@@ -1,35 +1,14 @@
 {
     "version": 2,
     "framework": null,
+    "outputDirectory": "public",
     "functions": {
-        "api/index.php": { "runtime": "vercel-php@0.7.4" }
+        "public/index.php": { "runtime": "vercel-php@0.7.4" }
     },
     "routes": [
         {
-            "src": "/template/css/(.*)",
-            "dest": "/public/template/css/$1"
-        },
-        {
-            "src": "/img/(.*)",
-            "dest": "/public/img/$1"
-        },
-        {
-            "src": "/template/js/(.*)",
-            "dest": "/public/template/js/$1"
-        },
-        {
-            "src": "/template/vendor/(.*)",
-            "dest": "/public/template/vendor/$1"
-        },
-        {
             "src": "/(.*)",
-            "dest": "/api/index.php"
-        }
-    ],
-    "crons": [
-        {
-            "path": "/run-scheduler",
-            "schedule": "0 1 * * *"
+            "dest": "/public/index.php"
         }
     ],
     "env": {
