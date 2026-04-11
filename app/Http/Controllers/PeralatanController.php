@@ -35,6 +35,26 @@ class PeralatanController extends Controller
         return view("pages.{$lokasi}.peralatan.index", compact('dataPeralatan', 'lokasi', 'search'));
     }
 
+    /**
+     * Fitur Saran Pencarian (Autocomplete) - AJAX
+     */
+    public function autocomplete(Request $request, $lokasi)
+    {
+        $search = $request->query('term');
+        
+        $results = Peralatan::where('lokasi', $lokasi)
+            ->where(function($q) use ($search) {
+                $q->where('nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('merk_tipe', 'LIKE', "%{$search}%")
+                  ->orWhere('nomor_polisi', 'LIKE', "%{$search}%");
+            })
+            ->limit(8)
+            ->get(['nama_barang as label', 'kode_barang as value']);
+
+        return response()->json($results);
+    }
+
     public function create($lokasi)
     {
         return view("pages.{$lokasi}.peralatan.create", compact('lokasi'));
@@ -45,20 +65,17 @@ class PeralatanController extends Controller
      */
     public function store(Request $request, $lokasi)
     {
-        // 1. BERSIHKAN FORMAT RUPIAH & RIBUAN
         $inputs = $request->all();
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
 
         foreach ($currencyFields as $field) {
             if (isset($inputs[$field])) {
-                // Menghapus titik ribuan dan mengubah koma desimal menjadi titik
                 $cleanValue = str_replace('.', '', $inputs[$field]);
                 $inputs[$field] = str_replace(',', '.', $cleanValue);
             }
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI (Penting: kode_barang harus Unique)
         $validator = Validator::make($request->all(), [
             'kode_barang'        => 'required|string|max:100|unique:peralatans,kode_barang',
             'nama_barang'        => 'required|string|max:255',
@@ -90,7 +107,6 @@ class PeralatanController extends Controller
 
         $peralatan = Peralatan::create($dataToStore);
 
-        // 3. NOTIFIKASI
         $recipients = User::whereIn('role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
@@ -115,7 +131,6 @@ class PeralatanController extends Controller
     {
         if ($peralatan->lokasi !== $lokasi) abort(404);
 
-        // 1. BERSIHKAN FORMAT
         $inputs = $request->all();
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
         foreach ($currencyFields as $field) {
@@ -126,11 +141,10 @@ class PeralatanController extends Controller
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI (Kecualikan kode_barang milik sendiri)
         $validator = Validator::make($request->all(), [
             'kode_barang'        => "required|string|max:100|unique:peralatans,kode_barang,{$peralatan->kode_barang},kode_barang",
             'nama_barang'        => 'required|string|max:255',
-            'nibr'               => 'nullable|string|max:255',
+            'nibar'               => 'nullable|string|max:255',
             'nomor_register'     => 'nullable|string|max:255',
             'Lok'                => 'required|string', 
             'merk_tipe'          => 'nullable|string|max:255',

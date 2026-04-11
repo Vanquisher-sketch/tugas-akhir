@@ -21,7 +21,6 @@ use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
 use App\Http\Controllers\PajakController;
-use App\Http\Controllers\TestWaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,7 +59,7 @@ Route::middleware('auth')->group(function () {
     // Rute Manajemen User (Admin)
     Route::resource('user', UserController::class);
 
-    // --- RUTE DINAMIS UNTUK SEMUA MODUL ---
+    // --- RUTE DINAMIS UNTUK SEMUA MODUL (PANDAWA) ---
     Route::prefix('{lokasi}')
         ->whereIn('lokasi', ['tawang', 'lengkongsari', 'cikalang', 'empang', 'kahuripan', 'tawangsari'])
         ->name('lokasi.')
@@ -71,14 +70,13 @@ Route::middleware('auth')->group(function () {
             Route::get('export/{menu}', [ExportController::class, 'export'])->name('export.excel');
 
             // 1. Route Ruangan
-            // REVISI: Pastikan binding menggunakan kode_ruangan
             Route::get('room/print', [RoomController::class, 'print'])->name('room.print');
             Route::resource('room', RoomController::class)->scoped([
                 'room' => 'kode_ruangan'
             ]);
 
-            // 2. Route Inventaris (Bersarang di Room)
-            // REVISI: Scoped binding agar room pakai kode_ruangan & inventari pakai kode_barang
+            // 2. Route Inventaris (Autocomplete & Resource)
+            Route::get('room/{room:kode_ruangan}/inventaris/autocomplete', [InventarisController::class, 'autocomplete'])->name('inventaris.autocomplete');
             Route::get('room/{room:kode_ruangan}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
             Route::post('room/{room:kode_ruangan}/inventaris/{inventari:kode_barang}/move', [InventarisController::class, 'move'])->name('inventaris.move');
             Route::resource('room.inventaris', InventarisController::class)->scoped([
@@ -87,28 +85,33 @@ Route::middleware('auth')->group(function () {
             ])->names('inventaris');
 
             // 3. KIB A (Tanah)
+            Route::get('tanah/autocomplete', [TanahController::class, 'autocomplete'])->name('tanah.autocomplete');
             Route::get('tanah/print', [TanahController::class, 'print'])->name('tanah.print');
             Route::resource('tanah', TanahController::class)->scoped(['tanah' => 'kode_barang']);
 
             // 4. KIB B (Peralatan)
+            Route::get('peralatan/autocomplete', [PeralatanController::class, 'autocomplete'])->name('peralatan.autocomplete');
             Route::get('peralatan/print', [PeralatanController::class, 'print'])->name('peralatan.print');
             Route::resource('peralatan', PeralatanController::class)->scoped(['peralatan' => 'kode_barang']);
 
             // 5. KIB C (Gedung)
+            Route::get('gedung/autocomplete', [GedungController::class, 'autocomplete'])->name('gedung.autocomplete');
             Route::get('gedung/print', [GedungController::class, 'print'])->name('gedung.print');
             Route::resource('gedung', GedungController::class)->scoped(['gedung' => 'kode_barang']);
 
             // 6. KIB D (Jalan)
+            Route::get('jalan/autocomplete', [JalanController::class, 'autocomplete'])->name('jalan.autocomplete');
             Route::get('jalan/print', [JalanController::class, 'print'])->name('jalan.print');
             Route::resource('jalan', JalanController::class)->scoped(['jalan' => 'kode_barang']);
 
             // 7. Aset Rusak
+            Route::get('rusak/autocomplete', [RusakController::class, 'autocomplete'])->name('rusak.autocomplete');
             Route::get('rusak/print', [RusakController::class, 'print'])->name('rusak.print');
             Route::resource('rusak', RusakController::class)->scoped(['rusak' => 'no_id_pemda']);
 
             // 8. PENGGUNAAN BMD
             Route::get('bmd/print', [BmdController::class, 'print'])->name('bmd.print');
-            Route::resource('bmd', BmdController::class); // BMD tetap pakai ID (auto-increment)
+            Route::resource('bmd', BmdController::class);
 
             // 9. MONITORING PAJAK
             Route::get('pajak/print', [PajakController::class, 'print'])->name('pajak.print');

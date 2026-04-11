@@ -33,6 +33,26 @@ class TanahController extends Controller
         return view("pages.{$lokasi}.tanah.index", compact('dataTanah', 'lokasi', 'search'));
     }
 
+    /**
+     * Fitur Saran Pencarian (Autocomplete) - AJAX
+     */
+    public function autocomplete(Request $request, $lokasi)
+    {
+        $search = $request->query('term');
+        
+        // Mengambil data tanah yang sesuai dengan input user
+        $results = Tanah::where('lokasi', $lokasi)
+            ->where(function($q) use ($search) {
+                $q->where('nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('kode_barang', 'LIKE', "%{$search}%") // Ditambah pencarian kode
+                  ->orWhere('Lok', 'LIKE', "%{$search}%");
+            })
+            ->limit(5)
+            ->get(['nama_barang as label', 'kode_barang as value']);
+
+        return response()->json($results);
+    }
+
     public function create($lokasi)
     {
         return view("pages.{$lokasi}.tanah.create", compact('lokasi'));
@@ -43,13 +63,12 @@ class TanahController extends Controller
      */
     public function store(Request $request, $lokasi)
     {
-        // 1. BERSIHKAN FORMAT RUPIAH & RIBUAN (Mencegah error decimal database)
+        // 1. BERSIHKAN FORMAT RUPIAH & RIBUAN
         $inputs = $request->all();
         $currencyFields = ['nilai_perolehan', 'harga_satuan', 'jumlah'];
 
         foreach ($currencyFields as $field) {
             if (isset($inputs[$field])) {
-                // Menghapus titik ribuan dan mengubah koma desimal menjadi titik
                 $cleanValue = str_replace('.', '', $inputs[$field]);
                 $inputs[$field] = str_replace(',', '.', $cleanValue);
             }
@@ -58,7 +77,6 @@ class TanahController extends Controller
 
         // 2. VALIDASI
         $validator = Validator::make($request->all(), [
-            // REVISI: Validasi Unik untuk kode_barang
             'kode_barang'        => 'required|string|max:100|unique:tanahs,kode_barang',
             'nama_barang'        => 'required|string|max:255',
             'nibar'              => 'nullable|string|max:255',
@@ -67,7 +85,7 @@ class TanahController extends Controller
             'spesifikasi_lainnya'=> 'nullable|string',
             'jumlah'             => 'required|numeric', 
             'satuan'             => 'required|string|max:255',
-            'Lok'                => 'required|string', // Alamat Fisik (L Besar)
+            'Lok'                => 'required|string', 
             'titik_koordinat'    => 'nullable|string|max:255',
             'bukti_nama'         => 'nullable|string|max:255',
             'bukti_nomor'        => 'nullable|string|max:255',
@@ -104,7 +122,6 @@ class TanahController extends Controller
 
     public function edit($lokasi, Tanah $tanah)
     {
-        // Laravel otomatis mencari $tanah berdasarkan kode_barang
         if ($tanah->lokasi !== $lokasi) abort(404);
         return view("pages.{$lokasi}.tanah.edit", compact('tanah', 'lokasi'));
     }
@@ -116,7 +133,6 @@ class TanahController extends Controller
     {
         if ($tanah->lokasi !== $lokasi) abort(404);
 
-        // 1. BERSIHKAN FORMAT
         $inputs = $request->all();
         $currencyFields = ['nilai_perolehan', 'harga_satuan', 'jumlah'];
         foreach ($currencyFields as $field) {
@@ -127,9 +143,7 @@ class TanahController extends Controller
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI
         $validator = Validator::make($request->all(), [
-            // REVISI: Kecualikan kode_barang milik sendiri agar tidak error unique
             'kode_barang'        => "required|string|max:100|unique:tanahs,kode_barang,{$tanah->kode_barang},kode_barang",
             'nama_barang'        => 'required|string|max:255',
             'nibar'              => 'nullable|string|max:255',

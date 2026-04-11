@@ -32,6 +32,25 @@ class GedungController extends Controller
         return view("pages.{$lokasi}.gedung.index", compact('dataGedung', 'lokasi', 'search'));
     }
 
+    /**
+     * Fitur Saran Pencarian (Autocomplete) - AJAX
+     */
+    public function autocomplete(Request $request, $lokasi)
+    {
+        $search = $request->query('term');
+        
+        $results = Gedung::where('lokasi', $lokasi)
+            ->where(function($q) use ($search) {
+                $q->where('nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('Lok', 'LIKE', "%{$search}%");
+            })
+            ->limit(5)
+            ->get(['nama_barang as label', 'kode_barang as value']);
+
+        return response()->json($results);
+    }
+
     public function create($lokasi)
     {
         return view("pages.{$lokasi}.gedung.create", compact('lokasi'));
@@ -54,7 +73,7 @@ class GedungController extends Controller
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI (Kode Barang Unik)
+        // 2. VALIDASI
         $validator = Validator::make($request->all(), [
             'kode_barang'               => 'required|string|max:100|unique:gedungs,kode_barang',
             'nama_barang'               => 'required|string|max:255',
@@ -66,7 +85,7 @@ class GedungController extends Controller
             'Lok'                       => 'required|string', 
             'titik_koordinat'           => 'nullable|string|max:255',
             'status_kepemilikan_tanah'  => 'nullable|string|max:255',
-            'jumlah'                    => 'required|integer|min:0',
+            'jumlah'                    => 'required|numeric|min:0',
             'satuan'                    => 'required|string|max:255',
             'harga_satuan'              => 'required|numeric|min:0',
             'nilai_perolehan'           => 'required|numeric|min:0',
@@ -133,7 +152,7 @@ class GedungController extends Controller
             'Lok'                       => 'required|string', 
             'titik_koordinat'           => 'nullable|string|max:255',
             'status_kepemilikan_tanah'  => 'nullable|string|max:255',
-            'jumlah'                    => 'required|integer|min:0',
+            'jumlah'                    => 'required|numeric|min:0',
             'satuan'                    => 'required|string|max:255',
             'harga_satuan'              => 'required|numeric|min:0',
             'nilai_perolehan'           => 'required|numeric|min:0',
