@@ -21,6 +21,7 @@ use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
 use App\Http\Controllers\PajakController;
+use App\Http\Controllers\ArsipController; // TAMBAHKAN INI
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +118,14 @@ Route::middleware('auth')->group(function () {
             Route::get('pajak/print', [PajakController::class, 'print'])->name('pajak.print');
             Route::post('pajak/kirim-reminder', [PajakController::class, 'kirimReminderManual'])->name('pajak.kirim_reminder');
             Route::resource('pajak', PajakController::class)->only(['index', 'edit', 'update']);
+
+            // 10. RUTE ARSIP (Baru)
+            Route::prefix('arsip')->name('arsip.')->group(function() {
+                Route::get('/', [ArsipController::class, 'index'])->name('index'); // Pilih Kategori
+                Route::get('/{kategori}', [ArsipController::class, 'show'])->name('show'); // Lihat Isi Sampah
+                Route::post('/{kategori}/{kode}/restore', [ArsipController::class, 'restore'])->name('restore'); // Pulihkan
+                Route::delete('/{kategori}/{kode}/permanen', [ArsipController::class, 'forceDelete'])->name('permanen'); // Hapus Selamanya
+            });
         });
 });
 

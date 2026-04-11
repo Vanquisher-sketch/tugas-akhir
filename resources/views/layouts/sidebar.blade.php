@@ -25,6 +25,13 @@
             }
         }
     }
+
+    // Mendapatkan lokasi saat ini dari URL untuk link Arsip
+    $currentLokasi = request()->segment(1); 
+    // Jika di dashboard atau root, default ke tawang (atau sesuaikan logika dashboard kamu)
+    if(in_array($currentLokasi, ['dashboard', 'user', 'profile', 'notifications', ''])) {
+        $currentLokasi = 'tawang'; 
+    }
 @endphp
 
 <ul class="navbar-nav bg-gradient-secondary sidebar sidebar-dark accordion" id="accordionSidebar">
@@ -61,15 +68,12 @@
         <div id="collapseTawang" class="collapse {{ $isTawangActive ? 'show' : '' }}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 
-                {{-- 1. Data Ruangan --}}
                 <a class="collapse-item {{ request()->is('tawang/room*') && !request()->is('tawang/room/*/inventaris*') ? 'active' : '' }}" 
                    href="{{ route('lokasi.room.index', ['lokasi' => 'tawang']) }}">Data Ruangan</a>
                 
-                {{-- 2. Data Inventori Ruangan (List Ruangan) --}}
                 <div class="dropdown-divider"></div>
                 <h6 class="collapse-header">Inventori Ruangan:</h6>
                 @forelse ($tawangRooms as $room)
-                    {{-- REVISI: Menggunakan kode_ruangan sebagai parameter --}}
                     <a class="collapse-item {{ request()->is('tawang/room/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
                        href="{{ route('lokasi.inventaris.index', ['lokasi' => 'tawang', 'room' => $room->kode_ruangan]) }}"
                        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;" 
@@ -80,7 +84,6 @@
                     <small class="ml-3 text-muted">Belum ada ruangan</small>
                 @endforelse
 
-                {{-- 3. Kartu Inventaris Barang (KIB) --}}
                 <div class="dropdown-divider"></div>
                 <h6 class="collapse-header">KIB (A,B,C,D):</h6>
                 <a class="collapse-item" href="{{ route('lokasi.tanah.index', ['lokasi' => 'tawang']) }}">Tanah (A)</a>
@@ -123,7 +126,6 @@
                     <div class="dropdown-divider"></div>
                     <h6 class="collapse-header">Inventori Ruangan:</h6>
                     @forelse ($allRoomsByLocation[$slug] ?? [] as $room)
-                        {{-- REVISI: Menggunakan kode_ruangan sebagai parameter --}}
                         <a class="collapse-item {{ request()->is($slug . '/room/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
                            href="{{ route('lokasi.inventaris.index', ['lokasi' => $slug, 'room' => $room->kode_ruangan]) }}"
                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;"
@@ -150,13 +152,25 @@
         </li>
     @endforeach
 
-    @if ($roleId == 1 )
+    {{-- ============================================================ --}}
+    {{-- BAGIAN SISTEM KEAMANAN & ADMIN --}}
+    {{-- ============================================================ --}}
     <hr class="sidebar-divider">
-    <div class="sidebar-heading">Admin</div>
+    <div class="sidebar-heading">Sistem & Keamanan</div>
+
+    {{-- MENU ARSIP (Baru) --}}
+    <li class="nav-item {{ request()->is('*/arsip*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('lokasi.arsip.index', ['lokasi' => $currentLokasi]) }}">
+            <i class="fas fa-fw fa-archive"></i>
+            <span>Pusat Arsip</span>
+        </a>
+    </li>
+
+    @if ($roleId == 1 )
     <li class="nav-item {{ request()->is('user*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('user.index') }}">
             <i class="fas fa-fw fa-user-circle"></i>
-            <span>Account</span>
+            <span>Manajemen Akun</span>
         </a>
     </li>
     @endif
