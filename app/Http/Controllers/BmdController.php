@@ -40,7 +40,7 @@ class BmdController extends Controller
     }
 
     /**
-     * Fitur Saran Pencarian (Autocomplete) - Mencari pemakai atau barang
+     * Fitur Saran Pencarian (Autocomplete)
      */
     public function autocomplete(Request $request, $lokasi)
     {
@@ -68,13 +68,22 @@ class BmdController extends Controller
 
     public function create($lokasi)
     {
-        $peralatans = Peralatan::where('lokasi', $lokasi)->select('kode_barang', 'nama_barang', 'nomor_polisi')->get();
+        // REVISI: Ambil daftar kode_barang yang sudah ada di tabel bmds (sudah terpakai)
+        $sudahTerpakai = Bmd::where('lokasi', $lokasi)->pluck('peralatan_kode')->toArray();
+
+        // Ambil peralatan yang BELUM terpakai (NotIn)
+        $peralatans = Peralatan::where('lokasi', $lokasi)
+            ->whereNotIn('kode_barang', $sudahTerpakai)
+            ->select('kode_barang', 'nama_barang', 'nomor_polisi')
+            ->get();
+
         return view("pages.{$lokasi}.bmd.create", compact('lokasi', 'peralatans'));
     }
 
     public function store(Request $request, $lokasi)
     {
         $validated = $this->validateRequest($request);
+        
         DB::beginTransaction();
         try {
             $dataToStore = $validated;
@@ -86,6 +95,7 @@ class BmdController extends Controller
 
             $bmd = Bmd::create($dataToStore);
             DB::commit();
+
             $this->sendNotification($bmd, 'ditambahkan');
             return redirect()->route('lokasi.bmd.index', ['lokasi' => $lokasi])->with('success', 'Data berhasil ditambahkan.');
         } catch (\Exception $e) {
@@ -97,7 +107,19 @@ class BmdController extends Controller
     public function edit($lokasi, Bmd $bmd)
     {
         if ($bmd->lokasi !== $lokasi) abort(404);
-        $peralatans = Peralatan::where('lokasi', $lokasi)->select('kode_barang', 'nama_barang', 'nomor_polisi')->get();
+
+        // REVISI: Ambil barang yang dipakai orang lain (kecuali data yang sedang diedit)
+        $dipakaiOrangLain = Bmd::where('lokasi', $lokasi)
+            ->where('id', '!=', $bmd->id)
+            ->pluck('peralatan_kode')
+            ->toArray();
+
+        // Tampilkan barang yang tersedia + barang milik BAST ini sendiri
+        $peralatans = Peralatan::where('lokasi', $lokasi)
+            ->whereNotIn('kode_barang', $dipakaiOrangLain)
+            ->select('kode_barang', 'nama_barang', 'nomor_polisi')
+            ->get();
+
         return view("pages.{$lokasi}.bmd.edit", compact('bmd', 'lokasi', 'peralatans'));
     }
 
@@ -105,6 +127,7 @@ class BmdController extends Controller
     {
         if ($bmd->lokasi !== $lokasi) abort(404);
         $validated = $this->validateRequest($request);
+
         DB::beginTransaction();
         try {
             $dataToUpdate = $validated;
@@ -143,6 +166,9 @@ class BmdController extends Controller
             'bast_nomor'          => 'nullable|string',
             'bast_tanggal'        => 'nullable|date',
             'bast_file'           => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Pastikan field pajak masuk jika ada di form create/edit
+            'tanggal_pajak'       => 'nullable|date',
+            'tanggal_stnk'        => 'nullable|date',
         ]);
     }
 

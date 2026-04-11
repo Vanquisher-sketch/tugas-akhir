@@ -16,28 +16,31 @@
             @csrf
             @method('PUT')
 
-            {{-- Row 1: Data Barang & Lokasi --}}
             <div class="row">
-                <div class="col-md-6">
+                {{-- Bagian 1: Informasi Aset --}}
+                <div class="col-md-6 border-right">
                     <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">1. Informasi Aset & Lokasi</h5>
                     
                     <div class="form-group">
-                        <label class="font-weight-bold text-dark">Pilih Barang</label>
-                        <select name="peralatan_id" class="form-control select2" required>
+                        <label class="font-weight-bold text-dark">Pilih Barang (Peralatan & Mesin)</label>
+                        {{-- REVISI: name disesuaikan ke peralatan_kode --}}
+                        <select name="peralatan_kode" class="form-control select2" required>
                             @foreach($peralatans as $alat)
-                                <option value="{{ $alat->id }}" {{ (old('peralatan_id', $bmd->peralatan_id) == $alat->id) ? 'selected' : '' }}>
-                                    [{{ $alat->kode_barang }}] {{ $alat->nama_barang }} (NIBR: {{ $alat->nibr ?? '-' }})
+                                <option value="{{ $alat->kode_barang }}" 
+                                    {{ (old('peralatan_kode', $bmd->peralatan_kode) == $alat->kode_barang) ? 'selected' : '' }}>
+                                    [{{ $alat->kode_barang }}] {{ $alat->nama_barang }} @if($alat->nomor_polisi) ({{ $alat->nomor_polisi }}) @endif
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="font-weight-bold text-dark">Lokasi/Alamat Penggunaan</label>
+                        <label class="font-weight-bold text-dark">Lokasi/Alamat Penggunaan Saat Ini</label>
                         <input type="text" name="alamat_penggunaan" class="form-control" value="{{ old('alamat_penggunaan', $bmd->alamat_penggunaan) }}" required>
                     </div>
                 </div>
 
+                {{-- Bagian 2: Data Pemakai --}}
                 <div class="col-md-6">
                     <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">2. Data Pemakai</h5>
                     
@@ -52,96 +55,79 @@
                             <select name="pemakai_status" class="form-control" required>
                                 <option value="ASN" {{ old('pemakai_status', $bmd->pemakai_status) == 'ASN' ? 'selected' : '' }}>ASN</option>
                                 <option value="Non-ASN" {{ old('pemakai_status', $bmd->pemakai_status) == 'Non-ASN' ? 'selected' : '' }}>Non-ASN</option>
-                                <option value="Anggota DPRD" {{ old('pemakai_status', $bmd->pemakai_status) == 'Anggota DPRD' ? 'selected' : '' }}>Anggota DPRD</option>
                                 <option value="Lainnya" {{ old('pemakai_status', $bmd->pemakai_status) == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label>Jabatan</label>
-                            <input type="text" name="pemakai_jabatan" class="form-control" value="{{ old('pemakai_jabatan', $bmd->pemakai_jabatan) }}">
+                            <label>Identitas (NIP/NIK)</label>
+                            <input type="text" name="pemakai_identitas" class="form-control" value="{{ old('pemakai_identitas', $bmd->pemakai_identitas) }}" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="font-weight-bold text-dark">Identitas (NIP/NIK/KTP)</label>
-                        <input type="text" name="pemakai_identitas" class="form-control" value="{{ old('pemakai_identitas', $bmd->pemakai_identitas) }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Alamat Pemakai</label>
-                        <textarea name="pemakai_alamat" class="form-control" rows="2">{{ old('pemakai_alamat', $bmd->pemakai_alamat) }}</textarea>
+                        <label>Jabatan Pemakai</label>
+                        <input type="text" name="pemakai_jabatan" class="form-control" value="{{ old('pemakai_jabatan', $bmd->pemakai_jabatan) }}">
                     </div>
                 </div>
             </div>
 
             <hr class="my-4">
 
-            {{-- Row 2: Dokumen --}}
+            {{-- Row 2: Dokumen & Pajak --}}
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6 border-right">
                     <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">3. Dokumen Sumber (BAST)</h5>
                     
                     <div class="form-row">
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-7">
                             <label>Nomor BAST</label>
                             <input type="text" name="bast_nomor" class="form-control" value="{{ old('bast_nomor', $bmd->bast_nomor) }}">
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-5">
                             <label>Tanggal BAST</label>
                             <input type="date" name="bast_tanggal" class="form-control" value="{{ $bmd->bast_tanggal ? $bmd->bast_tanggal->format('Y-m-d') : '' }}">
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mt-2">
                         <label class="font-weight-bold text-dark">Upload Scan BAST (Isi jika ingin ganti file)</label>
                         <div class="custom-file">
                             <input type="file" name="bast_file" class="custom-file-input" id="bastFileEdit">
                             <label class="custom-file-label" for="bastFileEdit">Pilih file baru...</label>
                         </div>
-                        <small class="text-muted">Biarkan kosong jika tidak ingin mengganti file.</small>
-
                         @if($bmd->bast_file)
-                            <div class="mt-2 p-2 border rounded bg-light">
-                                <i class="fas fa-file-check text-success"></i> File saat ini: 
-                                <a href="{{ asset('storage/' . $bmd->bast_file) }}" target="_blank" class="font-weight-bold">Lihat Dokumen</a>
+                            <div class="mt-2">
+                                <small class="text-success"><i class="fas fa-check-circle"></i> File tersimpan:</small>
+                                <a href="{{ asset('storage/' . $bmd->bast_file) }}" target="_blank" class="badge badge-info">Lihat Dokumen</a>
                             </div>
                         @endif
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">4. Dokumen Lain (Opsional)</h5>
-                    
+                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">4. Monitoring Pajak Kendaraan</h5>
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label>Nama Dokumen</label>
-                            <input type="text" name="dokumen_lain_nama" class="form-control" value="{{ old('dokumen_lain_nama', $bmd->dokumen_lain_nama) }}">
+                            <label>Jatuh Tempo Pajak</label>
+                            <input type="date" name="tanggal_pajak" class="form-control" value="{{ $bmd->tanggal_pajak ? $bmd->tanggal_pajak->format('Y-m-d') : '' }}">
                         </div>
                         <div class="form-group col-md-6">
-                            <label>Nomor Dokumen</label>
-                            <input type="text" name="dokumen_lain_nomor" class="form-control" value="{{ old('dokumen_lain_nomor', $bmd->dokumen_lain_nomor) }}">
+                            <label>Ganti STNK (5 Tahunan)</label>
+                            <input type="date" name="tanggal_stnk" class="form-control" value="{{ $bmd->tanggal_stnk ? $bmd->tanggal_stnk->format('Y-m-d') : '' }}">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Tanggal Dokumen Lain</label>
-                        <input type="date" name="dokumen_lain_tanggal" class="form-control" value="{{ $bmd->dokumen_lain_tanggal ? $bmd->dokumen_lain_tanggal->format('Y-m-d') : '' }}">
+                        <label>Keterangan Tambahan</label>
+                        <textarea name="keterangan" class="form-control" rows="2">{{ old('keterangan', $bmd->keterangan) }}</textarea>
                     </div>
                 </div>
             </div>
 
-            <hr class="my-4">
-
-            <div class="form-group">
-                <label class="font-weight-bold text-dark">Keterangan Tambahan</label>
-                <textarea name="keterangan" class="form-control" rows="3">{{ old('keterangan', $bmd->keterangan) }}</textarea>
-            </div>
-
+            <hr>
             <div class="d-flex justify-content-end mt-4">
-                <a href="{{ route('lokasi.bmd.index', $lokasi) }}" class="btn btn-secondary mr-2">
-                    <i class="fas fa-times fa-sm"></i> Batal
-                </a>
-                <button type="submit" class="btn btn-warning shadow-sm">
-                    <i class="fas fa-save fa-sm text-white-50"></i> Update Data
+                <a href="{{ route('lokasi.bmd.index', $lokasi) }}" class="btn btn-secondary mr-2">Batal</a>
+                <button type="submit" class="btn btn-warning shadow-sm px-4 text-dark font-weight-bold">
+                    <i class="fas fa-save fa-sm"></i> Simpan Perubahan
                 </button>
             </div>
 
@@ -152,6 +138,7 @@
 
 @push('scripts')
 <script>
+    // Update nama file di input custom bootstrap
     $(".custom-file-input").on("change", function() {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
