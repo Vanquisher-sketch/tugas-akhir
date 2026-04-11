@@ -11,36 +11,19 @@ class Tanah extends Model
 
     protected $table = 'tanahs';
 
-    protected $fillable = [
-        'lokasi',
-        'kode_barang',
-        'nama_barang',
-        'nibar',
-        'nomor_register',
-        'spesifikasi_barang', // Luas
-        'spesifikasi_lainnya',
-        'jumlah',
-        'satuan',
-        'Lok', // Ingat, L besar
-        'titik_koordinat',
-        'bukti_nama',
-        'bukti_nomor',
-        'bukti_tanggal',
-        'nama_kepemilikan_dokumen',
-        'nilai_perolehan',
-        'harga_satuan',
-        'cara_perolehan',
-        'tanggal_perolehan',
-        'status_penggunaan',
-        'keterangan',
-    ];
+    // REVISI: Set Primary Key ke kode_barang
+    protected $primaryKey = 'kode_barang';
 
-    protected $casts = [
-        'bukti_tanggal' => 'date',
-        'tanggal_perolehan' => 'date',
-        // Casting decimal tidak wajib jika input sudah bersih, tapi bagus untuk output JSON
-        'nilai_perolehan' => 'decimal:2',
-        'harga_satuan' => 'decimal:2',
-        'jumlah' => 'decimal:2',
+    // REVISI: Matikan auto-increment karena PK adalah string
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'kode_barang', 'lokasi', 'nama_barang', 'nibar', 'nomor_register',
+        'spesifikasi_barang', 'spesifikasi_lainnya', 'jumlah', 'satuan',
+        'Lok', 'titik_koordinat', 'bukti_nama', 'bukti_nomor', 
+        'bukti_tanggal', 'nama_kepemilikan_dokumen', 'nilai_perolehan',
+        'harga_satuan', 'cara_perolehan', 'tanggal_perolehan',
+        'status_penggunaan', 'keterangan'
     ];
 }

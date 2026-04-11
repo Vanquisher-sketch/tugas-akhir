@@ -12,10 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rooms', function (Blueprint $table) {
-            $table->id();
-            $table->string('lokasi'); // Kolom kunci untuk data per lokasi
+            // 1. Hapus $table->id()
+            
+            // 2. Jadikan kode_ruangan sebagai Primary Key
+            // Saya beri panjang 50 karakter agar fleksibel
+            $table->string('kode_ruangan', 50)->primary(); 
+            
+            $table->string('lokasi'); 
             $table->string('name');
-            $table->string('kode_ruangan')->nullable();
             $table->timestamps();
         });
     }
@@ -28,4 +32,3 @@ return new class extends Migration
         Schema::dropIfExists('rooms');
     }
 };
-

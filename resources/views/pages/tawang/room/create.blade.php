@@ -10,11 +10,12 @@
             @csrf
             <div class="form-group">
                 <label for="name">Nama Ruangan</label>
-                <input type="text" name="name" id="name" class="form-control" required>
+                <input type="text" name="name" id="name" class="form-control" required placeholder="Contoh: Ruang Rapat">
             </div>
             <div class="form-group">
                 <label for="kode_ruangan">Kode Ruangan</label>
-                <input type="text" name="kode_ruangan" id="kode_ruangan" class="form-control">
+                <input type="text" name="kode_ruangan" id="kode_ruangan" class="form-control" placeholder="Akan terisi otomatis...">
+                <small class="text-muted">Kode akan tergenerate otomatis, kamu tetap bisa mengubahnya manual.</small>
             </div>
             <hr>
             <button type="submit" class="btn btn-primary mr-1">Simpan</button>
@@ -22,5 +23,34 @@
         </form>
     </div>
 </div>
-@endsection
 
+{{-- Tambahkan Script Auto-Generate di sini --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const kodeInput = document.getElementById('kode_ruangan');
+
+        nameInput.addEventListener('keyup', function() {
+            let nameValue = nameInput.value.trim();
+            
+            if (nameValue.length > 0) {
+                // 1. Ambil Inisial (Contoh: "Ruang Admin" -> "RA")
+                let initials = nameValue.split(' ')
+                                        .filter(word => word.length > 0)
+                                        .map(word => word.charAt(0))
+                                        .join('')
+                                        .toUpperCase();
+
+                // 2. Tambahkan nomor random 3 digit (Contoh: 123)
+                // Math.random() akan menjamin kode RA-124 berbeda dengan RA-562
+                let randomNumber = Math.floor(100 + Math.random() * 900);
+
+                // 3. Gabungkan (Contoh: RA-123)
+                kodeInput.value = `${initials}-${randomNumber}`;
+            } else {
+                kodeInput.value = '';
+            }
+        });
+    });
+</script>
+@endsection

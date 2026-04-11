@@ -12,18 +12,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
+// Pastikan kamu sudah install barryvdh/laravel-dompdf jika ingin pakai PDF
+// atau gunakan view print biasa seperti menu lainnya.
 
 class BmdController extends Controller
 {
     /**
-     * Menampilkan daftar penggunaan BMD berdasarkan lokasi.
+     * Menampilkan daftar penggunaan BMD (Monitoring BAST).
      */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
 
-        // Optimasi Query: Eager Load 'peralatan' dan filter lokasi
+        // REVISI: Eager Load menggunakan relasi 'peralatan' yang berbasis kode
         $bmds = Bmd::with('peralatan')
             ->where('lokasi', $lokasi)
             ->when($search, function ($query, $search) {
@@ -32,83 +33,79 @@ class BmdController extends Controller
                       ->orWhere('alamat_penggunaan', 'LIKE', "%{$search}%")
                       ->orWhere('bast_nomor', 'LIKE', "%{$search}%")
                       ->orWhereHas('peralatan', function ($subQ) use ($search) {
+                          // REVISI: Pencarian menembus tabel peralatans menggunakan kode_barang
                           $subQ->where('nama_barang', 'LIKE', "%{$search}%")
                                ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                               ->orWhere('nibr', 'LIKE', "%{$search}%");
+                               ->orWhere('nibr', 'LIKE', "%{$search}%")
+                               ->orWhere('nomor_polisi', 'LIKE', "%{$search}%");
                       });
                 });
             })
             ->latest()
             ->paginate(10)
-            ->withQueryString(); // Agar pagination tetap membawa parameter search
+            ->withQueryString();
 
         return view("pages.{$lokasi}.bmd.index", compact('bmds', 'lokasi', 'search'));
     }
 
     /**
-     * Menampilkan form tambah data.
+     * Form Tambah Data BMD.
      */
     public function create($lokasi)
     {
-        $peralatans = Peralatan::select('id', 'kode_barang', 'nama_barang', 'nibr')->get();
+        // REVISI: Ambil kode_barang sebagai value untuk dropdown
+        $peralatans = Peralatan::select('kode_barang', 'nama_barang', 'nibr')->get();
         return view("pages.{$lokasi}.bmd.create", compact('lokasi', 'peralatans'));
     }
 
     /**
-     * Menyimpan data baru.
+     * Simpan Data.
      */
     public function store(Request $request, $lokasi)
     {
         $validated = $this->validateRequest($request);
 
-        DB::beginTransaction(); // Mulai Transaksi Database
+        DB::beginTransaction();
 
         try {
             $dataToStore = $validated;
             $dataToStore['lokasi'] = $lokasi;
 
-            // Handle Upload File
+            // Handle Upload File BAST
             if ($request->hasFile('bast_file')) {
                 $dataToStore['bast_file'] = $this->handleFileUpload($request->file('bast_file'));
             }
 
             $bmd = Bmd::create($dataToStore);
 
-            DB::commit(); // Simpan permanen jika sukses
+            DB::commit();
 
-            // Kirim Notifikasi (Diluar transaksi agar error notif tidak membatalkan simpan data)
             $this->sendNotification($bmd, 'ditambahkan');
 
             return redirect()->route('lokasi.bmd.index', ['lokasi' => $lokasi])
                              ->with('success', 'Data Penggunaan BMD berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Batalkan semua jika error
-            Log::error("Error Store BMD: " . $e->getMessage()); // Catat error di log
+            DB::rollBack();
+            Log::error("Error Store BMD: " . $e->getMessage());
             
-            // Hapus file jika sudah terlanjur terupload tapi DB gagal
             if (isset($dataToStore['bast_file'])) {
                 $this->deleteFile($dataToStore['bast_file']);
             }
 
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Menampilkan form edit.
-     */
     public function edit($lokasi, Bmd $bmd)
     {
         $this->checkLocationMatch($lokasi, $bmd);
         
-        $peralatans = Peralatan::select('id', 'kode_barang', 'nama_barang', 'nibr')->get();
+        // REVISI: Dropdown list menggunakan kode_barang
+        $peralatans = Peralatan::select('kode_barang', 'nama_barang', 'nibr')->get();
         return view("pages.{$lokasi}.bmd.edit", compact('bmd', 'lokasi', 'peralatans'));
     }
 
-    /**
-     * Update data.
-     */
     public function update(Request $request, $lokasi, Bmd $bmd)
     {
         $this->checkLocationMatch($lokasi, $bmd);
@@ -118,25 +115,16 @@ class BmdController extends Controller
 
         try {
             $dataToUpdate = $validated;
-            $oldFile = $bmd->bast_file;
 
-            // Handle File Replace
             if ($request->hasFile('bast_file')) {
-                // Upload file baru
+                // Hapus file lama jika ada file baru
+                $this->deleteFile($bmd->bast_file);
                 $dataToUpdate['bast_file'] = $this->handleFileUpload($request->file('bast_file'));
-                
-                // Tandai file lama untuk dihapus nanti
-                $fileToDelete = $oldFile;
             }
 
             $bmd->update($dataToUpdate);
 
             DB::commit();
-
-            // Hapus file lama fisik hanya jika update DB sukses & ada file baru
-            if (isset($fileToDelete)) {
-                $this->deleteFile($fileToDelete);
-            }
 
             $this->sendNotification($bmd, 'diperbarui');
 
@@ -150,9 +138,6 @@ class BmdController extends Controller
         }
     }
 
-    /**
-     * Hapus data.
-     */
     public function destroy($lokasi, Bmd $bmd)
     {
         $this->checkLocationMatch($lokasi, $bmd);
@@ -161,16 +146,13 @@ class BmdController extends Controller
 
         try {
             $filePath = $bmd->bast_file;
-            $bmdDataForNotif = clone $bmd; // Clone object untuk keperluan notif setelah delete
+            $bmdDataForNotif = clone $bmd; 
 
             $bmd->delete();
 
             DB::commit();
 
-            // Hapus file fisik setelah data DB sukses dihapus
             $this->deleteFile($filePath);
-
-            // Notif
             $this->sendNotification($bmdDataForNotif, 'dihapus', true);
 
             return redirect()->route('lokasi.bmd.index', ['lokasi' => $lokasi])
@@ -184,7 +166,7 @@ class BmdController extends Controller
     }
 
     /**
-     * Cetak PDF per lokasi.
+     * Cetak Laporan BMD.
      */
     public function print($lokasi)
     {
@@ -193,56 +175,38 @@ class BmdController extends Controller
                     ->latest()
                     ->get();
 
-        $pdf = Pdf::loadView('bmd.pdf', compact('bmds', 'lokasi'))
-                  ->setPaper('a4', 'landscape');
-                  
-        return $pdf->stream("Laporan-BMD-{$lokasi}.pdf");
+        return view("pages.{$lokasi}.bmd.print", compact('bmds', 'lokasi'));
     }
 
     // =========================================================================
     // PRIVATE METHODS (HELPER)
     // =========================================================================
 
-    /**
-     * Validasi Request (DRY Principle)
-     */
     private function validateRequest(Request $request)
     {
         return $request->validate([
-            // 1. Relasi & Lokasi
-            'peralatan_id'       => 'required|exists:peralatans,id',
-            'alamat_penggunaan'  => 'required|string',
-
-            // 2. Data Pemakai Utama
-            'pemakai_nama'       => 'required|string',
-            'pemakai_status'     => 'required|string',
-            'pemakai_identitas'  => 'required|string',
-            'pemakai_jabatan'    => 'nullable|string',
-            'pemakai_alamat'     => 'nullable|string',
-
-            // 3. Data Kontak & Pajak (Sesuai Migration)
-            'nomor_pemakai'      => 'nullable|numeric|digits_between:10,15',
-            'nomor_bendahara'    => 'nullable|numeric|digits_between:10,15',
-            'tanggal_pajak'      => 'nullable|date',
-
-            // 4. Dokumen BAST
-            'bast_nomor'         => 'nullable|string',
-            'bast_tanggal'       => 'nullable|date',
-            'bast_file'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-
-            // 5. Dokumen Lain
-            'dokumen_lain_nama'    => 'nullable|string',
-            'dokumen_lain_nomor'   => 'nullable|string',
-            'dokumen_lain_tanggal' => 'nullable|date',
-
-            // 6. Lainnya
-            'keterangan'         => 'nullable|string',
+            // REVISI: Validasi ke kode_barang di tabel peralatans
+            'peralatan_kode'      => 'required|exists:peralatans,kode_barang',
+            'alamat_penggunaan'   => 'required|string',
+            'pemakai_nama'        => 'required|string',
+            'pemakai_status'      => 'required|string',
+            'pemakai_identitas'   => 'required|string',
+            'pemakai_jabatan'     => 'nullable|string',
+            'pemakai_alamat'      => 'nullable|string',
+            'nomor_pemakai'       => 'nullable|string|max:20',
+            'nomor_bendahara'     => 'nullable|string|max:20',
+            'tanggal_pajak'       => 'nullable|date',
+            'tanggal_stnk'        => 'nullable|date',
+            'bast_nomor'          => 'nullable|string',
+            'bast_tanggal'        => 'nullable|date',
+            'bast_file'           => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'dokumen_lain_nama'   => 'nullable|string',
+            'dokumen_lain_nomor'  => 'nullable|string',
+            'dokumen_lain_tanggal'=> 'nullable|date',
+            'keterangan'          => 'nullable|string',
         ]);
     }
 
-    /**
-     * Cek apakah BMD milik lokasi yang sedang diakses
-     */
     private function checkLocationMatch($lokasi, $bmd)
     {
         if ($bmd->lokasi !== $lokasi) {
@@ -250,17 +214,11 @@ class BmdController extends Controller
         }
     }
 
-    /**
-     * Handle File Upload
-     */
     private function handleFileUpload($file)
     {
         return $file->store('uploads/bast', 'public');
     }
 
-    /**
-     * Handle File Delete (Aman dari error jika file tidak ada)
-     */
     private function deleteFile($path)
     {
         if ($path && Storage::disk('public')->exists($path)) {
@@ -268,19 +226,17 @@ class BmdController extends Controller
         }
     }
 
-    /**
-     * Handle Kirim Notifikasi
-     */
     private function sendNotification($bmd, $action, $isDelete = false)
     {
         try {
             $recipients = User::whereIn('role_id', [1, 2])->get();
             
             if ($isDelete) {
-                $pesan = "Peminjam: {$bmd->pemakai_nama} (Data telah dihapus)";
+                $pesan = "Data pemakaian oleh {$bmd->pemakai_nama} telah dihapus.";
             } else {
-                $namaBarang = $bmd->peralatan->nama_barang ?? 'Barang';
-                $pesan = "{$namaBarang} oleh {$bmd->pemakai_nama} di {$bmd->alamat_penggunaan}";
+                // Karena pakai with('peralatan'), kita bisa ambil nama barangnya
+                $namaBarang = $bmd->peralatan->nama_barang ?? 'Aset';
+                $pesan = "Aset: {$namaBarang} digunakan oleh {$bmd->pemakai_nama}";
             }
 
             Notification::send($recipients, new DataModificationNotification(
@@ -290,7 +246,6 @@ class BmdController extends Controller
                 $pesan
             ));
         } catch (\Exception $e) {
-            // Jangan biarkan error notifikasi mengganggu flow user
             Log::warning("Gagal mengirim notifikasi BMD: " . $e->getMessage());
         }
     }

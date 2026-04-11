@@ -6,18 +6,21 @@
         <h6 class="m-0 font-weight-bold text-primary">Tambah Inventaris Ruangan: {{ $room->name }}</h6>
     </div>
     <div class="card-body">
-        <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'room' => $room->id]) }}" method="POST">
+        {{-- REVISI: Route parameter menggunakan $room->kode_ruangan --}}
+        <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" method="POST">
             @csrf
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="nama_barang">Nama Barang</label>
-                        <input type="text" class="form-control @error('nama_barang') is-invalid @enderror" name="nama_barang" value="{{ old('nama_barang') }}" required>
+                        <input type="text" id="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Contoh: Meja Kerja">
                         @error('nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
                         <label for="kode_barang">Kode Barang</label>
-                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang') }}">
+                        {{-- REVISI: Ditambahkan ID untuk JavaScript auto-gen --}}
+                        <input type="text" id="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang') }}" required>
+                        <small class="text-muted">Kode barang otomatis (Inisial-Nomor). Bisa diubah manual.</small>
                         @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
@@ -45,7 +48,7 @@
                     </div>
                     <div class="form-group">
                         <label for="tahun_perolehan">Tahun Perolehan</label>
-                        <input type="number" class="form-control @error('tahun_perolehan') is-invalid @enderror" name="tahun_perolehan" value="{{ old('tahun_perolehan') }}" placeholder="Contoh: 2024">
+                        <input type="number" class="form-control @error('tahun_perolehan') is-invalid @enderror" name="tahun_perolehan" value="{{ old('tahun_perolehan', date('Y')) }}" placeholder="Contoh: 2026">
                         @error('tahun_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
@@ -66,9 +69,37 @@
                 </div>
             </div>
             <hr>
-            <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->id]) }}" class="btn btn-secondary">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan</button>
+            {{-- REVISI: Link Batal menggunakan kode_ruangan --}}
+            <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-secondary">Batal</a>
+            <button type="submit" class="btn btn-primary shadow-sm">Simpan Data</button>
         </form>
     </div>
 </div>
+
+{{-- SCRIPT AUTO-GENERATE KODE BARANG SINGKAT --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const namaBarang = document.getElementById('nama_barang');
+        const kodeBarang = document.getElementById('kode_barang');
+
+        namaBarang.addEventListener('keyup', function() {
+            let val = namaBarang.value.trim();
+            if (val.length > 0) {
+                // Ambil inisial (Contoh: "Kursi Lipat" -> "KL")
+                let initials = val.split(' ')
+                                  .filter(word => word.length > 0)
+                                  .map(word => word.charAt(0))
+                                  .join('')
+                                  .toUpperCase();
+
+                // Tambah nomor acak agar tidak bentrok sebagai Primary Key
+                let rand = Math.floor(100 + Math.random() * 900);
+                
+                kodeBarang.value = `${initials}-${rand}`;
+            } else {
+                kodeBarang.value = '';
+            }
+        });
+    });
+</script>
 @endsection

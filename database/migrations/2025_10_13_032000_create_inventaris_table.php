@@ -1,6 +1,5 @@
 <?php
 
-// database/migrations/xxxx_xx_xx_xxxxxx_create_inventaris_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,24 +9,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventaris', function (Blueprint $table) {
-            $table->id(); // (5) No.
+            // 1. Hapus $table->id()
+            
+            // 2. Jadikan kode_barang sebagai PRIMARY KEY (String)
+            $table->string('kode_barang', 100)->primary(); 
 
-            // Kolom dipertahankan sesuai permintaan
             $table->string('lokasi'); 
             
-            // Dibiarkan nullable untuk fleksibilitas jika 'lokasi' yang utama
-            $table->foreignId('room_id')->nullable()->constrained('rooms')->onDelete('set null');
+            // Relasi ke ruangan menggunakan kode_ruangan (String)
+            $table->string('room_kode')->nullable();
+            $table->foreign('room_kode')
+                  ->references('kode_ruangan')
+                  ->on('rooms')
+                  ->onDelete('set null')
+                  ->onUpdate('cascade');
 
-            $table->string('nibar')->nullable(); // (6) NIBAR
-            $table->string('nomor_register')->nullable(); // (7) Nomor Register
-            $table->string('kode_barang'); // (8) Kode Barang
-            $table->string('nama_barang'); // (9) Nama Barang
-            $table->text('spesifikasi_barang')->nullable(); // (10) Spesifikasi
-            $table->string('merk_tipe')->nullable(); // (11) Merek / Tipe (Tipe data diubah ke string)
-            $table->year('tahun_perolehan'); // (12) Tahun Perolehan
-            $table->unsignedInteger('jumlah'); // (13) Jumlah (Tipe data diubah ke integer)
-            $table->string('satuan'); // (14) Satuan
-            $table->text('keterangan')->nullable(); // (15) Ket.
+            $table->string('nibar')->nullable(); 
+            $table->string('nomor_register')->nullable(); 
+            $table->string('nama_barang'); 
+            $table->text('spesifikasi_barang')->nullable(); 
+            $table->string('merk_tipe')->nullable(); 
+            $table->year('tahun_perolehan'); 
+            $table->unsignedInteger('jumlah'); 
+            $table->string('satuan'); 
+            $table->text('keterangan')->nullable(); 
             
             $table->timestamps();
         });

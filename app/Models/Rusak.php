@@ -9,21 +9,18 @@ class Rusak extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $table = 'rusaks';
+
+    // REVISI: Primary Key menggunakan no_id_pemda sesuai migration
+    protected $primaryKey = 'no_id_pemda';
+
+    // REVISI: Matikan auto-increment
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
-        'no_id_pemda',
-        'nama_barang',
-        'spesifikasi',
-        'no_polisi',
-        'tahun_perolehan',
-        'harga_perolehan',
-        'kondisi',
-        'tercatat_di_kib',
-        'keterangan',
-        'lokasi',
+        'no_id_pemda', 'nama_barang', 'spesifikasi', 'no_polisi',
+        'tahun_perolehan', 'harga_perolehan', 'kondisi',
+        'tercatat_di_kib', 'keterangan', 'lokasi'
     ];
 }

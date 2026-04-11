@@ -12,19 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rusaks', function (Blueprint $table) {
-            $table->id();
-            $table->string('no_id_pemda')->nullable();
-            $table->string('nama_barang');
-            $table->string('spesifikasi')->nullable();
-            $table->string('no_polisi')->nullable();
-            $table->year('tahun_perolehan')->nullable();
-            $table->decimal('harga_perolehan', 15, 2)->nullable();
-            $table->string('kondisi')->nullable();
-            $table->string('tercatat_di_kib')->nullable();
-            $table->text('keterangan')->nullable();
-            $table->string('lokasi');
-            $table->timestamps();
-        });
+    // REVISI: Primary Key menggunakan No ID Pemda atau kode unik rusak
+    $table->string('no_id_pemda', 100)->primary(); 
+    
+    $table->string('nama_barang');
+    $table->string('spesifikasi')->nullable();
+    $table->string('no_polisi')->nullable();
+    $table->year('tahun_perolehan')->nullable();
+    $table->decimal('harga_perolehan', 15, 2)->nullable();
+    $table->string('kondisi')->nullable();
+    $table->string('tercatat_di_kib')->nullable(); // Contoh: KIB B
+    $table->text('keterangan')->nullable();
+    $table->string('lokasi');
+    $table->timestamps();
+});
     }
 
     /**

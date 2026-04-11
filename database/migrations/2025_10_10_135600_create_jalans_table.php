@@ -12,28 +12,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jalans', function (Blueprint $table) {
-            $table->id();
-            $table->string('lokasi');
-            $table->string('kode_barang');                                 // Sesuai Kolom (6)
-            $table->string('nama_barang');                                // Sesuai Kolom (7)
-            $table->string('nibar')->nullable();                          // Sesuai Kolom (8)
-            $table->string('nomor_register');                             // Sesuai Kolom (9)
-            $table->string('spesifikasi_barang')->nullable();             // Sesuai Kolom (10)
-            $table->string('spesifikasi_lainnya')->nullable();            // Sesuai Kolom (11)
-            $table->string('nomor_ruas_jalan_jembatan_irigasi')->nullable(); // Sesuai Kolom (12)
-            $table->string('Lok');                                     // Sesuai Kolom (13)
-            $table->string('titik_koordinat')->nullable();                // Sesuai Kolom (14)
-            $table->string('status_kepemilikan_tanah')->nullable();        // Sesuai Kolom (15)
-            $table->unsignedInteger('jumlah');                            // Sesuai Kolom (16)
-            $table->string('satuan');                                     // Sesuai Kolom (17)
-            $table->decimal('harga_satuan', 15, 2);                       // Sesuai Kolom (18)
-            $table->decimal('nilai_perolehan', 15, 2);                    // Sesuai Kolom (19)
-            $table->string('cara_perolehan');                             // Sesuai Kolom (20)
-            $table->date('tanggal_perolehan');                            // Sesuai Kolom (21)
-            $table->string('status_penggunaan')->nullable();               // Sesuai Kolom (22)
-            $table->text('keterangan')->nullable();                       // Sesuai Kolom (23)
-            $table->timestamps();
-        });
+    // REVISI: Hapus $table->id()
+    $table->string('kode_barang', 100)->primary(); // (6) Primary Key
+
+    $table->string('lokasi');
+    $table->string('nama_barang'); // (7)
+    $table->string('nibar')->nullable(); // (8)
+    $table->string('nomor_register'); // (9)
+    $table->string('spesifikasi_barang')->nullable(); // (10)
+    $table->string('spesifikasi_lainnya')->nullable(); // (11)
+    $table->string('nomor_ruas_jalan_jembatan_irigasi')->nullable(); // (12)
+    $table->string('Lok'); // (13) Alamat/Lokasi Fisik
+    $table->string('titik_koordinat')->nullable(); // (14)
+    $table->string('status_kepemilikan_tanah')->nullable(); // (15)
+    $table->unsignedInteger('jumlah'); // (16)
+    $table->string('satuan'); // (17)
+    $table->decimal('harga_satuan', 15, 2); // (18)
+    $table->decimal('nilai_perolehan', 15, 2); // (19)
+    $table->string('cara_perolehan'); // (20)
+    $table->date('tanggal_perolehan'); // (21)
+    $table->string('status_penggunaan')->nullable(); // (22)
+    $table->text('keterangan')->nullable(); // (23)
+    $table->timestamps();
+});
     }
 
     /**

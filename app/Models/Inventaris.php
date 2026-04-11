@@ -4,30 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Inventaris extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'inventaris';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    // Set Primary Key ke kode_barang
+    protected $primaryKey = 'kode_barang';
+
+    // Matikan auto-increment
+    public $incrementing = false;
+
+    // Set tipe data string
+    protected $keyType = 'string';
+
     protected $fillable = [
+        'kode_barang',
         'lokasi',
-        'room_id',
+        'room_kode',
         'nibar',
         'nomor_register',
-        'kode_barang',
         'nama_barang',
         'spesifikasi_barang',
         'merk_tipe',
@@ -36,12 +34,10 @@ class Inventaris extends Model
         'satuan',
         'keterangan',
     ];
-    
-    /**
-     * Mendefinisikan relasi ke model Room.
-     */
-    public function room(): BelongsTo
+
+    // Relasi ke Room
+    public function room()
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Room::class, 'room_kode', 'kode_ruangan');
     }
 }

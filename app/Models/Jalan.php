@@ -9,48 +9,20 @@ class Jalan extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'jalans';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'lokasi',
-        'kode_barang',
-        'nama_barang',
-        'nibar',
-        'nomor_register',
-        'spesifikasi_barang',
-        'spesifikasi_lainnya',
-        'nomor_ruas_jalan_jembatan_irigasi',
-        'Lok', // Nama kolom kedua untuk lokasi (dengan 'L' kapital)
-        'titik_koordinat',
-        'status_kepemilikan_tanah',
-        'jumlah',
-        'satuan',
-        'harga_satuan',
-        'nilai_perolehan',
-        'cara_perolehan',
-        'tanggal_perolehan',
-        'status_penggunaan',
-        'keterangan',
-    ];
+    // REVISI: Primary Key menggunakan kode_barang
+    protected $primaryKey = 'kode_barang';
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'tanggal_perolehan' => 'date',
-        'harga_satuan' => 'decimal:2',
-        'nilai_perolehan' => 'decimal:2',
+    // REVISI: Matikan auto-increment karena PK adalah string
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'kode_barang', 'lokasi', 'nama_barang', 'nibar', 'nomor_register',
+        'spesifikasi_barang', 'spesifikasi_lainnya', 'nomor_ruas_jalan_jembatan_irigasi',
+        'Lok', 'titik_koordinat', 'status_kepemilikan_tanah', 'jumlah',
+        'satuan', 'harga_satuan', 'nilai_perolehan', 'cara_perolehan',
+        'tanggal_perolehan', 'status_penggunaan', 'keterangan'
     ];
 }

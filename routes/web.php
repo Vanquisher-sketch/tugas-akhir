@@ -10,7 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 
-// --- CONTROLLER DINAMIS (SATU UNTUK SEMUA) ---
+// --- CONTROLLER DINAMIS ---
 use App\Http\Controllers\TanahController;
 use App\Http\Controllers\PeralatanController;
 use App\Http\Controllers\GedungController;
@@ -21,8 +21,6 @@ use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
 use App\Http\Controllers\PajakController;
-
-// --- CONTROLLER TEST WA (Tambahan Baru) ---
 use App\Http\Controllers\TestWaController;
 
 /*
@@ -73,59 +71,54 @@ Route::middleware('auth')->group(function () {
             Route::get('export/{menu}', [ExportController::class, 'export'])->name('export.excel');
 
             // 1. Route Ruangan
+            // REVISI: Pastikan binding menggunakan kode_ruangan
             Route::get('room/print', [RoomController::class, 'print'])->name('room.print');
-            Route::resource('room', RoomController::class);
+            Route::resource('room', RoomController::class)->scoped([
+                'room' => 'kode_ruangan'
+            ]);
 
             // 2. Route Inventaris (Bersarang di Room)
-            Route::get('room/{room}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
-            Route::post('room/{room}/inventaris/{inventari}/move', [InventarisController::class, 'move'])->name('inventaris.move');
-            Route::resource('room/{room}/inventaris', InventarisController::class)->names('inventaris');
+            // REVISI: Scoped binding agar room pakai kode_ruangan & inventari pakai kode_barang
+            Route::get('room/{room:kode_ruangan}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
+            Route::post('room/{room:kode_ruangan}/inventaris/{inventari:kode_barang}/move', [InventarisController::class, 'move'])->name('inventaris.move');
+            Route::resource('room.inventaris', InventarisController::class)->scoped([
+                'room' => 'kode_ruangan',
+                'inventari' => 'kode_barang'
+            ])->names('inventaris');
 
             // 3. KIB A (Tanah)
             Route::get('tanah/print', [TanahController::class, 'print'])->name('tanah.print');
-            Route::resource('tanah', TanahController::class);
+            Route::resource('tanah', TanahController::class)->scoped(['tanah' => 'kode_barang']);
 
             // 4. KIB B (Peralatan)
             Route::get('peralatan/print', [PeralatanController::class, 'print'])->name('peralatan.print');
-            Route::resource('peralatan', PeralatanController::class);
+            Route::resource('peralatan', PeralatanController::class)->scoped(['peralatan' => 'kode_barang']);
 
             // 5. KIB C (Gedung)
             Route::get('gedung/print', [GedungController::class, 'print'])->name('gedung.print');
-            Route::resource('gedung', GedungController::class);
+            Route::resource('gedung', GedungController::class)->scoped(['gedung' => 'kode_barang']);
 
             // 6. KIB D (Jalan)
             Route::get('jalan/print', [JalanController::class, 'print'])->name('jalan.print');
-            Route::resource('jalan', JalanController::class);
+            Route::resource('jalan', JalanController::class)->scoped(['jalan' => 'kode_barang']);
 
             // 7. Aset Rusak
             Route::get('rusak/print', [RusakController::class, 'print'])->name('rusak.print');
-            Route::resource('rusak', RusakController::class);
+            Route::resource('rusak', RusakController::class)->scoped(['rusak' => 'no_id_pemda']);
 
             // 8. PENGGUNAAN BMD
             Route::get('bmd/print', [BmdController::class, 'print'])->name('bmd.print');
-            Route::resource('bmd', BmdController::class);
+            Route::resource('bmd', BmdController::class); // BMD tetap pakai ID (auto-increment)
 
             // 9. MONITORING PAJAK
             Route::get('pajak/print', [PajakController::class, 'print'])->name('pajak.print');
-            
-            // [BARU] Route khusus untuk tombol Kirim WA Reminder (Manual)
-            // Nanti di form view pajak action-nya ke route ini
             Route::post('pajak/kirim-reminder', [PajakController::class, 'kirimReminderManual'])->name('pajak.kirim_reminder');
-            
             Route::resource('pajak', PajakController::class)->only(['index', 'edit', 'update']);
         });
 });
-
 
 // --- KHUSUS UNTUK VERCEL CRON ---
 Route::get('/run-scheduler', function () {
     Artisan::call('schedule:run');
     return 'Scheduler dijalankan!';
 });
-
-
-// --- AREA TESTING & DEVELOPMENT ---
-
-// [BARU] Route Tes Koneksi WA (Hello World)
-// Akses di browser: http://localhost:8000/tes-wa
-// Route::get('/tes-wa', [TestWaController::class, 'kirimTes']);

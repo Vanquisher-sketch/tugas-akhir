@@ -9,28 +9,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tanahs', function (Blueprint $table) {
-            $table->id();
+            // REVISI: Hapus $table->id()
+            // REVISI: Jadikan kode_barang sebagai Primary Key
+            $table->string('kode_barang', 100)->primary(); // (5)
             
             // Filter Sistem (tawang, kahuripan, dll)
             $table->string('lokasi')->nullable(); 
 
             // Data Utama Sesuai KIB A
-            $table->string('kode_barang');           // (5)
-            $table->string('nama_barang');           // (6)
-            $table->string('nibar')->nullable();     // (7)
+            $table->string('nama_barang');                // (6)
+            $table->string('nibar')->nullable();          // (7)
             $table->string('nomor_register')->nullable(); // (8)
             
             $table->text('spesifikasi_barang')->nullable();  // (9) Luas M2
             $table->text('spesifikasi_lainnya')->nullable(); // (10)
             
-            // Angka-angka
-            $table->decimal('jumlah', 15, 2); // (11) Luas Tanah (Pakai decimal agar bisa koma)
+            $table->decimal('jumlah', 15, 2); // (11) Luas Tanah
             $table->string('satuan');         // (12) M2 / Ha
             
-            // Lokasi Fisik (Alamat)
-            // Hati-hati: Kolom ini bernama 'Lok' (huruf L besar)
+            // Lokasi Fisik (Alamat) - Menggunakan 'Lok' sesuai permintaanmu
             $table->text('Lok');              // (13) 
-            
             $table->string('titik_koordinat')->nullable(); // (14)
 
             // Bukti Kepemilikan
@@ -40,7 +38,7 @@ return new class extends Migration
             $table->string('nama_kepemilikan_dokumen')->nullable(); // (18)
 
             // Nilai Aset
-            $table->decimal('nilai_perolehan', 15, 2);       // (19) Wajib
+            $table->decimal('nilai_perolehan', 15, 2);       // (19)
             $table->decimal('harga_satuan', 15, 2)->nullable(); // (20)
 
             $table->string('cara_perolehan');    // (21)

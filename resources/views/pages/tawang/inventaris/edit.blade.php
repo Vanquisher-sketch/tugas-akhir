@@ -3,10 +3,12 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
+        {{-- Menampilkan Nama Ruangan sebagai konteks --}}
         <h6 class="m-0 font-weight-bold text-primary">Edit Inventaris Ruangan: {{ $room->name }}</h6>
     </div>
     <div class="card-body">
-        <form action="{{ route('lokasi.inventaris.update', ['lokasi' => $lokasi, 'room' => $room->id, 'inventari' => $inventari->id]) }}" method="POST">
+        {{-- REVISI: Parameter room menggunakan kode_ruangan, dan inventari menggunakan kode_barang --}}
+        <form action="{{ route('lokasi.inventaris.update', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan, 'inventari' => $inventari->kode_barang]) }}" method="POST">
             @csrf
             @method('PUT')
             <div class="row">
@@ -18,7 +20,9 @@
                     </div>
                     <div class="form-group">
                         <label for="kode_barang">Kode Barang</label>
-                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang', $inventari->kode_barang) }}">
+                        {{-- Field Kode Barang tetap tampil sebagai identitas utama --}}
+                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang', $inventari->kode_barang) }}" required>
+                        <small class="text-danger">Catatan: Mengubah kode barang akan memperbarui identitas unik aset ini di database.</small>
                         @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
@@ -46,7 +50,7 @@
                     </div>
                     <div class="form-group">
                         <label for="tahun_perolehan">Tahun Perolehan</label>
-                        <input type="number" class="form-control @error('tahun_perolehan') is-invalid @enderror" name="tahun_perolehan" value="{{ old('tahun_perolehan', $inventari->tahun_perolehan) }}" placeholder="Contoh: 2024">
+                        <input type="number" class="form-control @error('tahun_perolehan') is-invalid @enderror" name="tahun_perolehan" value="{{ old('tahun_perolehan', $inventari->tahun_perolehan) }}">
                         @error('tahun_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
@@ -56,7 +60,7 @@
                     </div>
                     <div class="form-group">
                         <label for="satuan">Satuan</label>
-                        <input type="text" class="form-control @error('satuan') is-invalid @enderror" name="satuan" value="{{ old('satuan', $inventari->satuan) }}" placeholder="Contoh: Buah, Unit, Set">
+                        <input type="text" class="form-control @error('satuan') is-invalid @enderror" name="satuan" value="{{ old('satuan', $inventari->satuan) }}">
                         @error('satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
@@ -67,8 +71,9 @@
                 </div>
             </div>
             <hr>
-            <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->id]) }}" class="btn btn-secondary">Batal</a>
-            <button type="submit" class="btn btn-primary">Update</button>
+            {{-- REVISI: Link Batal diarahkan kembali menggunakan kode_ruangan --}}
+            <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-secondary shadow-sm">Batal</a>
+            <button type="submit" class="btn btn-primary shadow-sm">Ubah Data Inventaris</button>
         </form>
     </div>
 </div>

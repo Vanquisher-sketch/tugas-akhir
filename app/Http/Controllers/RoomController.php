@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\User; // Import User model
-use App\Notifications\DataModificationNotification; // Import Notification class
-use Illuminate\Support\Facades\Auth; // Import Auth facade
-use Illuminate\Support\Facades\Notification; // Import Notification facade
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\DataModificationNotification;
 
 class RoomController extends Controller
 {
@@ -16,19 +16,23 @@ class RoomController extends Controller
      */
     public function index(Request $request, $lokasi)
     {
-        $search = $request->query('search');
-        $query = Room::where('lokasi', $lokasi);
+        $search = $request->get('search');
 
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('kode_ruangan', 'LIKE', "%{$search}%");
-            });
-        }
-        
-        $dataRuangan = $query->latest()->paginate(10);
-        
-        return view("pages.{$lokasi}.room.index", compact('dataRuangan', 'lokasi', 'search'));
+        $dataRuangan = Room::where('lokasi', $lokasi)
+            ->when($search, function($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('kode_ruangan', 'LIKE', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        $allRooms = Room::where('lokasi', $lokasi)
+            ->select('name')
+            ->get();
+
+        return view("pages.{$lokasi}.room.index", compact('dataRuangan', 'allRooms', 'lokasi', 'search'));
     }
 
     /**
@@ -40,26 +44,40 @@ class RoomController extends Controller
     }
 
     /**
-     * Menyimpan data ruangan yang baru dibuat ke database.
+     * Menyimpan data ruangan baru ke database.
      */
     public function store(Request $request, $lokasi)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'kode_ruangan' => 'nullable|string|max:255',
+            // Sekarang wajib unik di tabel rooms pada kolom kode_ruangan
+            'kode_ruangan' => 'nullable|string|max:50|unique:rooms,kode_ruangan',
         ]);
-        
-        $dataToStore = $request->all();
-        $dataToStore['lokasi'] = $lokasi;
-        
-        $room = Room::create($dataToStore);
 
-        // Kirim notifikasi ke Admin (1) dan Kecamatan (2)
+        // LOGIKA AUTO-GENERATE KODE (Jika user tidak mengisi di form)
+        $kode = $request->kode_ruangan;
+        if (!$kode) {
+            // Contoh: TAWANG-ADMIN-123
+            $prefix = strtoupper(substr($lokasi, 0, 3));
+            $nameSlug = strtoupper(str_replace(' ', '-', $request->name));
+            $random = rand(100, 999);
+            $kode = "{$prefix}-{$nameSlug}-{$random}";
+        }
+
+        $room = Room::create([
+            'name'         => $request->name,
+            'kode_ruangan' => $kode,
+            'lokasi'       => $lokasi,
+        ]);
+
+        // Notifikasi
         $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'ditambahkan', 'Ruangan', $room->name));
+        if ($recipients->count() > 0) {
+            Notification::send($recipients, new DataModificationNotification(Auth::user(), 'ditambahkan', 'Ruangan', $room->name));
+        }
 
         return redirect()->route('lokasi.room.index', ['lokasi' => $lokasi])
-                         ->with('success', 'Data ruangan berhasil ditambahkan.');
+                         ->with('success', "Data ruangan {$room->name} berhasil ditambahkan dengan kode: {$kode}");
     }
 
     /**
@@ -67,9 +85,11 @@ class RoomController extends Controller
      */
     public function edit($lokasi, Room $room)
     {
+        // Laravel otomatis mencari berdasarkan kode_ruangan karena sudah diset di Model
         if ($room->lokasi !== $lokasi) {
             abort(404, 'Data ruangan tidak ditemukan di lokasi ini.');
         }
+
         return view("pages.{$lokasi}.room.edit", compact('room', 'lokasi'));
     }
 
@@ -84,14 +104,19 @@ class RoomController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'kode_ruangan' => 'nullable|string|max:255',
+            // Validasi unik kecuali untuk data ini sendiri (agar bisa disave tanpa ganti kode)
+            'kode_ruangan' => "required|string|max:50|unique:rooms,kode_ruangan,{$room->kode_ruangan},kode_ruangan",
         ]);
         
-        $room->update($request->all());
+        // Update manual karena Primary Key bukan 'id'
+        $room->name = $request->name;
+        $room->kode_ruangan = $request->kode_ruangan;
+        $room->save();
 
-        // Kirim notifikasi ke Admin (1) dan Kecamatan (2)
         $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'diperbarui', 'Ruangan', $room->name));
+        if ($recipients->count() > 0) {
+            Notification::send($recipients, new DataModificationNotification(Auth::user(), 'diperbarui', 'Ruangan', $room->name));
+        }
 
         return redirect()->route('lokasi.room.index', ['lokasi' => $lokasi])
                          ->with('success', 'Data ruangan berhasil diperbarui.');
@@ -106,12 +131,13 @@ class RoomController extends Controller
             abort(404, 'Data ruangan tidak ditemukan di lokasi ini.');
         }
         
-        $roomName = $room->name; // Simpan nama sebelum dihapus
+        $roomName = $room->name; 
         $room->delete();
 
-        // Kirim notifikasi ke Admin (1) dan Kecamatan (2)
         $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'dihapus', 'Ruangan', $roomName));
+        if ($recipients->count() > 0) {
+            Notification::send($recipients, new DataModificationNotification(Auth::user(), 'dihapus', 'Ruangan', $roomName));
+        }
 
         return redirect()->route('lokasi.room.index', ['lokasi' => $lokasi])
                          ->with('success', 'Data ruangan berhasil dihapus.');
@@ -126,4 +152,3 @@ class RoomController extends Controller
         return view("pages.{$lokasi}.room.print", compact('dataRuangan', 'lokasi'));
     }
 }
-
