@@ -18,14 +18,11 @@ class InventarisController extends Controller
      */
     public function index(Request $request, $lokasi, Room $room)
     {
-        // Laravel otomatis mencari $room berdasarkan kode_ruangan karena Primary Key di Model sudah diubah
         if ($room->lokasi !== $lokasi) {
             abort(404);
         }
 
         $search = $request->query('search');
-        
-        // REVISI: Menggunakan room_kode (string) bukan room_id
         $query = Inventaris::where('room_kode', $room->kode_ruangan);
 
         if ($search) {
@@ -38,10 +35,26 @@ class InventarisController extends Controller
         }
 
         $dataInventaris = $query->latest()->paginate(10);
-        
         $allRooms = Room::where('lokasi', $lokasi)->orderBy('name')->get();
+        
+        // Daftar Satuan untuk Dropdown
+        $daftarSatuan = ['Unit', 'Buah', 'Set', 'Meter', 'Lembar', 'Paket', 'Dus', 'Pcs'];
 
-        return view("pages.{$lokasi}.inventaris.index", compact('dataInventaris', 'lokasi', 'room', 'search', 'allRooms'));
+        return view("pages.{$lokasi}.inventaris.index", compact('dataInventaris', 'lokasi', 'room', 'search', 'allRooms', 'daftarSatuan'));
+    }
+
+    /**
+     * Menampilkan form tambah inventaris (PENTING)
+     */
+    public function create($lokasi, Room $room)
+    {
+        if ($room->lokasi !== $lokasi) {
+            abort(404);
+        }
+
+        $daftarSatuan = ['Unit', 'Buah', 'Set', 'Meter', 'Lembar', 'Paket', 'Dus', 'Pcs'];
+
+        return view("pages.{$lokasi}.inventaris.create", compact('lokasi', 'room', 'daftarSatuan'));
     }
 
     /**
@@ -56,62 +69,86 @@ class InventarisController extends Controller
         $validated = $request->validate([
             'nibar'              => 'nullable|string|max:255',
             'nomor_register'     => 'nullable|string|max:255',
-            'kode_barang'        => 'required|string|max:100|unique:inventaris,kode_barang', // PK harus unik
+            'kode_barang'        => 'required|string|max:100|unique:inventaris,kode_barang', 
             'nama_barang'        => 'required|string|max:255',
             'spesifikasi_barang' => 'nullable|string',
             'merk_tipe'          => 'nullable|string|max:255',
             'tahun_perolehan'    => 'required|digits:4|integer|min:1900',
             'jumlah'             => 'required|integer|min:1',
-            'satuan'             => 'required|string|max:255',
+            'satuan'             => 'required|string|in:Unit,Buah,Set,Meter,Lembar,Paket,Dus,Pcs',
             'keterangan'         => 'nullable|string',
         ]);
 
-        // REVISI: Menggunakan room_kode
         $validated['room_kode'] = $room->kode_ruangan;
         $validated['lokasi']    = $lokasi; 
 
         $inventaris = Inventaris::create($validated);
-
-        $recipients = User::whereIn('role_id', [1, 2])->get();
-        if ($recipients->count() > 0) {
-            Notification::send($recipients, new DataModificationNotification(Auth::user(), 'ditambahkan', 'Inventaris', $inventaris->nama_barang));
-        }
+        $this->sendNotification('ditambahkan', $inventaris->nama_barang);
 
         return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])
-            ->with('success', 'Data inventaris berhasil ditambahkan.');
+            ->with('success', 'Data inventaris berhasil disimpan.');
     }
 
     /**
-     * LOGIKA MUTASI PARSIAL
+     * Menampilkan form edit inventaris (PENTING)
      */
-    public function move(Request $request, $lokasi, Room $room, Inventaris $inventari)
+    public function edit($lokasi, Room $room, Inventaris $inventari)
     {
-        // REVISI: Cek menggunakan room_kode
         if ($room->lokasi !== $lokasi || $inventari->room_kode !== $room->kode_ruangan) {
             abort(404);
         }
 
+        $daftarSatuan = ['Unit', 'Buah', 'Set', 'Meter', 'Lembar', 'Paket', 'Dus', 'Pcs'];
+
+        return view("pages.{$lokasi}.inventaris.edit", compact('lokasi', 'room', 'inventari', 'daftarSatuan'));
+    }
+
+    /**
+     * Memperbarui data inventaris.
+     */
+    public function update(Request $request, $lokasi, Room $room, Inventaris $inventari)
+    {
+        if ($room->lokasi !== $lokasi || $inventari->room_kode !== $room->kode_ruangan) { abort(404); }
+        
+        $validated = $request->validate([
+            'nibar' => 'nullable', 
+            'nomor_register' => 'nullable', 
+            'kode_barang' => 'required|string|unique:inventaris,kode_barang,' . $inventari->kode_barang . ',kode_barang',
+            'nama_barang' => 'required', 
+            'tahun_perolehan' => 'required|digits:4',
+            'jumlah' => 'required|integer|min:0', 
+            'satuan' => 'required|in:Unit,Buah,Set,Meter,Lembar,Paket,Dus,Pcs'
+        ]);
+
+        $inventari->update($validated);
+        $this->sendNotification('diperbarui', $inventari->nama_barang);
+
+        return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Data inventaris diperbarui.');
+    }
+
+    /**
+     * LOGIKA MUTASI (Pindah Barang)
+     */
+    public function move(Request $request, $lokasi, Room $room, Inventaris $inventari)
+    {
+        if ($room->lokasi !== $lokasi || $inventari->room_kode !== $room->kode_ruangan) { abort(404); }
+
         $request->validate([
-            'new_room_id' => 'required|exists:rooms,kode_ruangan', // Cek ke kolom kode_ruangan
+            'new_room_id' => 'required|exists:rooms,kode_ruangan',
             'qty_to_move' => 'required|integer|min:1',
         ]);
 
         $qtyPindah = (int) $request->qty_to_move;
-        $newRoom = Room::findOrFail($request->new_room_id);
+        $newRoom = Room::where('kode_ruangan', $request->new_room_id)->firstOrFail();
 
         if ($qtyPindah > $inventari->jumlah) {
-            return redirect()->back()->with('error', "Gagal: Jumlah pindah ($qtyPindah) melebihi stok ({$inventari->jumlah}).");
+            return redirect()->back()->with('error', "Gagal: Jumlah pindah melebihi stok.");
         }
 
         try {
             DB::transaction(function () use ($inventari, $newRoom, $qtyPindah, $lokasi) {
-                // 1. Kurangi jumlah di asal
                 $inventari->decrement('jumlah', $qtyPindah);
-
-                // 2. Cari barang dengan KODE_BARANG yang sama di ruangan tujuan
-                $targetItem = Inventaris::where('room_kode', $newRoom->kode_ruangan)
-                    ->where('kode_barang', $inventari->kode_barang)
-                    ->first();
+                $targetItem = Inventaris::where('room_kode', $newRoom->kode_ruangan)->where('kode_barang', $inventari->kode_barang)->first();
 
                 if ($targetItem) {
                     $targetItem->increment('jumlah', $qtyPindah);
@@ -128,65 +165,40 @@ class InventarisController extends Controller
                 }
             });
 
-            $recipients = User::whereIn('role_id', [1, 2])->get();
-            if ($recipients->count() > 0) {
-                Notification::send($recipients, new DataModificationNotification(
-                    Auth::user(), 
-                    "memindahkan $qtyPindah unit ke {$newRoom->name}", 
-                    'Inventaris', 
-                    $inventari->nama_barang
-                ));
-            }
-
-            return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])
-                ->with('success', "Berhasil memindahkan $qtyPindah unit ke ruangan {$newRoom->name}");
-
+            $this->sendNotification("memindahkan $qtyPindah unit ke {$newRoom->name}", $inventari->nama_barang);
+            return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Berhasil memindahkan barang.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memindahkan barang: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memindahkan barang.');
         }
     }
 
-    public function update(Request $request, $lokasi, Room $room, Inventaris $inventari)
-    {
-        if ($room->lokasi !== $lokasi || $inventari->room_kode !== $room->kode_ruangan) { abort(404); }
-        
-        $validated = $request->validate([
-            'nibar' => 'nullable', 
-            'nomor_register' => 'nullable', 
-            // Abaikan unik untuk kode_barang milik sendiri saat update
-            'kode_barang' => 'required|string|unique:inventaris,kode_barang,' . $inventari->kode_barang . ',kode_barang',
-            'nama_barang' => 'required', 
-            'tahun_perolehan' => 'required|digits:4',
-            'jumlah' => 'required|integer|min:0', 
-            'satuan' => 'required'
-        ]);
-
-        $inventari->update($validated);
-
-        return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Data diperbarui.');
-    }
-
+    /**
+     * Hapus Data (Masuk ke Arsip/Soft Delete)
+     */
     public function destroy($lokasi, Room $room, Inventaris $inventari)
     {
         if ($room->lokasi !== $lokasi || $inventari->room_kode !== $room->kode_ruangan) { abort(404); }
-        
-        $inventari->delete();
-        
-        return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Data dihapus.');
+        $namaBarang = $inventari->nama_barang;
+        $inventari->delete(); 
+        $this->sendNotification('dihapus (masuk arsip)', $namaBarang);
+        return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Data berhasil dihapus.');
     }
 
+    /**
+     * Cetak Kartu Inventaris Ruangan (KIR)
+     */
     public function print($lokasi, Room $room)
     {
-        // Pastikan keamanan lokasi dan ruangan
-        if ($room->lokasi !== $lokasi) {
-            abort(404);
-        }
-
-        // Ambil semua data inventaris di ruangan tersebut
-        $dataInventaris = Inventaris::where('room_kode', $room->kode_ruangan)
-            ->orderBy('nama_barang', 'asc')
-            ->get();
-
+        if ($room->lokasi !== $lokasi) { abort(404); }
+        $dataInventaris = Inventaris::where('room_kode', $room->kode_ruangan)->orderBy('nama_barang', 'asc')->get();
         return view("pages.{$lokasi}.inventaris.print", compact('dataInventaris', 'lokasi', 'room'));
+    }
+
+    private function sendNotification($action, $namaBarang)
+    {
+        $recipients = User::whereIn('role_id', [1, 2])->get();
+        if ($recipients->count() > 0) {
+            Notification::send($recipients, new DataModificationNotification(Auth::user(), $action, 'Inventaris', $namaBarang));
+        }
     }
 }

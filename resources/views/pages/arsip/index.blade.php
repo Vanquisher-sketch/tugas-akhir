@@ -3,10 +3,9 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Pusat Arsip Data - {{ ucfirst($lokasi) }}</h1>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Pusat Arsip Data - {{ ucfirst($lokasi) }}</h1>
     </div>
 
-    {{-- Notifikasi --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -31,7 +30,6 @@
             <div class="tab-content">
                 
                 @php
-                    // Array bantu untuk looping 7 kategori sekaligus
                     $kategoriList = [
                         ['id' => 'tab-tanah', 'data' => $arsipTanah, 'key' => 'tanah', 'active' => true],
                         ['id' => 'tab-peralatan', 'data' => $arsipPeralatan, 'key' => 'peralatan', 'active' => false],
@@ -46,7 +44,7 @@
                 @foreach($kategoriList as $kat)
                 <div class="tab-pane fade {{ $kat['active'] ? 'show active' : '' }}" id="{{ $kat['id'] }}">
                     <div class="table-responsive mt-3">
-                        <table class="table table-bordered table-hover table-sm" width="100%" cellspacing="0" style="font-size: 13px; color: #000;">
+                        <table class="table table-bordered table-hover table-sm text-dark" width="100%" cellspacing="0" style="font-size: 13px;">
                             <thead class="thead-light text-center">
                                 <tr>
                                     <th width="5%">No</th>
@@ -59,14 +57,20 @@
                             <tbody>
                                 @forelse($kat['data'] as $item)
                                     @php 
-                                        // Penentuan PK (Primary Key) otomatis
-                                        if($kat['key'] == 'rusak') $pk = $item->no_id_pemda;
-                                        elseif($kat['key'] == 'bmd' || $kat['key'] == 'inventaris') $pk = $item->id;
-                                        else $pk = $item->kode_barang;
+                                        // LOGIKA FIX: Penentuan PK agar tidak Error Missing Parameter
+                                        if($kat['key'] == 'rusak') {
+                                            $pk = $item->no_id_pemda;
+                                        } elseif($kat['key'] == 'bmd') {
+                                            $pk = $item->id;
+                                        } elseif($kat['key'] == 'inventaris') {
+                                            $pk = $item->kode_barang; // Inventaris pakai kode_barang sesuai revisi model
+                                        } else {
+                                            $pk = $item->kode_barang; // KIB A,B,C,D pakai kode_barang
+                                        }
                                     @endphp
                                     <tr>
                                         <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td class="font-weight-bold text-primary">{{ $pk }}</td>
+                                        <td class="font-weight-bold text-primary text-center">{{ $pk }}</td>
                                         <td>
                                             @if($kat['key'] == 'bmd')
                                                 Pemakaian: {{ $item->pemakai_nama }}
@@ -74,27 +78,31 @@
                                                 {{ $item->nama_barang }}
                                             @endif
                                         </td>
-                                        <td class="text-center text-muted">{{ $item->deleted_at->format('d/m/Y H:i') }}</td>
+                                        <td class="text-center text-muted">{{ $item->deleted_at->format('d/m/Y H:i:s') }}</td>
                                         <td class="text-center">
-                                            {{-- Form Pulihkan --}}
-                                            <form action="{{ route('lokasi.arsip.restore', [$lokasi, $kat['key'], $pk]) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-success py-0 px-2" title="Pulihkan">
-                                                    <i class="fas fa-undo"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            {{-- Form Hapus Permanen --}}
-                                            <form action="{{ route('lokasi.arsip.permanen', [$lokasi, $kat['key'], $pk]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus permanen data ini?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger py-0 px-2" title="Hapus Selamanya">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
+                                            @if($pk)
+                                                {{-- Tombol Pulihkan --}}
+                                                <form action="{{ route('lokasi.arsip.restore', [$lokasi, $kat['key'], $pk]) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success py-0 px-2 shadow-sm" title="Pulihkan">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
+                                                </form>
+                                                
+                                                {{-- Tombol Hapus Permanen --}}
+                                                <form action="{{ route('lokasi.arsip.permanen', [$lokasi, $kat['key'], $pk]) }}" method="POST" class="d-inline delete-form">
+                                                    @csrf @method('DELETE')
+                                                    <button type="button" class="btn btn-sm btn-danger py-0 px-2 btn-delete shadow-sm" title="Hapus Selamanya">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="badge badge-danger">ID Missing</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5" class="text-center text-muted py-4">Data arsip kosong.</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted py-4">Tidak ada data arsip di kategori ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -107,3 +115,31 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Integrasi SweetAlert2 untuk Hapus Permanen agar makin cakep
+        $('.btn-delete').on('click', function(e) {
+            e.preventDefault();
+            var form = $(this).closest('.delete-form');
+
+            Swal.fire({
+                title: 'Hapus Permanen?',
+                text: "Data ini akan hilang selamanya dari database!",
+                icon: 'error', // Ikon Error (X merah) untuk hapus permanen
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#858796',
+                confirmButtonText: 'Ya, Hapus Selamanya!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+@endpush

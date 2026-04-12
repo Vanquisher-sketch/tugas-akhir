@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id"> {{-- Diganti ke ID agar sesuai standar TA --}}
 
 <head>
     <meta charset="utf-8">
@@ -13,17 +13,21 @@
 
     <link href="{{ asset('template/css/sb-admin-2.min.css')}}" rel="stylesheet">
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
     <style>
-        /* 1. MENGATUR LEBAR SIDEBAR AGAR LEBIH LEGA */
+        /* MENGATUR LEBAR SIDEBAR AGAR LEBIH LEGA */
         @media (min-width: 768px) {
             .sidebar {
-                width: 18rem !important; /* Standar 14rem, kita naikkan ke 18rem */
+                width: 18rem !important;
             }
             .sidebar.toggled {
                 width: 6.5rem !important;
             }
             
-            /* Sidebar Tetap Diam (Sticky) */
+            /* Sidebar Sticky */
             #accordionSidebar {
                 position: sticky !important;
                 top: 0;
@@ -32,7 +36,6 @@
                 overflow-y: auto;
             }
 
-            /* Sembunyikan scrollbar sidebar agar tetap estetik */
             #accordionSidebar::-webkit-scrollbar {
                 width: 4px;
             }
@@ -42,18 +45,15 @@
             }
         }
 
-        /* 2. NAVBAR (TOPBAR) TETAP DIAM */
+        /* NAVBAR (TOPBAR) STICKY */
         .navbar.navbar-expand {
             position: sticky !important;
             top: 0;
-            right: 0;
-            left: 0;
             z-index: 1030;
             background-color: #fff;
             box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important;
         }
 
-        /* 3. PENYESUAIAN KONTEN UTAMA */
         #content-wrapper {
             display: flex;
             flex-direction: column;
@@ -61,12 +61,16 @@
             overflow-x: hidden;
         }
 
-        /* Agar teks di dalam sidebar tidak terpotong (Wrap text) */
         .sidebar .nav-item .collapse .collapse-inner .collapse-item {
             white-space: normal !important;
             word-wrap: break-word;
             line-height: 1.2;
             padding: 0.5rem 1rem;
+        }
+
+        /* 3. Penyesuaian font agar lebih ramah dibaca untuk dokumen TA */
+        body {
+            color: #2d3436;
         }
     </style>
 </head>
@@ -81,33 +85,37 @@
             <div id="content">
 
                 @include('layouts.navbar')
-                <div class="container-fluid pt-4">
+                
+                <div class="container-fluid pt-4 animate__animated animate__fadeIn"> {{-- Ditambah animasi fade-in saat ganti halaman --}}
                     @yield('content')
                 </div>
-                </div>
-            @include('layouts.footer')
+                
             </div>
+            
+            @include('layouts.footer')
+            
         </div>
+    </div>
+
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form action="/logout" method="post">
+            <form action="{{ route('logout') }}" method="post">
                 @csrf
-                @method('POST')
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Konfirmasi Logout?</h5>
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title font-weight-bold text-primary" id="exampleModalLabel">Konfirmasi Keluar</h5>
                         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">×</span>
                         </button>
                     </div>
-                    <div class="modal-body">Apakah anda yakin akan keluar dari aplikasi?</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kembali</button>
-                        <button type="submit" class="btn btn-primary">Logout</button>
+                    <div class="modal-body">Apakah Anda yakin akan keluar dari aplikasi PANDAWA?</div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary shadow-sm px-4">Keluar</button>
                     </div>
                 </div>
             </form>
@@ -120,6 +128,30 @@
     <script src="{{ asset('template/vendor/jquery-easing/jquery.easing.min.js')}}"></script>
 
     <script src="{{ asset('template/js/sb-admin-2.min.js')}}"></script>
+
+    {{-- 4. Global Script untuk SweetAlert2 Flash Messages --}}
+    @if(session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            showConfirmButton: false,
+            timer: 2000
+        });
+    </script>
+    @endif
+
+    @if(session('error'))
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Terjadi Kesalahan',
+            text: "{{ session('error') }}",
+            confirmButtonColor: '#4e73df'
+        });
+    </script>
+    @endif
 
     @stack('scripts')
 

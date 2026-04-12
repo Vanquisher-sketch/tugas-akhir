@@ -11,24 +11,21 @@ class Room extends Model
 
     protected $table = 'rooms';
 
-    /**
-     * Set Primary Key ke kode_ruangan
-     */
+    // Karena Primary Key Room juga pakai kode_ruangan (String)
     protected $primaryKey = 'kode_ruangan';
-
-    /**
-     * Matikan Auto-Increment karena Primary Key kita bukan Integer
-     */
     public $incrementing = false;
-
-    /**
-     * Set tipe data Primary Key menjadi String
-     */
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'kode_ruangan', // Sekarang ini wajib masuk fillable karena diisi manual/system
-        'lokasi',
-        'name',
-    ];
+    protected $fillable = ['kode_ruangan', 'name', 'lokasi'];
+
+    /**
+     * Relasi HasMany: Satu Ruangan memiliki Banyak Inventaris
+     */
+    public function inventaris()
+    {
+        // Parameter 1: Model tujuan
+        // Parameter 2: Foreign Key di tabel inventaris (room_kode)
+        // Parameter 3: Local Key di tabel rooms (kode_ruangan)
+        return $this->hasMany(Inventaris::class, 'room_kode', 'kode_ruangan');
+    }
 }

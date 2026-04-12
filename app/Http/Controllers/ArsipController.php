@@ -20,7 +20,6 @@ class ArsipController extends Controller
      */
     public function index($lokasi)
     {
-        // Mengambil data sampah dari setiap kategori berdasarkan lokasi
         $arsipTanah      = Tanah::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
         $arsipPeralatan   = Peralatan::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
         $arsipGedung      = Gedung::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
@@ -49,11 +48,12 @@ class ArsipController extends Controller
         $model = $this->getModel($kategori);
         $primaryKey = $this->getPrimaryKey($kategori);
 
+        // Cari data menggunakan primary key yang sudah disesuaikan
         $item = $model::where($primaryKey, $kode)->onlyTrashed()->firstOrFail();
         
         if ($item->lokasi !== $lokasi) abort(403, 'Akses ditolak.');
 
-        $item->restore(); // Memulihkan data
+        $item->restore();
 
         return redirect()->back()->with('success', 'Data berhasil dipulihkan dari arsip.');
     }
@@ -70,12 +70,12 @@ class ArsipController extends Controller
         
         if ($item->lokasi !== $lokasi) abort(403, 'Akses ditolak.');
 
-        // Jika kategori BMD dan memiliki file BAST, hapus file fisiknya
+        // Hapus file fisik jika kategori BMD
         if ($kategori == 'bmd' && $item->bast_file) {
             Storage::disk('public')->delete($item->bast_file);
         }
 
-        $item->forceDelete(); // Hapus selamanya
+        $item->forceDelete();
 
         return redirect()->back()->with('success', 'Data telah dihapus secara permanen.');
     }
@@ -101,17 +101,18 @@ class ArsipController extends Controller
      * Helper: Menentukan Primary Key (Kunci Utama) unik tiap kategori
      */
     private function getPrimaryKey($kategori) {
-        // Rusak menggunakan no_id_pemda
+        // 1. Rusak pakai no_id_pemda
         if ($kategori == 'rusak') {
             return 'no_id_pemda';
         }
         
-        // BMD dan Inventaris menggunakan ID (Auto Increment)
-        if ($kategori == 'bmd' || $kategori == 'inventaris') {
+        // 2. BMD pakai id (auto increment)
+        if ($kategori == 'bmd') {
             return 'id';
         }
 
-        // KIB A, B, C, D menggunakan kode_barang
+        // 3. Inventaris dan KIB A, B, C, D pakainya kode_barang (String)
+        // Revisi: Inventaris dilepas dari 'id' karena kita pakai kode_barang sebagai PK
         return 'kode_barang';
     }
 }

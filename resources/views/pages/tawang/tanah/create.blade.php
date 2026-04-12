@@ -1,6 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">Tambah Data Inventaris Tanah (KIB A) - {{ ucfirst($lokasi) }}</h6>
@@ -46,6 +55,19 @@
 
                 {{-- Kolom Kanan --}}
                 <div class="col-md-6">
+                    <div class="form-group">
+    <label>Cara Perolehan <span class="text-danger">*</span></label>
+    <select name="cara_perolehan" class="form-control @error('cara_perolehan') is-invalid @enderror" required>
+        <option value="">-- Pilih Cara Perolehan --</option>
+        <option value="Pembelian" {{ old('cara_perolehan') == 'Pembelian' ? 'selected' : '' }}>Pembelian</option>
+        <option value="Hibah" {{ old('cara_perolehan') == 'Hibah' ? 'selected' : '' }}>Hibah</option>
+        <option value="Tukar Menukar" {{ old('cara_perolehan') == 'Tukar Menukar' ? 'selected' : '' }}>Tukar Menukar</option>
+        <option value="Lainnya" {{ old('cara_perolehan') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+    </select>
+    @error('cara_perolehan')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
                     <div class="form-group">
                         <label for="nilai_perolehan">Nilai Perolehan (Rp) <span class="text-danger">*</span></label>
                         <input type="text" class="form-control money @error('nilai_perolehan') is-invalid @enderror" id="nilai_perolehan" name="nilai_perolehan" value="{{ old('nilai_perolehan') }}" required>
