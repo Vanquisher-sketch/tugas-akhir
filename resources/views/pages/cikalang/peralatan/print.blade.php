@@ -2,83 +2,94 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Cetak Data Peralatan & Mesin - {{ ucfirst($lokasi) }}</title>
+    <title>KIB B - {{ ucfirst($lokasi) }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body { font-size: 9pt; }
-        .table th, .table td { padding: 0.2rem; vertical-align: middle; border: 1px solid #000 !important; }
-        .header-table td { border: none !important; padding: 0; }
+        @page { size: A4 landscape; margin: 1cm; }
+        body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
+        .table-bordered th, .table-bordered td { border: 1px solid #000 !important; vertical-align: middle; padding: 3px; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .signature-block { margin-top: 40px; }
-        .signature-block .signer { margin-top: 50px; }
-        @page { size: A4 landscape; margin: 1cm; }
+        .header-info td { border: none !important; padding: 0; font-weight: bold; }
     </style>
 </head>
 <body onload="window.print()">
-
     <div class="container-fluid">
-        <h6 class="text-center font-weight-bold">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
-        <h6 class="text-center font-weight-bold">PERALATAN DAN MESIN</h6>
+        <h6 class="text-center font-weight-bold mb-0">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
+        <h6 class="text-center font-weight-bold mb-4">PERALATAN DAN MESIN (KIB B)</h6>
         
-        <table class="table header-table mt-4" style="width: 50%;">
-             <tbody>
-                <tr><td><b>Kuasa Pengguna Barang</b></td><td>: ............................................</td></tr>
-                <tr><td><b>Kode Lokasi</b></td><td>: ............................................</td></tr>
-                <tr><td><b>PROVINSI/KABUPATEN/KOTA</b></td><td>: ............................................</td></tr>
-                <tr><td><b>TAHUN</b></td><td>: {{ date('Y') }}</td></tr>
-            </tbody>
+        <table class="header-info mb-3" style="width: 40%;">
+            <tr><td width="150">Lokasi</td><td>: {{ strtoupper($lokasi) }}</td></tr>
+            <tr><td>Kabupaten/Kota</td><td>: TASIKMALAYA</td></tr>
+            <tr><td>Tahun</td><td>: {{ date('Y') }}</td></tr>
         </table>
 
-        <table class="table table-bordered mt-3">
-            <thead class="text-center">
+        <table class="table table-bordered">
+            <thead class="text-center bg-light">
                 <tr>
                     <th rowspan="2">No</th>
                     <th rowspan="2">Kode Barang</th>
                     <th rowspan="2">Nama Barang</th>
-                    <th rowspan="2">NIBAR</th>
-                    <th rowspan="2">Nomor Register</th>
-                    <th colspan="3">Spesifikasi Barang</th>
-                    <th colspan="4">Kendaraan (Diisi*)</th>
-                    <th rowspan="2">Jumlah</th>
+                    <th rowspan="2">NIBR</th>
+                    <th rowspan="2">Register</th>
+                    <th colspan="2">Spesifikasi</th>
+                    <th colspan="3">Nomor Kendaraan</th>
+                    <th rowspan="2">Jml</th>
                     <th rowspan="2">Satuan</th>
-                    <th rowspan="2">Harga Satuan (Rp)</th>
-                    <th rowspan="2">Nilai Perolehan (Rp)</th>
-                    <th rowspan="2">Cara Perolehan</th>
+                    <th rowspan="2">Harga Perolehan (Rp)</th>
                     <th rowspan="2">Tgl Perolehan</th>
-                    <th rowspan="2">Status Penggunaan</th>
                     <th rowspan="2">Keterangan</th>
                 </tr>
                 <tr>
-                    <th>Merek/Tipe</th><th>Ukuran</th><th>Lainnya</th><th>No. Rangka</th><th>No. Mesin</th><th>No. Polisi</th><th>BPKB</th>
-                </tr>
-                 <tr>
-                    @for ($i = 1; $i <= 20; $i++) {{-- Menyesuaikan dengan jumlah kolom data --}}
-                        <th>({{ $i+5 }})</th> {{-- Nomor kolom dimulai dari (6) --}}
-                    @endfor
+                    <th>Merk/Tipe</th>
+                    <th>Lainnya</th>
+                    <th>Polisi</th>
+                    <th>Rangka</th>
+                    <th>BPKB</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($dataPeralatan as $index => $item)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $item->kode_barang }}</td><td>{{ $item->nama_barang }}</td><td>{{ $item->nibar }}</td><td>{{ $item->nomor_register }}</td><td>{{ $item->merek_tipe }}</td><td>{{ $item->ukuran }}</td><td>{{ $item->spesifikasi_lainnya }}</td><td>{{ $item->nomor_rangka }}</td><td>{{ $item->nomor_mesin }}</td><td>{{ $item->nomor_polisi }}</td><td>{{ $item->nomor_bpkb }}</td><td class="text-center">{{ $item->jumlah }}</td><td>{{ $item->satuan }}</td><td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td><td class="text-right">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td><td>{{ $item->cara_perolehan }}</td><td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '' }}</td><td>{{ $item->status_penggunaan }}</td><td>{{ $item->keterangan }}</td>
+                    <td>{{ $item->kode_barang }}</td>
+                    <td>{{ $item->nama_barang }}</td>
+                    <td>{{ $item->nibr }}</td>
+                    <td>{{ $item->nomor_register }}</td>
+                    <td>{{ $item->merk_tipe }}</td>
+                    <td>{{ $item->spesifikasi_lainnya }}</td>
+                    <td class="text-center">{{ $item->nomor_polisi }}</td>
+                    <td><small>{{ $item->nomor_rangka }}</small></td>
+                    <td>{{ $item->nomor_bpkb }}</td>
+                    <td class="text-center">{{ $item->jumlah }}</td>
+                    <td>{{ $item->satuan }}</td>
+                    <td class="text-right">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
+                    <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '' }}</td>
+                    <td>{{ $item->keterangan }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="20" class="text-center">Belum ada data.</td></tr>
+                <tr><td colspan="15" class="text-center">Data Kosong</td></tr>
                 @endforelse
             </tbody>
+            <tfoot class="font-weight-bold">
+                <tr>
+                    <td colspan="12" class="text-right">TOTAL</td>
+                    <td class="text-right">{{ number_format($dataPeralatan->sum('nilai_perolehan'), 0, ',', '.') }}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
         </table>
 
-        <div class="row signature-block">
+        <div class="row mt-5">
             <div class="col-8"></div>
             <div class="col-4 text-center">
-                <p>{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
+                <p>Tasikmalaya, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
                 <p>Kuasa Pengguna Barang</p>
-                <div class="signer"><p class="font-weight-bold"><u>............................................</u></p><p>NIP. ............................................</p></div>
+                <br><br><br>
+                <p class="font-weight-bold"><u>............................................</u></p>
+                <p>NIP. ............................................</p>
             </div>
         </div>
     </div>
-
 </body>
 </html>

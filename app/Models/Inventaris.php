@@ -4,22 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Inventaris extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory; // 🌟 PASTIKAN DI SINI SUDAH TIDAK ADA LAGI "use SoftDeletes;"
 
-    protected $table = 'inventaris';
-
-    // Set Primary Key ke kode_barang
+    // Tentukan Primary Key karena bukan pakai 'id' auto-increment
     protected $primaryKey = 'kode_barang';
-
-    // Matikan auto-increment
     public $incrementing = false;
-
-    // Set tipe data string
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -34,12 +26,7 @@ class Inventaris extends Model
         'tahun_perolehan',
         'jumlah',
         'satuan',
-        'keterangan',
+        'kondisi', // 🌟 Tetap masukkan fillable agar dibaca controller
+        'keterangan'
     ];
-
-    // Relasi ke Room
-    public function room()
-    {
-        return $this->belongsTo(Room::class, 'room_kode', 'kode_ruangan');
-    }
 }

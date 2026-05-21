@@ -13,18 +13,18 @@ class Peralatan extends Model
 
     protected $table = 'peralatans';
 
-    // REVISI: Set Primary Key ke kode_barang
+    // Set Primary Key ke kode_barang
     protected $primaryKey = 'kode_barang';
 
-    // REVISI: Matikan auto-increment karena PK adalah string
+    // Matikan auto-increment karena PK adalah string
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'kode_barang', 'lokasi', 'nama_barang', 'nibar', 'nomor_register',
+        'kode_barang', 'lokasi', 'nama_barang', 'nibr', 'nomor_register',
         'spesifikasi_barang', 'merk_tipe', 'Lok', 'spesifikasi_lainnya',
-        'nomor_polisi', 'nomor_rangka', 'nomor_bpkb', 'jumlah', 'satuan',
-        'harga_satuan', 'nilai_perolehan', 'cara_perolehan', 
-        'tanggal_perolehan', 'status_penggunaan', 'keterangan'
+        'nomor_polisi', 'tanggal_pajak', 'tanggal_stnk', 'nomor_rangka', 'nomor_bpkb', 
+        'jumlah', 'satuan', 'harga_satuan', 'nilai_perolehan', 'cara_perolehan', 
+        'tanggal_perolehan', 'status_penggunaan', 'kondisi', 'keterangan'
     ];
 }

@@ -3,136 +3,137 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rusak;
+use App\Models\Peralatan;
+use App\Models\Inventaris;
 use App\Models\User;
 use App\Notifications\DataModificationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Validator;
 
 class RusakController extends Controller
 {
+    /**
+     * Tampilkan Jurnal Kerusakan Lintas Modul (VERSI FIX PAGINATION)
+     */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
-        $query = Rusak::where('lokasi', $lokasi);
+        
+        // 1. Ambil data dasar dari jurnal rusak berdasarkan lokasi wilayah
+        $jurnalRusak = Rusak::where('lokasi', $lokasi)->get();
 
+        // 2. Mapping data secara live menggunakan paduan kolom 'kode_barang'
+        $mappedData = $jurnalRusak->map(function ($item) use ($lokasi) {
+            $detail = null;
+
+            if ($item->jenis_asal === 'Peralatan') {
+                $detail = Peralatan::where('lokasi', $lokasi)->where('kode_barang', $item->kode_barang)->first();
+                $item->nama_barang = $detail->nama_barang ?? 'Aset Telah Diarsip';
+                $item->spesifikasi = $detail->merk_tipe ?? '-';
+                $item->no_polisi = $detail->nomor_polisi ?? '-';
+                $item->tahun_perolehan = $detail->tahun_perolehan ?? '-';
+                $item->harga_perolehan = $detail->harga_perolehan ?? 0;
+            } elseif ($item->jenis_asal === 'Inventaris') {
+                $detail = Inventaris::where('kode_barang', $item->kode_barang)->first();
+                $item->nama_barang = $detail->nama_barang ?? 'Aset Telah Diarsip';
+                $item->spesifikasi = 'Inventaris Ruangan';
+                $item->no_polisi = '-';
+                $item->tahun_perolehan = $detail->tahun_perolehan ?? '-';
+                $item->harga_perolehan = $detail->harga_perolehan ?? 0;
+            }
+
+            return $item;
+        });
+
+        // 3. Filter fitur pencarian jika admin mengetikkan keyword
         if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('no_id_pemda', 'LIKE', "%{$search}%")
-                  ->orWhere('spesifikasi', 'LIKE', "%{$search}%")
-                  ->orWhere('no_polisi', 'LIKE', "%{$search}%");
+            $mappedData = $mappedData->filter(function ($item) use ($search) {
+                return false !== stripos($item->nama_barang, $search) || 
+                       false !== stripos($item->kode_barang, $search) ||
+                       false !== stripos($item->keterangan, $search);
             });
         }
+
+        // 🌟 FIX EROR: Reset index collection setelah di-filter agar berurutan kembali (0, 1, 2...)
+        $cleanCollection = $mappedData->values();
+
+        // 4. Integrasikan ke dalam LengthAwarePaginator manual
+        $perPage = 10;
+        $page = $request->query('page', 1);
         
-        $dataRusak = $query->latest('updated_at')->paginate(10);
+        $dataRusak = new \Illuminate\Pagination\LengthAwarePaginator(
+            $cleanCollection->forPage($page, $perPage),
+            $cleanCollection->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         return view("pages.{$lokasi}.rusak.index", compact('dataRusak', 'lokasi', 'search'));
     }
 
     /**
-     * Fitur Saran Pencarian (Autocomplete)
+     * Selesai Perbaikan (Destroy)
+     * Mengeluarkan aset dari daftar rusak & memulihkan kondisi fisik asal menjadi Baik
      */
-    public function autocomplete(Request $request, $lokasi)
+    public function destroy($lokasi, $id)
     {
-        $search = $request->query('term');
-        $results = Rusak::where('lokasi', $lokasi)
-            ->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('no_id_pemda', 'LIKE', "%{$search}%");
-            })
-            ->limit(5)
-            ->get(['nama_barang as label', 'no_id_pemda as value']);
-
-        return response()->json($results);
-    }
-
-    public function create($lokasi)
-    {
-        return view("pages.{$lokasi}.rusak.create", compact('lokasi'));
-    }
-
-    public function store(Request $request, $lokasi)
-    {
-        $inputs = $request->all();
-        if (isset($inputs['harga_perolehan'])) {
-            $cleanValue = str_replace('.', '', $inputs['harga_perolehan']);
-            $inputs['harga_perolehan'] = str_replace(',', '.', $cleanValue);
-        }
-        $request->replace($inputs);
-
-        $validator = Validator::make($request->all(), [
-            'no_id_pemda'     => 'required|string|max:100|unique:rusaks,no_id_pemda',
-            'nama_barang'     => 'required|string|max:255',
-            'tahun_perolehan' => 'required|digits:4',
-            'harga_perolehan' => 'required|numeric|min:0',
-            'kondisi'         => 'required|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        $rusak = Rusak::where('lokasi', $lokasi)->findOrFail($id);
         
-        $dataToStore = $validator->validated();
-        $dataToStore['lokasi'] = $lokasi;
-        $rusak = Rusak::create($dataToStore);
-
-        $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'ditambahkan', 'Barang Rusak', $rusak->nama_barang));
-
-        return redirect()->route('lokasi.rusak.index', ['lokasi' => $lokasi])->with('success', 'Data berhasil ditambahkan.');
-    }
-
-    public function edit($lokasi, Rusak $rusak)
-    {
-        if ($rusak->lokasi !== $lokasi) abort(404);
-        return view("pages.{$lokasi}.rusak.edit", compact('rusak', 'lokasi'));
-    }
-
-    public function update(Request $request, $lokasi, Rusak $rusak)
-    {
-        if ($rusak->lokasi !== $lokasi) abort(404);
-
-        $inputs = $request->all();
-        if (isset($inputs['harga_perolehan'])) {
-            $cleanValue = str_replace('.', '', $inputs['harga_perolehan']);
-            $inputs['harga_perolehan'] = str_replace(',', '.', $cleanValue);
+        // Ambil nama barang dari mapping dinamis sebelum data jurnalnya dihapus
+        $itemName = 'Aset';
+        if ($rusak->jenis_asal === 'Peralatan') {
+            $detail = Peralatan::where('lokasi', $lokasi)->where('kode_barang', $rusak->kode_barang)->first();
+            $itemName = $detail->nama_barang ?? 'Aset Peralatan';
+            
+            // Kembalikan status ke 'Baik' dan kosongkan deskripsi keterangan kerusakan
+            Peralatan::where('lokasi', $lokasi)->where('kode_barang', $rusak->kode_barang)->update(['kondisi' => 'Baik', 'keterangan' => null]);
+        } elseif ($rusak->jenis_asal === 'Inventaris') {
+            $detail = Inventaris::where('kode_barang', $rusak->kode_barang)->first();
+            $itemName = $detail->nama_barang ?? 'Aset Inventaris';
+            
+            Inventaris::where('kode_barang', $rusak->kode_barang)->update(['kondisi' => 'Baik', 'keterangan' => null]);
         }
-        $request->replace($inputs);
 
-        $validator = Validator::make($request->all(), [
-            'no_id_pemda'     => "required|string|max:100|unique:rusaks,no_id_pemda,{$rusak->no_id_pemda},no_id_pemda",
-            'nama_barang'     => 'required|string|max:255',
-            'harga_perolehan' => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-        
-        $rusak->update($validator->validated());
-
-        $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'diperbarui', 'Barang Rusak', $rusak->nama_barang));
-
-        return redirect()->route('lokasi.rusak.index', ['lokasi' => $lokasi])->with('success', 'Data berhasil diperbarui.');
-    }
-
-    public function destroy($lokasi, Rusak $rusak)
-    {
-        if ($rusak->lokasi !== $lokasi) abort(404);
-        $itemName = $rusak->nama_barang;
         $rusak->delete();
 
+        // Kirim log notifikasi modifikasi data ke admin pusat/super admin
         $recipients = User::whereIn('role_id', [1, 2])->get();
-        Notification::send($recipients, new DataModificationNotification(Auth::user(), 'dihapus', 'Barang Rusak', $itemName));
+        if (class_exists(\App\Notifications\DataModificationNotification::class)) {
+            Notification::send($recipients, new DataModificationNotification(Auth::user(), 'dihapus', 'Barang Rusak', $itemName));
+        }
 
-        return redirect()->route('lokasi.rusak.index', ['lokasi' => $lokasi])->with('success', 'Data berhasil dihapus.');
+        return redirect()->route('lokasi.rusak.index', ['lokasi' => $lokasi])
+                         ->with('success', "Barang {$itemName} selesai diperbaiki. Status kondisi di modul asal kembali dipulihkan ke status Baik.");
     }
 
+    /**
+     * Cetak Laporan PDF Jurnal Kerusakan
+     */
     public function print($lokasi)
     {
-        $dataRusak = Rusak::where('lokasi', $lokasi)->latest('updated_at')->get();
+        $jurnalRusak = Rusak::where('lokasi', $lokasi)->get();
+        
+        $dataRusak = $jurnalRusak->map(function ($item) use ($lokasi) {
+            if ($item->jenis_asal === 'Peralatan') {
+                $detail = Peralatan::where('lokasi', $lokasi)->where('kode_barang', $item->kode_barang)->first();
+                $item->nama_barang = $detail->nama_barang ?? 'Aset Diarsip';
+                $item->spesifikasi = $detail->merk_tipe ?? '-';
+                $item->no_polisi = $detail->nomor_polisi ?? '-';
+                $item->tahun_perolehan = $detail->tahun_perolehan ?? '-';
+                $item->harga_perolehan = $detail->harga_perolehan ?? 0;
+            } else {
+                $detail = Inventaris::where('kode_barang', $item->kode_barang)->first();
+                $item->nama_barang = $detail->nama_barang ?? 'Aset Diarsip';
+                $item->spesifikasi = 'Inventaris Ruangan';
+                $item->no_polisi = '-';
+                $item->tahun_perolehan = $detail->tahun_perolehan ?? '-';
+                $item->harga_perolehan = $detail->harga_perolehan ?? 0;
+            }
+            return $item;
+        });
+
         return view("pages.{$lokasi}.rusak.print", compact('dataRusak', 'lokasi'));
     }
 }

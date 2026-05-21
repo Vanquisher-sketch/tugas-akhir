@@ -4,34 +4,55 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bmd extends Model
 {
     use HasFactory;
-    use SoftDeletes;
 
     protected $table = 'bmds';
 
-    // BMD tetap menggunakan ID auto-increment sebagai Primary Key 
-    // karena satu Barang (Kode) bisa punya banyak riwayat pemakai.
-    protected $primaryKey = 'id';
-
+    // Daftarkan semua kolom sesuai dengan revisi migration terbaru
     protected $fillable = [
-        'peralatan_kode', 'lokasi', 'alamat_penggunaan', 'pemakai_nama',
-        'pemakai_status', 'pemakai_jabatan', 'pemakai_identitas', 
-        'pemakai_alamat', 'nomor_pemakai', 'nomor_bendahara', 
-        'tanggal_pajak', 'tanggal_stnk', 'bast_nomor', 'bast_tanggal', 
-        'bast_file', 'dokumen_lain_nama', 'dokumen_lain_nomor', 
-        'dokumen_lain_tanggal', 'keterangan'
+        'peralatan_kode',
+        'pegawai_id',
+        'bendahara_id',
+        'lokasi',
+        'alamat_penggunaan',
+        'pemakai_status',
+        'pemakai_identitas',
+        'bast_nomor',
+        'bast_tanggal',
+        'bast_file',
+        'dokumen_lain_nama',
+        'dokumen_lain_nomor',
+        'dokumen_lain_tanggal',
+        'keterangan'
     ];
 
     /**
-     * Relasi ke Peralatan (KIB B)
-     * Menghubungkan peralatan_kode di tabel bmds ke kode_barang di tabel peralatans
+     * 🌟 RELASI KE KIB B (Peralatan)
+     * BMD ini terhubung ke satu Peralatan berdasarkan 'peralatan_kode'
      */
     public function peralatan()
     {
         return $this->belongsTo(Peralatan::class, 'peralatan_kode', 'kode_barang');
+    }
+
+    /**
+     * 🌟 RELASI KE PEGAWAI (Sebagai Pemakai / Pihak Kedua)
+     * BMD ini dipakai oleh satu Pegawai berdasarkan 'pegawai_id'
+     */
+    public function pegawai()
+    {
+        return $this->belongsTo(Pegawai::class, 'pegawai_id', 'id');
+    }
+
+    /**
+     * 🌟 RELASI KE PEGAWAI (Sebagai Bendahara / Pihak Pertama)
+     * BMD ini diserahkan oleh satu Bendahara berdasarkan 'bendahara_id'
+     */
+    public function bendahara()
+    {
+        return $this->belongsTo(Pegawai::class, 'bendahara_id', 'id');
     }
 }

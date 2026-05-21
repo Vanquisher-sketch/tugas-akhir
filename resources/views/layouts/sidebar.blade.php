@@ -26,9 +26,9 @@
         }
     }
 
-    // Mendapatkan lokasi saat ini dari URL untuk link Arsip
+    // Mendapatkan lokasi saat ini dari URL untuk link Arsip dan Pegawai 🌟
     $currentLokasi = request()->segment(1); 
-    // Jika di dashboard atau root, default ke tawang (atau sesuaikan logika dashboard kamu)
+    // Jika di dashboard atau halaman luar, default ke 'tawang'
     if(in_array($currentLokasi, ['dashboard', 'user', 'profile', 'notifications', ''])) {
         $currentLokasi = 'tawang'; 
     }
@@ -156,13 +156,21 @@
     {{-- BAGIAN SISTEM KEAMANAN & ADMIN --}}
     {{-- ============================================================ --}}
     <hr class="sidebar-divider">
-    <div class="sidebar-heading">Sistem & Keamanan</div>
+    <div class="sidebar-heading">Administrasi </div>
 
-    {{-- MENU ARSIP (Baru) --}}
+    {{-- MENU ARSIP --}}
     <li class="nav-item {{ request()->is('*/arsip*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('lokasi.arsip.index', ['lokasi' => $currentLokasi]) }}">
             <i class="fas fa-fw fa-archive"></i>
             <span>Pusat Arsip</span>
+        </a>
+    </li>
+
+    {{-- 🌟 MENU DATA PEGAWAI (Ditaruh Terpusat Di Sini) 🌟 --}}
+    <li class="nav-item {{ request()->is('*/pegawai*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('lokasi.pegawai.index', ['lokasi' => $currentLokasi]) }}">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Data Pegawai</span>
         </a>
     </li>
 

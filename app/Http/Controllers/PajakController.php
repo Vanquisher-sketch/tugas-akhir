@@ -2,37 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Peralatan;
 use App\Models\Bmd;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class PajakController extends Controller
 {
     /**
-     * MENAMPILKAN DATA (INDEX)
-     * Menampilkan daftar aset dari tabel BMD untuk dimonitor pajaknya.
+     * MENAMPILKAN DATA (INDEX) - OTOMATIS PATROLI REAL-TIME 🌟
+     * Menampilkan daftar kendaraan yang pajaknya sudah dekat tempo (< 30 hari) atau sudah lewat.
      */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
+        $hariIni = Carbon::today();
+        $batasPeringatan = Carbon::today()->addDays(30);
 
-        // Optimasi Query dengan 'when'
-        $pajaks = Bmd::with('peralatan')
-            ->where('lokasi', $lokasi)
+        // Ambil data kendaraan dari tabel peralatans yang pajaknya kritis
+        $pajaks = Peralatan::where('lokasi', $lokasi)
+            ->whereNotNull('nomor_polisi')
+            ->whereNotNull('tanggal_pajak')
+            ->where(function ($query) use ($hariIni, $batasPeringatan) {
+                // Kondisi 1: Sudah lewat jatuh tempo (Pajak Mati)
+                $query->where('tanggal_pajak', '<=', $hariIni)
+                // Kondisi 2: Dekat jatuh tempo (Kurang dari atau sama dengan 30 hari lagi)
+                      ->orWhereBetween('tanggal_pajak', [$hariIni, $batasPeringatan]);
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('pemakai_nama', 'LIKE', "%{$search}%")
-                      ->orWhere('nomor_pemakai', 'LIKE', "%{$search}%")   // Cari via No HP Pemakai
-                      ->orWhere('nomor_bendahara', 'LIKE', "%{$search}%") // Cari via No HP Bendahara
-                      ->orWhereHas('peralatan', function ($subQ) use ($search) {
-                          $subQ->where('nama_barang', 'LIKE', "%{$search}%")
-                               ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                               ->orWhere('nibr', 'LIKE', "%{$search}%");
-                      });
+                    $q->where('nama_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('kode_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('nomor_polisi', 'LIKE', "%{$search}%")
+                      ->orWhere('merk_tipe', 'LIKE', "%{$search}%");
                 });
             })
-            ->latest() // Mengurutkan berdasarkan update terakhir
+            ->orderBy('tanggal_pajak', 'asc') // Urutkan dari yang paling darurat / kritis duluan
             ->paginate(10)
             ->withQueryString(); 
         
@@ -40,73 +47,72 @@ class PajakController extends Controller
     }
 
     /**
-     * FORM EDIT (Hanya untuk Update Kontak & Tanggal)
+     * FORM EDIT (Update Tanggal Pajak Langsung ke Aset Peralatan)
      */
     public function edit($lokasi, $id)
     {
-        // Cari data BMD berdasarkan ID dan Lokasi (Security check)
-        $pajak = Bmd::with('peralatan')
-                    ->where('lokasi', $lokasi)
-                    ->findOrFail($id);
+        // $id di sini adalah kode_barang milik Peralatan
+        $pajak = Peralatan::where('lokasi', $lokasi)
+                          ->findOrFail($id);
 
         return view("pages.{$lokasi}.pajak.edit", compact('pajak', 'lokasi'));
     }
 
     /**
-     * PROSES UPDATE
-     * Mengupdate nomor HP dan DUA JENIS TANGGAL (Pajak Tahunan & STNK 5 Tahunan)
+     * PROSES UPDATE (Sinkronisasi Data Legalitas Pajak Terbaru)
      */
     public function update(Request $request, $lokasi, $id)
     {
-        // 1. Validasi Input
-        // [REVISI] Menambahkan validasi untuk 'tanggal_stnk'
+        // 1. Validasi Input Tanggal Pajak Baru
         $validated = $request->validate([
-            'nomor_pemakai'   => 'nullable|numeric|digits_between:10,15',
-            'nomor_bendahara' => 'nullable|numeric|digits_between:10,15',
-            'tanggal_pajak'   => 'nullable|date', // Pajak Tahunan
-            'tanggal_stnk'    => 'nullable|date', // Pajak 5 Tahunan (Ganti Kaleng)
+            'tanggal_pajak'   => 'required|date', // Pajak Tahunan wajib diupdate
+            'tanggal_stnk'    => 'nullable|date', // Pajak 5 Tahunan
         ]);
 
-        // 2. Security Check & Retrieve Data
-        $bmd = Bmd::where('lokasi', $lokasi)->findOrFail($id);
+        // 2. Ambil data aset Peralatan
+        $peralatan = Peralatan::where('lokasi', $lokasi)->findOrFail($id);
 
-        // 3. Proses Update dengan Transaction & Try-Catch
         DB::beginTransaction();
-
         try {
-            $bmd->update([
-                'nomor_pemakai'   => $validated['nomor_pemakai'],
-                'nomor_bendahara' => $validated['nomor_bendahara'],
-                'tanggal_pajak'   => $validated['tanggal_pajak'], // Simpan Tgl Pajak Tahunan
-                'tanggal_stnk'    => $validated['tanggal_stnk'],  // [BARU] Simpan Tgl Ganti Kaleng
+            // 3. Update data legalitas langsung di tabel peralatans
+            $peralatan->update([
+                'tanggal_pajak'   => $validated['tanggal_pajak'],
+                'tanggal_stnk'    => $validated['tanggal_stnk'] ?? $peralatan->tanggal_stnk,
             ]);
 
             DB::commit();
 
             return redirect()->route('lokasi.pajak.index', $lokasi)
-                             ->with('success', 'Data Kontak, Pajak Tahunan, dan STNK berhasil diperbarui.');
+                             ->with('success', 'Data tanggal perpanjangan Pajak dan STNK kendaraan berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Update Pajak BMD: " . $e->getMessage());
+            Log::error("Error Update Pajak Peralatan: " . $e->getMessage());
             
             return redirect()->back()
                              ->withInput()
-                             ->with('error', 'Gagal memperbarui data pajak. Silakan coba lagi.');
+                             ->with('error', 'Gagal memperbarui data tanggal pajak kendaraan.');
         }
     }
 
     /**
-     * HALAMAN PRINT (Cetak Laporan)
-     * Menampilkan semua data tanpa pagination untuk dicetak browser/PDF.
+     * HALAMAN PRINT (Cetak Laporan Pajak Kritis)
      */
     public function print($lokasi)
     {
-        // Ambil SEMUA data (get) tanpa pagination
-        $pajaks = Bmd::with('peralatan')
-                    ->where('lokasi', $lokasi)
-                    ->latest() // Urutkan dari yang terbaru atau bisa ->orderBy('tanggal_pajak', 'asc')
-                    ->get();
+        $hariIni = Carbon::today();
+        $batasPeringatan = Carbon::today()->addDays(30);
+
+        // Menampilkan seluruh kendaraan kritis untuk dicetak
+        $pajaks = Peralatan::where('lokasi', $lokasi)
+            ->whereNotNull('nomor_polisi')
+            ->whereNotNull('tanggal_pajak')
+            ->where(function ($query) use ($hariIni, $batasPeringatan) {
+                $query->where('tanggal_pajak', '<=', $hariIni)
+                      ->orWhereBetween('tanggal_pajak', [$hariIni, $batasPeringatan]);
+            })
+            ->orderBy('tanggal_pajak', 'asc')
+            ->get();
 
         return view("pages.{$lokasi}.pajak.print", compact('pajaks', 'lokasi'));
     }

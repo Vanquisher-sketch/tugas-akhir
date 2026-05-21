@@ -34,49 +34,73 @@
             <table class="table table-bordered table-hover" width="100%" cellspacing="0" style="font-size: 0.75rem; color: #000;">
                 <thead class="thead-light text-center">
                     <tr>
-                        <th rowspan="2">No</th>
-                        <th rowspan="2">Nama Barang</th>
-                        <th rowspan="2">Kode Barang</th>
-                        <th rowspan="2">Lokasi Penggunaan</th>
+                        <th rowspan="2" class="align-middle">No</th>
+                        <th rowspan="2" class="align-middle">Nama Barang</th>
+                        <th rowspan="2" class="align-middle">Kode Barang</th>
+                        <th rowspan="2" class="align-middle">Lokasi Penggunaan</th>
                         <th colspan="2">Data Pemakai</th>
                         <th colspan="2">Dokumen BAST</th>
-                        <th rowspan="2">Status Pajak</th>
-                        <th rowspan="2">Aksi</th>
+                        <th rowspan="2" class="align-middle">Status Pajak (Aset)</th> {{-- 🌟 Sinkron dari Tabel Peralatan --}}
+                        <th rowspan="2" class="align-middle">Aksi</th>
                     </tr>
                     <tr>
                         <th>Nama</th>
-                        <th>Identitas</th>
-                        <th>Nomor</th>
-                        <th>File</th>
+                        <th>Identitas / Jabatan</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($bmds as $item)
                     <tr>
-                        <td class="text-center">{{ $loop->iteration }}</td>
-                        <td class="font-weight-bold">{{ $item->peralatan->nama_barang ?? '-' }}</td>
-                        <td>{{ $item->peralatan_kode }}</td>
-                        <td>{{ $item->alamat_penggunaan }}</td>
-                        <td>{{ $item->pemakai_nama }}</td>
-                        <td><small>{{ $item->pemakai_identitas }}</small></td>
-                        <td>{{ $item->bast_nomor ?? '-' }}</td>
-                        <td class="text-center">
-                            @if($item->bast_file)
-                                <a href="{{ asset('storage/' . $item->bast_file) }}" target="_blank" class="btn btn-sm btn-info btn-circle"><i class="fas fa-file-pdf"></i></a>
-                            @else - @endif
+                        <td class="text-center align-middle">{{ $loop->iteration }}</td>
+                        <td class="font-weight-bold align-middle">{{ $item->peralatan->nama_barang ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->peralatan_kode }}</td>
+                        <td class="align-middle">{{ $item->alamat_penggunaan }}</td>
+                        
+                        {{-- 🌟 Data Pemakai ditarik dari Relasi Tabel Pegawai --}}
+                        <td class="align-middle">
+                            <strong>{{ $item->pegawai->nama ?? 'Bukan Pegawai Aktif' }}</strong>
                         </td>
-                        <td class="text-center">
-                            @if($item->tanggal_pajak)
-                                <span class="badge badge-success">Terdata</span>
+                        <td class="align-middle">
+                            <small class="text-muted">ID: {{ $item->pemakai_identitas }}</small><br>
+                            <small class="text-dark">Jabatan: {{ $item->pegawai->jabatan ?? '-' }}</small>
+                        </td>
+
+                        <td class="align-middle text-center">{{ $item->bast_nomor ?? '-' }}</td>
+                        <td class="text-center align-middle">
+                            @if($item->bast_file)
+                                <a href="{{ asset('storage/' . $item->bast_file) }}" target="_blank" class="btn btn-sm btn-info btn-circle" title="Lihat Berkas Surat BAST PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                            @else 
+                                <span class="text-muted">-</span> 
+                            @endif
+                        </td>
+
+                        {{-- 🌟 POIN 4: Status Pajak Otomatis dari Relasi Tabel Peralatan --}}
+                        <td class="text-center align-middle">
+                            @if(isset($item->peralatan->tanggal_pajak) && $item->peralatan->tanggal_pajak)
+                                @php
+                                    $tglPajak = \Carbon\Carbon::parse($item->peralatan->tanggal_pajak);
+                                    $isExpired = $tglPajak->isPast();
+                                @endphp
+                                <span class="{{ $isExpired ? 'text-danger font-weight-bold' : 'text-success' }}">
+                                    <i class="fas fa-calendar-alt"></i> {{ $tglPajak->format('d/m/Y') }}
+                                </span>
+                                @if($isExpired)
+                                    <br><span class="badge badge-danger">Wajib Pajak!</span>
+                                @else
+                                    <br><span class="badge badge-success">Aktif</span>
+                                @endif
                             @else
                                 <span class="badge badge-light text-muted">Bukan Kendaraan</span>
                             @endif
                         </td>
-                        <td class="text-center">
-                            <a href="{{ route('lokasi.bmd.edit', [$lokasi, $item->id]) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                            <form action="{{ route('lokasi.bmd.destroy', [$lokasi, $item->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data pemakaian ini?')">
+
+                        <td class="text-center align-middle">
+                            <a href="{{ route('lokasi.bmd.edit', [$lokasi, $item->id]) }}" class="btn btn-sm btn-warning" title="Ubah Transaksi"><i class="fas fa-edit"></i></a>
+                            <form action="{{ route('lokasi.bmd.destroy', [$lokasi, $item->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data pemakaian ini? Berkas PDF Surat BAST juga akan dihapus di server.')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-danger" title="Hapus Transaksi"><i class="fas fa-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -121,6 +145,7 @@
             const query = this.value;
             if (query.length < 2) return; 
             fetch(`/{{ $lokasi }}/bmd/autocomplete?term=${query}`).then(res => res.json()).then(data => {
+                list.innerHTML = ''; // Clear options sebelum menambahkan baru
                 data.forEach(item => {
                     let option = document.createElement('option');
                     option.value = item.value; // Nama pemakai

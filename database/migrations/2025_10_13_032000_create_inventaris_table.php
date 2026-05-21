@@ -32,9 +32,11 @@ return new class extends Migration
             $table->year('tahun_perolehan'); 
             $table->unsignedInteger('jumlah'); 
             $table->string('satuan'); 
+            $table->enum('kondisi', ['Baik', 'Rusak Ringan', 'Rusak Berat'])->default('Baik');
             $table->text('keterangan')->nullable(); 
             
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

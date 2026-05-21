@@ -1,87 +1,121 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card shadow mb-4 border-left-primary">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Tambah Inventaris Ruangan: {{ $room->name }}</h6>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tambah Data Inventaris Ruangan</h1>
+        <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Kembali
+        </a>
     </div>
-    <div class="card-body">
-        <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" method="POST">
-            @csrf
-            <div class="row text-dark">
-                {{-- KOLOM KIRI --}}
-                <div class="col-md-6 border-right">
-                    <div class="form-group">
-                        <label class="font-weight-bold text-primary">Nama Barang <span class="text-danger">*</span></label>
-                        <input type="text" id="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Contoh: Meja Kerja">
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-plus mr-2"></i>Form Entri Aset Ruangan: {{ $room->name }}</h6>
+        </div>
+        <div class="card-body text-dark">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" method="POST">
+                @csrf
+                
+                <div class="row">
+                    {{-- Kode Barang (Primary Key) --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Kode Barang (PK) <span class="text-danger">*</span></label>
+                        <input type="text" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" placeholder="Contoh: 1.02.01.01.002" required>
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" id="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>NIBAR (Nomor Inventaris Barang)</label>
-                        <input type="text" class="form-control" name="nibar" value="{{ old('nibar') }}" placeholder="Contoh: 12.01.xx">
-                    </div>
-                    <div class="form-group">
-                        <label>Nomor Register</label>
-                        <input type="text" class="form-control" name="nomor_register" value="{{ old('nomor_register') }}" placeholder="Contoh: 0001">
-                    </div>
-                    <div class="form-group">
-                        <label>Spesifikasi Barang</label>
-                        <textarea class="form-control" name="spesifikasi_barang" rows="2" placeholder="Contoh: Bahan Kayu Jati">{{ old('spesifikasi_barang') }}</textarea>
+
+                    {{-- Nama Barang --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" placeholder="Nama aset barang" required>
                     </div>
                 </div>
 
-                {{-- KOLOM KANAN --}}
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Merek / Tipe</label>
-                        <input type="text" class="form-control" name="merk_tipe" value="{{ old('merk_tipe') }}" placeholder="Contoh: Olympic / L-40">
+                <div class="row">
+                    {{-- NIBAR --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">NIBAR (Nomor Induk Barang)</label>
+                        <input type="text" name="nibar" class="form-control" value="{{ old('nibar') }}" placeholder="Isi NIBAR jika ada">
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold text-primary">Tahun Perolehan <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="tahun_perolehan" value="{{ old('tahun_perolehan', date('Y')) }}" required>
+
+                    {{-- Nomor Register --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Nomor Register</label>
+                        <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register') }}" placeholder="Contoh: 0001">
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold text-primary">Jumlah <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="jumlah" value="{{ old('jumlah', 1) }}" required>
+                </div>
+
+                <div class="row">
+                    {{-- Merk / Tipe --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Merk / Tipe</label>
+                        <input type="text" name="merk_tipe" class="form-control" value="{{ old('merk_tipe') }}" placeholder="Contoh: Sharp / Polytron / Lenovo">
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold text-primary">Satuan <span class="text-danger">*</span></label>
-                        <select name="satuan" class="form-control" required>
-                            <option value="">-- Pilih Satuan --</option>
-                            @foreach($daftarSatuan as $s)
-                                <option value="{{ $s }}">{{ $s }}</option>
+
+                    {{-- Tahun Perolehan --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Tahun Perolehan <span class="text-danger">*</span></label>
+                        <input type="number" name="tahun_perolehan" class="form-control @error('tahun_perolehan') is-invalid @enderror" value="{{ old('tahun_perolehan', date('Y')) }}" placeholder="Contoh: 2026" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {{-- Jumlah --}}
+                    <div class="col-md-4 form-group">
+                        <label class="font-weight-bold">Volume Jumlah <span class="text-danger">*</span></label>
+                        <input type="number" name="jumlah" class="form-control @error('jumlah') is-invalid @enderror" value="{{ old('jumlah', 1) }}" min="1" required>
+                    </div>
+
+                    {{-- Satuan --}}
+                    <div class="col-md-4 form-group">
+                        <label class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
+                        <select name="satuan" class="form-control text-dark font-weight-bold" required>
+                            @foreach($daftarSatuan as $sat)
+                                <option value="{{ $sat }}" {{ old('satuan') == $sat ? 'selected' : '' }}>{{ $sat }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Keterangan</label>
-                        <textarea class="form-control" name="keterangan" rows="2" placeholder="Contoh: Kondisi Baik">{{ old('keterangan') }}</textarea>
+
+                    {{-- Poin 6: Opsi Kondisi 3 Tingkat --}}
+                    <div class="col-md-4 form-group">
+                        <label class="font-weight-bold text-primary">Kondisi Fisik Barang (Poin 6) <span class="text-danger">*</span></label>
+                        <select name="kondisi" class="form-control font-weight-bold text-dark" required>
+                            <option value="Baik" {{ old('kondisi') == 'Baik' ? 'selected' : '' }}>🟢 Baik</option>
+                            <option value="Rusak Ringan" {{ old('kondisi') == 'Rusak Ringan' ? 'selected' : '' }}>🟡 Rusak Ringan</option>
+                            <option value="Rusak Berat" {{ old('kondisi') == 'Rusak Berat' ? 'selected' : '' }}>🔴 Rusak Berat (Auto Jurnal Rusak)</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            <hr>
-            <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-secondary shadow-sm">Batal</a>
-            <button type="submit" class="btn btn-primary shadow-sm">Simpan Data</button>
-        </form>
+
+                {{-- Spesifikasi Barang --}}
+                <div class="form-group">
+                    <label class="font-weight-bold">Spesifikasi Barang</label>
+                    <textarea name="spesifikasi_barang" class="form-control" rows="2" placeholder="Detail deskripsi fisik spesifikasi barang...">{{ old('spesifikasi_barang') }}</textarea>
+                </div>
+
+                {{-- Keterangan --}}
+                <div class="form-group">
+                    <label class="font-weight-bold">Keterangan / Catatan Tambahan</label>
+                    <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan opsional atau alasan jika barang rusak berat...">{{ old('keterangan') }}</textarea>
+                </div>
+
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <button type="reset" class="btn btn-secondary mr-2">Reset Form</button>
+                    <button type="submit" class="btn btn-primary font-weight-bold"><i class="fas fa-save mr-1"></i> Simpan Data Aset</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-{{-- Script Generate Kode Otomatis --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const nama = document.getElementById('nama_barang');
-        const kode = document.getElementById('kode_barang');
-        nama.addEventListener('keyup', function() {
-            let val = nama.value.trim();
-            if (val.length > 0) {
-                let initials = val.split(' ').filter(word => word.length > 0).map(word => word.charAt(0)).join('').toUpperCase();
-                let rand = Math.floor(100 + Math.random() * 900);
-                kode.value = `${initials}-${rand}`;
-            }
-        });
-    });
-</script>
 @endsection

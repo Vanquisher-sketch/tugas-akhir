@@ -21,7 +21,8 @@ use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
 use App\Http\Controllers\PajakController;
-use App\Http\Controllers\ArsipController; // TAMBAHKAN INI
+use App\Http\Controllers\ArsipController;
+use App\Http\Controllers\PegawaiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,10 +77,14 @@ Route::middleware('auth')->group(function () {
                 'room' => 'kode_ruangan'
             ]);
 
-            // 2. Route Inventaris (Autocomplete & Resource)
+            // 2. Route Inventaris (Autocomplete, Detail QR, & Resource)
             Route::get('room/{room:kode_ruangan}/inventaris/autocomplete', [InventarisController::class, 'autocomplete'])->name('inventaris.autocomplete');
             Route::get('room/{room:kode_ruangan}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
             Route::post('room/{room:kode_ruangan}/inventaris/{inventari:kode_barang}/move', [InventarisController::class, 'move'])->name('inventaris.move');
+            
+            // 🌟 POIN 3: Rute Detail & Cetak Label QR Code Satuan untuk Inventaris Ruangan
+            Route::get('room/{room:kode_ruangan}/inventaris/{kode_barang}/detail', [InventarisController::class, 'showDetail'])->name('inventaris.detail');
+
             Route::resource('room.inventaris', InventarisController::class)->scoped([
                 'room' => 'kode_ruangan',
                 'inventari' => 'kode_barang'
@@ -93,6 +98,10 @@ Route::middleware('auth')->group(function () {
             // 4. KIB B (Peralatan)
             Route::get('peralatan/autocomplete', [PeralatanController::class, 'autocomplete'])->name('peralatan.autocomplete');
             Route::get('peralatan/print', [PeralatanController::class, 'print'])->name('peralatan.print');
+            
+            // 🌟 POIN 3: Rute Detail & Cetak Label QR Code Satuan untuk Peralatan KIB B
+            Route::get('peralatan/{kode_barang}/detail', [PeralatanController::class, 'showDetail'])->name('peralatan.detail');
+
             Route::resource('peralatan', PeralatanController::class)->scoped(['peralatan' => 'kode_barang']);
 
             // 5. KIB C (Gedung)
@@ -112,20 +121,25 @@ Route::middleware('auth')->group(function () {
 
             // 8. PENGGUNAAN BMD
             Route::get('bmd/print', [BmdController::class, 'print'])->name('bmd.print');
+            Route::get('bmd/cari-pegawai', [BmdController::class, 'cariPegawaiByNip'])->name('bmd.cari-pegawai');
             Route::resource('bmd', BmdController::class);
+            Route::get('bmd/{id}/buka-pdf', [BmdController::class, 'bukaPdf'])->name('bmd.buka_pdf');
 
             // 9. MONITORING PAJAK
             Route::get('pajak/print', [PajakController::class, 'print'])->name('pajak.print');
             Route::post('pajak/kirim-reminder', [PajakController::class, 'kirimReminderManual'])->name('pajak.kirim_reminder');
             Route::resource('pajak', PajakController::class)->only(['index', 'edit', 'update']);
 
-            // 10. RUTE ARSIP (Baru)
+            // 10. RUTE ARSIP
             Route::prefix('arsip')->name('arsip.')->group(function() {
-                Route::get('/', [ArsipController::class, 'index'])->name('index'); // Pilih Kategori
-                Route::get('/{kategori}', [ArsipController::class, 'show'])->name('show'); // Lihat Isi Sampah
-                Route::post('/{kategori}/{kode}/restore', [ArsipController::class, 'restore'])->name('restore'); // Pulihkan
-                Route::delete('/{kategori}/{kode}/permanen', [ArsipController::class, 'forceDelete'])->name('permanen'); // Hapus Selamanya
+                Route::get('/', [ArsipController::class, 'index'])->name('index'); 
+                Route::get('/{kategori}', [ArsipController::class, 'show'])->name('show'); 
+                Route::post('/{kategori}/{kode}/restore', [ArsipController::class, 'restore'])->name('restore'); 
+                Route::delete('/{kategori}/{kode}/permanen', [ArsipController::class, 'forceDelete'])->name('permanen'); 
             });
+
+            // 11. RUTE DATA PEGAWAI
+            Route::resource('pegawai', PegawaiController::class)->except(['show']);
         });
 });
 

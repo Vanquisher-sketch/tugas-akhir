@@ -2,200 +2,169 @@
 
 @section('content')
 <div class="container-fluid">
-
-    <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Monitoring Pajak & Dokumen - {{ ucfirst($lokasi) }}</h1>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Monitoring Pajak & Dokumen - {{ ucfirst($lokasi ?? 'Semua Lokasi') }}</h1>
     </div>
 
-    <!-- Card Container -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-column flex-md-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Data Aset, Pajak & Kelengkapan Dokumen</h6>
+        <div class="card-header py-3 d-flex flex-column flex-md-row align-items-center justify-content-between border-bottom-primary">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-2"></i>Sistem Patroli & Monitoring Pajak Otomatis (Poin 7)</h6>
             
-            <!-- Tombol Aksi -->
             <div class="mt-2 mt-md-0">
-                <!-- Tombol Print -->
+                @if(isset($lokasi))
                 <a href="{{ route('lokasi.pajak.print', $lokasi) }}" class="btn btn-danger btn-sm shadow-sm" target="_blank">
-                    <i class="fas fa-print fa-sm text-white-50"></i> PDF
+                    <i class="fas fa-file-pdf fa-sm text-white-50 mr-1"></i> Cetak PDF Laporan
                 </a>
-
-                <!-- Tombol Blast WA -->
-                <form action="{{ route('lokasi.pajak.kirim_reminder', $lokasi) }}" method="POST" class="d-inline ml-1" onsubmit="return confirm('Kirim notifikasi WA ke semua aset yang jatuh tempo?');">
-                    @csrf
-                    <button type="submit" class="btn btn-warning btn-sm shadow-sm text-dark">
-                        <i class="fab fa-whatsapp fa-sm"></i> Kirim Reminder
-                    </button>
-                </form>
-
-                <!-- Tombol Excel -->
-                <a href="{{ route('lokasi.export.excel', ['lokasi' => $lokasi, 'menu' => 'bmd']) }}" class="btn btn-success btn-sm shadow-sm ml-1" target="_blank">
-                    <i class="fas fa-file-excel fa-sm text-white-50"></i> Excel
-                </a>
+                @endif
             </div>
         </div>
 
-        <!-- Filter Search -->
-        <div class="card-body border-bottom">
-            <form action="" method="GET" class="form-inline float-right">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control bg-light border-0 small" placeholder="Cari aset / nopol..." value="{{ $search ?? '' }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="button" onclick="this.form.submit()">
-                            <i class="fas fa-search fa-sm"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
         <div class="card-body">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-            @endif
-
             <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0" style="font-size: 10px; color: #333;">
+                <table class="table table-bordered table-hover text-dark" id="dataTable" width="100%" cellspacing="0" style="font-size: 12px; vertical-align: middle;">
                     <thead class="thead-light text-center">
-                        <tr>
-                            <!-- BARIS 1: GROUP HEADER -->
-                            <th rowspan="2" class="align-middle font-weight-bold">No</th>
-                            <th rowspan="2" class="align-middle font-weight-bold">Info Aset</th>
-                            <th rowspan="2" class="align-middle font-weight-bold">Lokasi</th>
-                            
-                            <!-- Group Pemakai -->
-                            <th colspan="2" class="align-middle font-weight-bold">Pemakai</th>
-
-                            <!-- Group Pajak (Kuning) -->
-                            <th colspan="4" class="align-middle font-weight-bold text-dark" style="background-color: #ffeeba;">Monitoring Pajak</th>
-                            
-                            <!-- Group Dokumen BAST (Biru Muda) -->
-                            <th colspan="3" class="align-middle font-weight-bold" style="background-color: #e3f2fd;">Dokumen BAST</th>
-                            
-                            <!-- Group Dokumen Lain (Hijau Muda) -->
-                            <th colspan="3" class="align-middle font-weight-bold" style="background-color: #e8f5e9;">Dokumen Lain</th>
-                            
-                            <th rowspan="2" class="align-middle font-weight-bold">Ket</th>
-                            <th rowspan="2" class="align-middle font-weight-bold">Aksi</th>
+                        <tr class="font-weight-bold">
+                            <th rowspan="2" class="align-middle" style="width: 3%;">No</th>
+                            <th rowspan="2" class="align-middle" style="width: 22%;">Identitas Kendaraan Dinas</th>
+                            <th colspan="2" class="align-middle bg-light">Data Pemegang / Pemakai</th>
+                            <th colspan="3" class="align-middle text-dark" style="background-color: #ffeeba;">Status Pajak & Legalitas</th>
+                            <th colspan="3" class="align-middle" style="background-color: #e3f2fd;">Dokumen Kelengkapan BAST</th>
                         </tr>
-                        <tr>
-                            <!-- BARIS 2: SUB HEADER -->
-                            
-                            <!-- Sub Pemakai -->
-                            <th>Nama</th>
-                            <th>No. HP</th>
-
-                            <!-- Sub Pajak -->
-                            <th style="background-color: #fff3cd;">Tahunan</th>
-                            <th style="background-color: #ffe08a;">5 Tahunan</th>
-                            <th style="background-color: #fff3cd;">WA User</th>
-                            <th style="background-color: #fff3cd;">WA Bendahara</th>
-
-                            <!-- Sub BAST -->
-                            <th style="background-color: #eff8ff;">Nomor</th>
+                        <tr class="font-weight-bold">
+                            <th class="bg-light">Nama Pegawai</th>
+                            <th class="bg-light text-center">Hubungi WA</th>
+                            <th style="background-color: #fff3cd;">Jatuh Tempo Pajak</th>
+                            <th style="background-color: #fff3cd;">Masa Berlaku STNK</th>
+                            <th style="background-color: #fff3cd;" title="Kirim Pesan Pengingat Pajak">Kirim Warning</th>
+                            <th style="background-color: #eff8ff;">Nomor BAST</th>
                             <th style="background-color: #eff8ff;">Tanggal</th>
-                            <th style="background-color: #eff8ff;">File</th>
-
-                            <!-- Sub Dokumen Lain -->
-                            <th style="background-color: #f1f8e9;">Nama Dok</th>
-                            <th style="background-color: #f1f8e9;">Nomor</th>
-                            <th style="background-color: #f1f8e9;">Tanggal</th>
+                            <th style="background-color: #eff8ff;">Berkas</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($pajaks as $item)
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration + $pajaks->firstItem() - 1 }}</td>
+                        @php
+                            $tglPajak = \Carbon\Carbon::parse($item->tanggal_pajak);
+                            $diffDays = \Carbon\Carbon::today()->diffInDays($tglPajak, false);
                             
-                            <!-- Info Aset (Digabung biar hemat tempat) -->
-                            <td>
-                                <b>{{ $item->peralatan->nama_barang ?? '-' }}</b><br>
-                                <span class="text-muted">{{ $item->peralatan->nomor_polisi ?? $item->peralatan->merk_tipe ?? '-' }}</span><br>
-                                <small>{{ $item->peralatan->kode_barang ?? '-' }}</small>
+                            $rowStyle = '';
+                            if ($diffDays < 0) {
+                                $rowStyle = 'background-color: #f8d7da;'; 
+                            } elseif ($diffDays <= 30) {
+                                $rowStyle = 'background-color: #fff3cd;'; 
+                            }
+
+                            // Ambil data jembatan penggunaan bmd
+                            $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('peralatan_kode', $item->kode_barang)->first();
+                            
+                            // Ambil data nomor HP secara hirarki (Cek tabel pegawai dulu, baru fallback ke tabel bmd)
+                            $nomorWaHp = '-';
+                            if ($bmdAktif) {
+                                if ($bmdAktif->pegawai && $bmdAktif->pegawai->no_hp) {
+                                    $nomorWaHp = $bmdAktif->pegawai->no_hp;
+                                } elseif ($bmdAktif->pegawai && $bmdAktif->pegawai->telepon) {
+                                    $nomorWaHp = $bmdAktif->pegawai->telepon;
+                                } elseif ($bmdAktif->nomor_pemakai) {
+                                    $nomorWaHp = $bmdAktif->nomor_pemakai;
+                                }
+                            }
+                        @endphp
+                        <tr style="{{ $rowStyle }}">
+                            <td class="text-center align-middle font-weight-bold">{{ $loop->iteration + ($pajaks instanceof \Illuminate\Pagination\LengthAwarePaginator ? $pajaks->firstItem() - 1 : 0) }}</td>
+                            
+                            {{-- Identitas Kendaraan --}}
+                            <td class="align-middle">
+                                <div class="font-weight-bold text-primary">{{ $item->nama_barang }}</div>
+                                <div class="small font-weight-bold mt-1">
+                                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-car-side mr-1"></i> {{ $item->nomor_polisi ?? '-' }}</span>
+                                </div>
+                                <div class="small text-muted mt-1">Merk/Type: {{ $item->merk_tipe ?? '-' }}</div>
                             </td>
                             
-                            <td>{{ $item->alamat_penggunaan }}</td>
-                            
-                            <!-- Data Pemakai -->
-                            <td>{{ $item->pemakai_nama }}</td>
-                            <td>{{ $item->nomor_pemakai ?? '-' }}</td>
+                            {{-- Data Pemakai --}}
+                            <td class="align-middle">
+                                @if($bmdAktif && $bmdAktif->pegawai)
+                                    <b class="text-gray-900">{{ $bmdAktif->pegawai->nama }}</b><br>
+                                    <span class="badge badge-primary small mt-1">{{ $bmdAktif->pemakai_status ?? 'ASN' }}</span>
+                                @else
+                                    <span class="badge badge-secondary p-1 font-weight-bold"><i class="fas fa-warehouse mr-1"></i> Stand-by di Kantor</span>
+                                @endif
+                            </td>
 
-                            <!-- 1. PAJAK TAHUNAN -->
-                            <td class="text-center" style="background-color: #fffdf0;">
+                            {{-- Kontak No HP Pemakai (Otomatis Terisi) --}}
+                            <td class="align-middle text-center font-weight-bold text-success">
+                                {{ $nomorWaHp }}
+                            </td>
+
+                            {{-- Jatuh Tempo Pajak --}}
+                            <td class="text-center align-middle font-weight-bold">
                                 @if($item->tanggal_pajak)
-                                    @php
-                                        $tgl = \Carbon\Carbon::parse($item->tanggal_pajak);
-                                        $isLate = $tgl->isPast();
-                                        $isNear = $tgl->diffInDays(now()) < 30 && !$isLate;
-                                    @endphp
-                                    <span class="badge {{ $isLate ? 'badge-danger' : ($isNear ? 'badge-warning text-dark' : 'badge-success') }} shadow-sm">
-                                        {{ $tgl->format('d/m/Y') }}
-                                    </span>
+                                    @if($diffDays < 0)
+                                        <span class="badge badge-danger p-1 text-uppercase shadow-sm">
+                                            <i class="fas fa-times-circle"></i> {{ $tglPajak->format('d/m/Y') }}
+                                        </span>
+                                        <div style="font-size: 10px;" class="text-danger font-weight-bold mt-1 uppercase">TERLEWAT {{ abs($diffDays) }} HARI</div>
+                                    @elseif($diffDays <= 30)
+                                        <span class="badge badge-warning text-dark p-1 shadow-sm">
+                                            <i class="fas fa-exclamation-triangle"></i> {{ $tglPajak->format('d/m/Y') }}
+                                        </span>
+                                        <div style="font-size: 10px;" class="text-dark font-weight-bold mt-1 uppercase">{{ $diffDays }} HARI LAGI</div>
+                                    @else
+                                        <span class="badge badge-success p-1 shadow-sm">
+                                            <i class="fas fa-check-circle"></i> {{ $tglPajak->format('d/m/Y') }}
+                                        </span>
+                                    @endif
                                 @else - @endif
                             </td>
 
-                            <!-- 2. PAJAK 5 TAHUNAN (STNK) -->
-                            <td class="text-center" style="background-color: #fff8d6;">
-                                @if($item->tanggal_stnk)
-                                    @php
-                                        $tglS = \Carbon\Carbon::parse($item->tanggal_stnk);
-                                        $isLateS = $tglS->isPast();
-                                        $isNearS = $tglS->diffInDays(now()) < 60 && !$isLateS;
-                                    @endphp
-                                    <span class="badge {{ $isLateS ? 'badge-danger' : ($isNearS ? 'badge-warning text-dark' : 'badge-info') }} shadow-sm">
-                                        {{ $tglS->format('d/m/Y') }}
-                                    </span>
-                                @else - @endif
+                            {{-- STNK 5 Tahunan --}}
+                            <td class="text-center align-middle font-weight-bold">
+                                {{ $item->tanggal_stnk ? \Carbon\Carbon::parse($item->tanggal_stnk)->format('d/m/Y') : '-' }}
                             </td>
 
-                            <!-- Tombol WA -->
-                            <td class="text-center" style="background-color: #fffdf0;">
-                                @if($item->nomor_pemakai)
-                                    <a href="https://wa.me/{{ preg_replace('/^0/', '62', $item->nomor_pemakai) }}" target="_blank" class="text-success"><i class="fab fa-whatsapp"></i></a>
+                            {{-- WhatsApp Warning Trigger (Aktif Otomatis jika nomor HP ada) --}}
+                            <td class="text-center align-middle">
+                                @if($nomorWaHp !== '-')
+                                    @php
+                                        $cleanNumber = preg_replace('/[^0-9]/', '', $nomorWaHp);
+                                        $cleanNumber = preg_replace('/^0/', '62', $cleanNumber);
+                                        
+                                        $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->nama : 'Bapak/Ibu';
+                                        $txtStatus = $diffDays < 0 ? "TELAH LEWAT JATUH TEMPO" : "AKAN SEGERA JATUH TEMPO";
+                                        
+                                        $msgUser = "Halo Pak/Bu {$namaPemakai}, menginfokan bahwa pajak kendaraan dinas {$item->nama_barang} ({$item->nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . $tglPajak->format('d/m/Y') . ". Mohon berkas pendukung segera disiapkan untuk proses perpanjangan. Terima kasih.";
+                                    @endphp
+                                    <a href="https://wa.me/{{ $cleanNumber }}?text={{ urlencode($msgUser) }}" target="_blank" class="btn btn-success btn-sm shadow-sm font-weight-bold" title="Kirim Pesan Warning Ke Pemegang">
+                                        <i class="fab fa-whatsapp mr-1"></i> WA Pemegang
+                                    </a>
+                                @else
+                                    <button class="btn btn-sm btn-light border text-muted" style="font-size: 11px;" disabled>
+                                        <i class="fas fa-phone-slash mr-1"></i> No Kontak
+                                    </button>
                                 @endif
                             </td>
-                            <td class="text-center" style="background-color: #fffdf0;">
-                                @if($item->nomor_bendahara)
-                                    <a href="https://wa.me/{{ preg_replace('/^0/', '62', $item->nomor_bendahara) }}" target="_blank" class="text-info"><i class="fab fa-whatsapp"></i></a>
-                                @endif
-                            </td>
 
-                            <!-- DATA BAST (Sesuai Model) -->
-                            <td>{{ $item->bast_nomor ?? '-' }}</td>
-                            <td class="text-center">
-                                {{ $item->bast_tanggal ? \Carbon\Carbon::parse($item->bast_tanggal)->format('d/m/Y') : '-' }}
+                            {{-- Dokumen BAST Relasional --}}
+                            <td class="align-middle font-weight-bold text-center text-primary">
+                                {{ $bmdAktif->bast_nomor ?? '-' }}
                             </td>
-                            <td class="text-center">
-                                @if($item->bast_file)
-                                    <a href="{{ asset('storage/' . $item->bast_file) }}" target="_blank" class="text-primary"><i class="fas fa-file-alt"></i></a>
+                            <td class="text-center align-middle small">
+                                {{ ($bmdAktif && $bmdAktif->bast_tanggal) ? \Carbon\Carbon::parse($bmdAktif->bast_tanggal)->format('d/m/Y') : '-' }}
+                            </td>
+                            <td class="text-center align-middle">
+                                @if($bmdAktif && $bmdAktif->bast_file)
+                                    <a href="{{ route('lokasi.bmd.buka_pdf', ['lokasi' => $lokasi, 'id' => $bmdAktif->id]) }}" target="_blank" class="text-danger font-weight-bold">
+                                        <i class="fas fa-file-pdf fa-lg"></i>
+                                    </a>
                                 @else - @endif
-                            </td>
-
-                            <!-- DATA DOKUMEN LAIN (Sesuai Model) -->
-                            <td>{{ $item->dokumen_lain_nama ?? '-' }}</td>
-                            <td>{{ $item->dokumen_lain_nomor ?? '-' }}</td>
-                            <td class="text-center">
-                                {{ $item->dokumen_lain_tanggal ? \Carbon\Carbon::parse($item->dokumen_lain_tanggal)->format('d/m/Y') : '-' }}
-                            </td>
-
-                            <!-- Keterangan -->
-                            <td>{{ $item->keterangan ?? '-' }}</td>
-
-                            <!-- Aksi -->
-                            <td class="text-center">
-                                <a href="{{ route('lokasi.pajak.edit', [$lokasi, $item->id]) }}" class="btn btn-warning btn-sm shadow-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="16" class="text-center py-5 text-gray-500">
-                                <i class="fas fa-folder-open fa-3x mb-3 text-gray-300"></i><br>
-                                Data belum tersedia.
+                            <td colspan="10" class="text-center py-5 text-gray-500">
+                                <i class="fas fa-check-double fa-3x mb-3 text-success"></i><br>
+                                <h6 class="font-weight-bold text-success">Luar Biasa, Aman Semua!</h6>
+                                Tidak mendeteksi adanya kendaraan dinas yang pajaknya mati atau mendekati kritis (< 30 hari) di wilayah operasional ini.
                             </td>
                         </tr>
                         @endforelse
@@ -204,7 +173,9 @@
             </div>
 
             <div class="mt-4 d-flex justify-content-end">
-                {{ $pajaks->withQueryString()->links() }}
+                @if($pajaks instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                    {{ $pajaks->withQueryString()->links() }}
+                @endif
             </div>
         </div>
     </div>

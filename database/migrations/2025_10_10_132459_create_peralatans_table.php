@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('peralatans', function (Blueprint $table) {
-            // REVISI: Hapus $table->id() dan jadikan kode_barang sebagai Primary Key
+            // Primary Key menggunakan kode_barang (String)
             $table->string('kode_barang', 100)->primary();   // Sesuai Kolom (6)
             
             $table->string('lokasi');
@@ -24,8 +24,10 @@ return new class extends Migration
             $table->string('Lok');                          // Sesuai Kolom (12) - Lokasi Fisik
             $table->string('spesifikasi_lainnya')->nullable(); // Sesuai Kolom (13)
 
-            // Kendaraan Dinas
+            // Kendaraan Dinas & Legalitas Pajak (Poin 4)
             $table->string('nomor_polisi')->nullable();     // Sesuai Kolom (14)
+            $table->date('tanggal_pajak')->nullable();      // 🌟 TAMBAHAN POIN 4
+            $table->date('tanggal_stnk')->nullable();       // 🌟 TAMBAHAN POIN 4
             $table->string('nomor_rangka')->nullable();     // Sesuai Kolom (15)
             $table->string('nomor_bpkb')->nullable();       // Sesuai Kolom (16)
 
@@ -35,9 +37,14 @@ return new class extends Migration
             $table->decimal('nilai_perolehan', 15, 2);      // Sesuai Kolom (20)
             $table->string('cara_perolehan');               // Sesuai Kolom (21)
             $table->date('tanggal_perolehan');               // Sesuai Kolom (22)
-            $table->string('status_penggunaan')->nullable(); // Sesuai Kolom (23)
+            
+            // Status Penggunaan & Kondisi Fisik (Poin 4 & 6)
+            $table->string('status_penggunaan')->default('Tidak Aktif'); // 🌟 Sesuai Kolom (23) - Default Diubah Ke Tidak Aktif
+            $table->enum('kondisi', ['Baik', 'Rusak Ringan', 'Rusak Berat'])->default('Baik'); // 🌟 TAMBAHAN POIN 6
+            
             $table->text('keterangan')->nullable();          // Sesuai Kolom (24)
             
+            $table->softDeletes(); // 🌟 Ditambahkan karena di Model kamu menggunakan trait SoftDeletes
             $table->timestamps();
         });
     }

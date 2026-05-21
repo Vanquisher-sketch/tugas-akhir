@@ -3,136 +3,138 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Tambah Data Gedung & Bangunan (KIB C)</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Tambah Data Gedung & Bangunan (KIB C) - {{ ucfirst($lokasi) }}</h6>
     </div>
     <div class="card-body">
         <form action="{{ route('lokasi.gedung.store', ['lokasi' => $lokasi]) }}" method="POST">
             @csrf
-            
-            {{-- Input Hidden untuk Lokasi (Opsional, jika controller tidak otomatis menangkap dari URL) --}}
-            {{-- <input type="hidden" name="lokasi" value="{{ $lokasi }}"> --}}
-
             <div class="row">
                 {{-- Kolom Kiri --}}
-                <div class="col-md-6">
+                <div class="col-md-6 border-right">
                     <div class="form-group">
-                        <label for="kode_barang">Kode Barang</label>
-                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" name="kode_barang" value="{{ old('kode_barang') }}">
-                        @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nama_barang">Nama Barang</label>
-                        <input type="text" class="form-control @error('nama_barang') is-invalid @enderror" name="nama_barang" value="{{ old('nama_barang') }}" required>
+                        <label for="nama_barang">Nama Gedung / Bangunan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('nama_barang') is-invalid @enderror" id="nama_barang" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Contoh: Gedung Aula Kelurahan">
                         @error('nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="nbar">NIBAR</label>
-                        <input type="text" class="form-control @error('nbar') is-invalid @enderror" name="nbar" value="{{ old('nbar') }}">
-                        @error('nbar') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="kode_barang">Kode Barang <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang" name="kode_barang" value="{{ old('kode_barang') }}" required>
+                        @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="nomor_register">Nomor Register</label>
-                        <input type="text" class="form-control @error('nomor_register') is-invalid @enderror" name="nomor_register" value="{{ old('nomor_register') }}">
-                        @error('nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nbar">NIBAR</label>
+                                <input type="text" class="form-control" name="nbar" value="{{ old('nbar') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nomor_register">Nomor Register</label>
+                                <input type="text" class="form-control" name="nomor_register" value="{{ old('nomor_register') }}">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="spesifikasi_barang">Spesifikasi Nama Bangunan</label>
-                        <input type="text" class="form-control @error('spesifikasi_barang') is-invalid @enderror" name="spesifikasi_barang" value="{{ old('spesifikasi_barang') }}">
-                        @error('spesifikasi_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="spesifikasi_lainnya">Spesifikasi Lainnya</label>
-                        <input type="text" class="form-control @error('spesifikasi_lainnya') is-invalid @enderror" name="spesifikasi_lainnya" value="{{ old('spesifikasi_lainnya') }}">
-                        @error('spesifikasi_lainnya') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="text" class="form-control" name="spesifikasi_barang" value="{{ old('spesifikasi_barang') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="jumlah_lantai">Jumlah Lantai</label>
-                        <input type="number" class="form-control @error('jumlah_lantai') is-invalid @enderror" name="jumlah_lantai" value="{{ old('jumlah_lantai', 1) }}">
-                        @error('jumlah_lantai') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="number" class="form-control" name="jumlah_lantai" value="{{ old('jumlah_lantai', 1) }}">
                     </div>
 
                     <div class="form-group">
-                        <label for="Lok">Lokasi (Alamat)</label>
-                        {{-- Perhatikan name="Lok" Huruf Besar sesuai Model --}}
-                        <textarea class="form-control @error('Lok') is-invalid @enderror" name="Lok" rows="3">{{ old('Lok') }}</textarea>
-                        @error('Lok') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="titik_koordinat">Titik Koordinat</label>
-                        <input type="text" class="form-control @error('titik_koordinat') is-invalid @enderror" name="titik_koordinat" value="{{ old('titik_koordinat') }}">
-                        @error('titik_koordinat') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="Lok">Lokasi (Alamat) <span class="text-danger">*</span></label>
+                        <textarea class="form-control @error('Lok') is-invalid @enderror" name="Lok" rows="3" required>{{ old('Lok') }}</textarea>
                     </div>
                 </div>
 
                 {{-- Kolom Kanan --}}
                 <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="jumlah">Luas Bangunan (M2) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control money" name="jumlah" value="{{ old('jumlah') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="satuan">Satuan</label>
+                                <input type="text" class="form-control" name="satuan" value="{{ old('satuan', 'M2') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="harga_satuan">Harga Satuan (Rp)</label>
+                                <input type="text" class="form-control money" name="harga_satuan" value="{{ old('harga_satuan') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nilai_perolehan">Nilai Perolehan (Rp) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control money" name="nilai_perolehan" value="{{ old('nilai_perolehan') }}" required>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="status_kepemilikan_tanah">Status Kepemilikan Tanah</label>
-                        <input type="text" class="form-control @error('status_kepemilikan_tanah') is-invalid @enderror" name="status_kepemilikan_tanah" value="{{ old('status_kepemilikan_tanah') }}">
-                        @error('status_kepemilikan_tanah') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="text" class="form-control" name="status_kepemilikan_tanah" value="{{ old('status_kepemilikan_tanah') }}">
                     </div>
 
                     <div class="form-group">
-                        <label for="jumlah">Jumlah (Luas/Unit)</label>
-                        {{-- DISESUAIKAN: name="jumlah" (bukan jumlah_satuan_tanah) sesuai Model --}}
-                        <input type="number" step="0.01" class="form-control @error('jumlah') is-invalid @enderror" name="jumlah" value="{{ old('jumlah') }}" placeholder="Contoh: 100">
-                        @error('jumlah') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="satuan">Satuan</label>
-                        <input type="text" class="form-control @error('satuan') is-invalid @enderror" name="satuan" value="{{ old('satuan') }}" placeholder="Contoh: M2 / Unit">
-                        @error('satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="harga_satuan">Harga Satuan (Rp)</label>
-                        <input type="number" class="form-control @error('harga_satuan') is-invalid @enderror" name="harga_satuan" value="{{ old('harga_satuan') }}">
-                        @error('harga_satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nilai_perolehan">Nilai Perolehan (Rp)</label>
-                        <input type="number" class="form-control @error('nilai_perolehan') is-invalid @enderror" name="nilai_perolehan" value="{{ old('nilai_perolehan') }}">
-                        @error('nilai_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cara_perolehan">Cara Perolehan</label>
-                        <input type="text" class="form-control @error('cara_perolehan') is-invalid @enderror" name="cara_perolehan" value="{{ old('cara_perolehan') }}">
-                        @error('cara_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tanggal_perolehan">Tanggal Perolehan</label>
-                        <input type="date" class="form-control @error('tanggal_perolehan') is-invalid @enderror" name="tanggal_perolehan" value="{{ old('tanggal_perolehan') }}">
-                        @error('tanggal_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="status_penggunaan">Status Penggunaan</label>
-                        <input type="text" class="form-control @error('status_penggunaan') is-invalid @enderror" name="status_penggunaan" value="{{ old('status_penggunaan') }}">
-                        @error('status_penggunaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="tanggal_perolehan">Tanggal Perolehan <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="tanggal_perolehan" value="{{ old('tanggal_perolehan') }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="keterangan">Keterangan</label>
-                        <textarea class="form-control @error('keterangan') is-invalid @enderror" name="keterangan" rows="3">{{ old('keterangan') }}</textarea>
-                        @error('keterangan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <textarea class="form-control" name="keterangan" rows="4">{{ old('keterangan') }}</textarea>
                     </div>
                 </div>
             </div>
             <hr>
-            <a href="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan</button>
+            <div class="text-right">
+                <a href="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary">Batal</a>
+                <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
+            </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const namaInput = document.getElementById('nama_barang');
+        const kodeInput = document.getElementById('kode_barang');
+
+        namaInput.addEventListener('keyup', function() {
+            if (kodeInput.dataset.manual !== 'true') {
+                let val = this.value.trim();
+                if (val.length > 0) {
+                    let initials = val.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3);
+                    let random = Math.floor(100 + Math.random() * 900);
+                    kodeInput.value = `GDG-${initials}-${random}`;
+                }
+            }
+        });
+
+        kodeInput.addEventListener('input', function() { this.dataset.manual = 'true'; });
+
+        document.querySelectorAll('.money').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                this.value = value ? parseInt(value).toLocaleString('id-ID') : '';
+            });
+        });
+    });
+</script>
 @endsection

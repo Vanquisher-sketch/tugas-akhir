@@ -14,7 +14,7 @@ class TambahFiturArsipKeSemuaTabel extends Migration
         foreach ($tabelAset as $namaTabel) {
             if (Schema::hasTable($namaTabel)) {
                 Schema::table($namaTabel, function (Blueprint $table) {
-                    $table->softDeletes(); // Menambah kolom deleted_at
+                   // $table->softDeletes(); // Menambah kolom deleted_at
                 });
             }
         }

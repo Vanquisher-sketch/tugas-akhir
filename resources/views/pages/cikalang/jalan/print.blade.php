@@ -2,155 +2,65 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Data KIB D - {{ ucfirst($lokasi) }}</title>
+    <title>KIB D - {{ strtoupper($lokasi) }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h2, .header h3 {
-            margin: 5px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 4px;
-            text-align: left;
-            vertical-align: top;
-        }
-        th {
-            background-color: #f2f2f2;
-            text-align: center;
-            vertical-align: middle;
-        }
+        @page { size: landscape; margin: 10mm; }
+        body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
+        .table-bordered th, .table-bordered td { border: 1px solid #000 !important; vertical-align: middle; padding: 4px; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        
-        /* Tanda Tangan */
-        .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-            page-break-inside: avoid;
-        }
-        .signature-box {
-            width: 30%;
-            text-align: center;
-        }
-        .signature-box p {
-            margin-bottom: 60px;
-        }
-
-        @media print {
-            @page {
-                size: landscape;
-                margin: 10mm;
-            }
-            .no-print {
-                display: none;
-            }
-        }
     </style>
 </head>
 <body onload="window.print()">
-
-    <div class="no-print" style="margin-bottom: 20px;">
-        <button onclick="window.print()">Cetak Halaman</button>
-        <button onclick="window.close()">Tutup</button>
+    <div class="container-fluid">
+        <h6 class="text-center font-weight-bold mb-4">JALAN, IRIGASI DAN JARINGAN (KIB D) - {{ strtoupper($lokasi) }}</h6>
+        
+        <table class="table table-bordered">
+            <thead class="text-center bg-light">
+                <tr>
+                    <th>No</th>
+                    <th>Kode Barang</th>
+                    <th>Nama Barang</th>
+                    <th>Reg</th>
+                    <th>No. Ruas</th>
+                    <th>Pjg/Luas</th>
+                    <th>Satuan</th>
+                    <th>Lokasi/Alamat</th>
+                    <th>Status Tanah</th>
+                    <th>Tgl Perolehan</th>
+                    <th>Harga Satuan (Rp)</th>
+                    <th>Nilai Perolehan (Rp)</th>
+                    <th>Ket</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($dataJalan as $index => $item)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $item->kode_barang }}</td>
+                    <td>{{ $item->nama_barang }}</td>
+                    <td>{{ $item->nomor_register }}</td>
+                    <td>{{ $item->nomor_ruas_jalan_jembatan_irigasi }}</td>
+                    <td class="text-center">{{ number_format($item->jumlah, 0, ',', '.') }}</td>
+                    <td>{{ $item->satuan }}</td>
+                    <td>{{ $item->Lok }}</td>
+                    <td>{{ $item->status_kepemilikan_tanah }}</td>
+                    <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
+                    <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                    <td class="text-right font-weight-bold">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
+                    <td>{{ $item->keterangan }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot class="font-weight-bold">
+                <tr>
+                    <td colspan="11" class="text-right">TOTAL NILAI ASET</td>
+                    <td class="text-right">{{ number_format($dataJalan->sum('nilai_perolehan'), 0, ',', '.') }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
-
-    <div class="header">
-        <h2>KARTU INVENTARIS BARANG (KIB) D</h2>
-        <h3>JALAN, IRIGASI DAN JARINGAN</h3>
-        <p>Lokasi: {{ ucfirst($lokasi) }} | Tanggal Cetak: {{ date('d-m-Y') }}</p>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th rowspan="2">No</th>
-                <th rowspan="2">Kode Barang</th>
-                <th rowspan="2">Nama Barang</th>
-                <th rowspan="2">NIBAR</th>
-                <th rowspan="2">No. Reg</th>
-                <th rowspan="2">Spesifikasi Jalan/Jaringan</th>
-                <th rowspan="2">No. Ruas</th>
-                <th rowspan="2">Lokasi / Alamat</th>
-                <th rowspan="2">Status Tanah</th>
-                <th rowspan="2">Tgl Perolehan</th>
-                <th colspan="2">Jumlah</th>
-                <th rowspan="2">Harga Satuan (Rp)</th>
-                <th rowspan="2">Nilai Perolehan (Rp)</th>
-                <th rowspan="2">Keterangan</th>
-            </tr>
-            <tr>
-                <th>Jml</th>
-                <th>Satuan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($dataJalan as $index => $item)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $item->kode_barang }}</td>
-                <td>{{ $item->nama_barang }}</td>
-                <td>{{ $item->nbar }}</td>
-                <td>{{ $item->nomor_register }}</td>
-                <td>
-                    {{ $item->spesifikasi_barang }}<br>
-                    <small><i>{{ $item->spesifikasi_lainnya }}</i></small>
-                </td>
-                <td>{{ $item->nomor_ruas_jalan_jembatan_irigasi }}</td>
-                <td>{{ $item->Lok }}</td>
-                <td>{{ $item->status_kepemilikan_tanah }}</td>
-                <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '-' }}</td>
-                <td class="text-center">{{ $item->jumlah }}</td>
-                <td>{{ $item->satuan }}</td>
-                <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
-                <td>{{ $item->keterangan }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="15" class="text-center">Data tidak tersedia.</td>
-            </tr>
-            @endforelse
-            
-            @if(count($dataJalan) > 0)
-            <tr style="font-weight: bold; background-color: #f9f9f9;">
-                <td colspan="13" class="text-center">TOTAL NILAI ASET</td>
-                <td class="text-right">{{ number_format($dataJalan->sum('nilai_perolehan'), 0, ',', '.') }}</td>
-                <td></td>
-            </tr>
-            @endif
-        </tbody>
-    </table>
-
-    {{-- Kolom Tanda Tangan --}}
-    <div class="signature-section">
-        <div class="signature-box">
-            <p>Mengetahui,<br>Kepala SKPD/Unit Kerja</p>
-            <br>
-            <p><strong>(.......................................)</strong><br>NIP. ..................................</p>
-        </div>
-        <div class="signature-box">
-            {{-- REVISI: Menggunakan "Tasikmalaya" secara hardcode --}}
-            <p>Tasikmalaya, {{ date('d F Y') }}<br>Pengurus Barang</p>
-            <br>
-            <p><strong>(.......................................)</strong><br>NIP. ..................................</p>
-        </div>
-    </div>
-
 </body>
 </html>
