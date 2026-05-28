@@ -7,7 +7,7 @@ use App\Models\Tanah;
 use App\Models\Peralatan;
 use App\Models\Gedung;
 use App\Models\Jalan;
-use App\Models\Bmd; // Pastikan Model Bmd diimport
+use App\Models\Bmd;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -17,19 +17,19 @@ class DashboardController extends Controller
     {
         $selectedLokasi = $request->input('lokasi');
 
-        // --- 1. Ambil Semua Lokasi untuk Filter ---
-        $lokasiQuery = Tanah::select('lokasi')->distinct()
-            ->union(Peralatan::select('lokasi')->distinct())
-            ->union(Gedung::select('lokasi')->distinct())
-            ->union(Jalan::select('lokasi')->distinct());
+        // --- 1. Ambil Semua Lokasi menggunakan DB murni tanpa campur tangan Model ---
+        $lokasiQuery = DB::table('tanahs')->select('lokasi')->whereNotNull('lokasi')->distinct()
+            ->union(DB::table('peralatans')->select('lokasi')->whereNotNull('lokasi')->distinct())
+            ->union(DB::table('gedungs')->select('lokasi')->whereNotNull('lokasi')->distinct())
+            ->union(DB::table('jalans')->select('lokasi')->whereNotNull('lokasi')->distinct());
         
-        $allLokasi = $lokasiQuery->pluck('lokasi')->filter();
+        $allLokasi = $lokasiQuery->pluck('lokasi')->filter()->unique()->values();
 
-        // --- 2. Query Dasar Aset ---
-        $tanahQuery = Tanah::query();
-        $peralatanQuery = Peralatan::query();
-        $gedungQuery = Gedung::query();
-        $jalanQuery = Jalan::query();
+        // --- 2. Query Dasar Aset (Ditambahkan withoutGlobalScopes agar abai terhadap SoftDeletes) ---
+        $tanahQuery = Tanah::withoutGlobalScopes();
+        $peralatanQuery = Peralatan::withoutGlobalScopes();
+        $gedungQuery = Gedung::withoutGlobalScopes();
+        $jalanQuery = Jalan::withoutGlobalScopes();
         
         if ($selectedLokasi) {
             $tanahQuery->where('lokasi', $selectedLokasi);
@@ -38,7 +38,7 @@ class DashboardController extends Controller
             $jalanQuery->where('lokasi', $selectedLokasi);
         }
 
-        // --- 3. Hitung KPI ---
+        // --- 3. Hitung KPI (Aman dari hantaman deleted_at) ---
         $nilaiTanah = (clone $tanahQuery)->sum('nilai_perolehan');
         $nilaiPeralatan = (clone $peralatanQuery)->sum('nilai_perolehan');
         $nilaiGedung = (clone $gedungQuery)->sum('nilai_perolehan');
@@ -53,23 +53,34 @@ class DashboardController extends Controller
         
         $kpiTotalAset = $countTanah + $countPeralatan + $countGedung + $countJalan;
 
-        // --- 4. Monitoring Pajak (DARI TABEL BMDS) ---
-        // Kita mengambil data dari tabel bmds dan join ke peralatans untuk nama barangnya
-        $asetPajakMendatang = Bmd::with('peralatan') // Asumsi ada relasi 'peralatan' di model Bmd
-            ->whereNotNull('tanggal_pajak')
-            ->whereBetween('tanggal_pajak', [
-                Carbon::now()->subDays(7), 
-                Carbon::now()->addDays(30)
-            ])
+        // --- 4. 🌟 REVISI AMAN: Ambil data BMD Kendaraan untuk Monitoring Pajak ---
+        // Kita load data dasarnya dulu, lalu kita filter dinamis biar terhindar dari eror salah nama kolom SQL
+        $bmdData = Bmd::with('peralatan')
             ->when($selectedLokasi, function($query) use ($selectedLokasi) {
                 return $query->where('lokasi', $selectedLokasi);
             })
-            ->orderBy('tanggal_pajak', 'asc')
             ->get();
+
+        $now = Carbon::now();
+        $tujuhHariLalu = Carbon::now()->subDays(7);
+        $tigaPuluhHariSelesai = Carbon::now()->addDays(30);
+
+        // Filter data menggunakan Collection Laravel (Membaca dinamis properti model)
+        $asetPajakMendatang = $bmdData->filter(function ($item) use ($tujuhHariLalu, $tigaPuluhHariSelesai) {
+            // Cari properti tanggal yang ada di dalam model bmds (entah tgl_pajak, tanggal_pajak, atau jatuh_tempo)
+            $kolomTanggal = $item->tgl_pajak ?? $item->tanggal_pajak ?? $item->jatuh_tempo ?? null;
+            
+            if (!$kolomTanggal) return false;
+
+            $date = Carbon::parse($kolomTanggal);
+            return $date->between($tujuhHariLalu, $tigaPuluhHariSelesai);
+        })->sortBy(function ($item) {
+            return $item->tgl_pajak ?? $item->tanggal_pajak ?? $item->jatuh_tempo;
+        });
 
         // --- 5. Data Charts ---
         $chartKomposisiAset = [
-            'labels' => ['KIB A', 'KIB B', 'KIB C', 'KIB D'],
+            'labels' => ['KIB A (Tanah)', 'KIB B (Peralatan)', 'KIB C (Gedung)', 'KIB D (Jalan)'],
             'data' => [$countTanah, $countPeralatan, $countGedung, $countJalan],
         ];
 
@@ -77,9 +88,6 @@ class DashboardController extends Controller
             'labels' => ['KIB A', 'KIB B', 'KIB C', 'KIB D'],
             'data' => [$nilaiTanah, $nilaiPeralatan, $nilaiGedung, $nilaiJalan],
         ];
-
-        // Chart Perolehan... (logika sama seperti sebelumnya)
-        $allPerolehan = []; // ... logic skip for brevity ...
 
         return view('pages/dashboard', compact(
             'kpiTotalNilai', 

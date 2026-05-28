@@ -170,8 +170,16 @@ class InventarisController extends Controller
 
         try {
             DB::transaction(function () use ($inventari, $newRoom, $qtyPindah, $lokasi) {
+                // 1. 🌟 TRACKING DETAIL UNIT: Ambil baris manifes stiker dari ruangan asal sebanyak jumlah unit yang dimutasi
+                $detailUnitDipindah = DetailInventaris::where('id_barang', $inventari->kode_barang)
+                    ->where('lokasi', $room->name)
+                    ->take($qtyPindah)
+                    ->get();
+
+                // 2. Kurangi volume jumlah stok di tabel induk ruangan asal
                 $inventari->decrement('jumlah', $qtyPindah);
 
+                // 3. Cek apakah barang tersebut sudah pernah didata di ruangan tujuan
                 $targetItem = Inventaris::where('kode_barang', $inventari->kode_barang)
                     ->where('room_kode', $newRoom->kode_ruangan)
                     ->first();
@@ -189,6 +197,14 @@ class InventarisController extends Controller
                     $newItem->save();
                 }
 
+                // 4. 🌟 MUTASI DETAIL OTOMATIS: Update lokasi fisik stiker unit ke nama ruangan baru
+                foreach ($detailUnitDipindah as $unit) {
+                    $unit->update([
+                        'lokasi' => $newRoom->name
+                    ]);
+                }
+
+                // 5. Bersihkan data induk lama jika stok di ruangan asal sudah murni habis (0)
                 if ($inventari->fresh()->jumlah <= 0) {
                     Rusak::where('kode_barang', $inventari->kode_barang)->delete();
                     $inventari->delete();
@@ -196,10 +212,11 @@ class InventarisController extends Controller
             });
 
             $this->sendNotification("memindahkan $qtyPindah unit ke {$newRoom->name}", $inventari->nama_barang);
-            return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Berhasil memindahkan barang.');
+            return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])
+                ->with('success', "Berhasil memindahkan $qtyPindah unit aset beserta data manifes stiker detailnya.");
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memindahkan barang: ' . $e->getMessage());
         }
     }
 
