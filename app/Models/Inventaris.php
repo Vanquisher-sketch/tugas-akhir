@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Inventaris extends Model
 {
-    use HasFactory; // 🌟 PASTIKAN DI SINI SUDAH TIDAK ADA LAGI "use SoftDeletes;"
+    use HasFactory;
     use SoftDeletes;
+
     // Tentukan Primary Key karena bukan pakai 'id' auto-increment
     protected $primaryKey = 'kode_barang';
     public $incrementing = false;
@@ -27,7 +28,17 @@ class Inventaris extends Model
         'tahun_perolehan',
         'jumlah',
         'satuan',
-        'kondisi', // 🌟 Tetap masukkan fillable agar dibaca controller
+        'kondisi', 
         'keterangan'
     ];
+
+    /**
+     * 🌟 TAHAP 2 ROADMAP: KABEL RELASI KE MASTER PERALATAN (KIB B)
+     * Menghubungkan kolom kode_barang di tabel inventaris ruangan 
+     * ke kolom kode_barang di master data peralatan.
+     */
+    public function peralatan()
+    {
+        return $this->belongsTo(Peralatan::class, 'kode_barang', 'kode_barang');
+    }
 }

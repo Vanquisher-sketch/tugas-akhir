@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Inventaris;
-use App\Models\DetailInventaris; // 🌟 PENTING: Panggil Model Detail Baru
+use App\Models\DetailInventaris; 
+use App\Models\Peralatan; // Master KIB B
 use App\Models\Room;
 use App\Models\Rusak;
 use App\Models\User;
@@ -12,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class InventarisController extends Controller
 {
@@ -41,8 +41,20 @@ class InventarisController extends Controller
     public function create($lokasi, Room $room)
     {
         if ($room->lokasi !== $lokasi) { abort(404); }
+        
         $daftarSatuan = ['Unit', 'Buah', 'Set', 'Meter', 'Lembar', 'Paket', 'Dus', 'Pcs'];
-        return view("pages.{$lokasi}.inventaris.create", compact('lokasi', 'room', 'daftarSatuan'));
+        
+        // 🌟 REVISI SMART DROPDOWN: Hitung sisa stok sebelum dikirim ke view form tambah
+        $masterPeralatan = Peralatan::orderBy('nama_barang', 'asc')->get()->map(function ($barang) {
+            // Hitung total unit barang ini yang sudah ditaruh di berbagai ruangan
+            $terpakai = Inventaris::where('kode_barang', $barang->kode_barang)->sum('jumlah');
+            
+            // Tanam properti sisa_stok secara dinamis
+            $barang->sisa_stok = (int)$barang->jumlah - (int)$terpakai;
+            return $barang;
+        });
+
+        return view("pages.{$lokasi}.inventaris.create", compact('lokasi', 'room', 'daftarSatuan', 'masterPeralatan'));
     }
 
     public function store(Request $request, $lokasi, Room $room)
@@ -50,44 +62,54 @@ class InventarisController extends Controller
         if ($room->lokasi !== $lokasi) { abort(404); }
 
         $validated = $request->validate([
+            'kode_barang'        => 'required|string|max:100', 
             'nibar'              => 'nullable|string|max:255',
             'nomor_register'     => 'nullable|string|max:255',
-            'kode_barang'        => 'required|string|max:100|unique:inventaris,kode_barang', 
-            'nama_barang'        => 'required|string|max:255',
-            'spesifikasi_barang' => 'nullable|string',
-            'merk_tipe'          => 'nullable|string|max:255',
-            'tahun_perolehan'    => 'required|digits:4',
             'jumlah'             => 'required|integer|min:1',
             'satuan'             => 'required|string',
             'kondisi'            => 'required|in:Baik,Rusak Ringan,Rusak Berat', 
             'keterangan'         => 'nullable|string',
+            'nama_barang'        => 'nullable|string|max:255',
+            'merk_tipe'          => 'nullable|string|max:255',
+            'tahun_perolehan'    => 'nullable',
+            'spesifikasi_barang' => 'nullable|string',
         ]);
 
         $validated['room_kode'] = $room->kode_ruangan;
         $validated['lokasi']    = $lokasi; 
 
-        // 🌟 DATABASE TRANSACTION: Mengamankan proses simpan ganda (Induk & Detail)
+        // 🌟 PROTES VALIDASI SISA STOK BACKEND (ANTI JEBOL)
+        $masterPeralatan = Peralatan::where('kode_barang', $request->kode_barang)->first();
+        if (!$masterPeralatan) {
+            return redirect()->back()->withInput()->with('error', 'Gagal: Kode barang tidak valid di Master KIB B.');
+        }
+
+        $totalStokMaster = (int) $masterPeralatan->jumlah;
+        $stokTerpakaiDiruangan = (int) Inventaris::where('kode_barang', $request->kode_barang)->sum('jumlah');
+        $sisaStokTersedia = $totalStokMaster - $stokTerpakaiDiruangan;
+
+        if ((int)$request->jumlah > $sisaStokTersedia) {
+            return redirect()->back()->withInput()->with('error', "Gagal disimpan! Kuantitas tidak mencukupi. Total di Master KIB B ada {$totalStokMaster} unit, sudah terbagi di ruangan lain sebanyak {$stokTerpakaiDiruangan} unit. Sisa jatah maksimal penempatan: {$sisaStokTersedia} unit.");
+        }
+
+        // DATABASE TRANSACTION: Proses eksekusi double input (Induk & Barcode Manifes Pecahan)
         $inventaris = DB::transaction(function () use ($validated, $room, $lokasi) {
-            // 1. Simpan ke tabel induk (inventaris)
             $item = Inventaris::create($validated);
 
-            // 2. OTOMATIS PECAH UNIT: Lakukan looping sebanyak jumlah kuantitas unit yang di-input
             $jumlahUnit = (int) $item->jumlah;
             for ($i = 1; $i <= $jumlahUnit; $i++) {
-                // Bikin nomor register buntut otomatis (0001, 0002, 0003...) sepanjang 4 digit
                 $noUrutBuntut = str_pad($i, 4, '0', STR_PAD_LEFT);
                 
                 DetailInventaris::create([
-                    'id_barang'     => $item->kode_barang, // Foreign Key ke tabel inventaris
-                    'kode_barcode'  => $item->kode_barang . '.' . $noUrutBuntut, // Contoh: KODE.0001
+                    'id_barang'     => $item->kode_barang, 
+                    'kode_barcode'  => $item->kode_barang . '.' . $noUrutBuntut, 
                     'kondisi'       => $item->kondisi,
-                    'lokasi'        => $room->name, // Mengambil string nama ruangan dari master room
-                    'status_pinjam' => 'Tersedia', // Status awal aset satuan
-                    'tanggal_cek'   => now()->toDateString() // Otomatis terisi tanggal hari ini
+                    'lokasi'        => $room->name, 
+                    'status_pinjam' => 'Tersedia', 
+                    'tanggal_cek'   => now()->toDateString() 
                 ]);
             }
 
-            // Pemicu log penampung barang rusak jika kondisi awal disetel Rusak Berat
             if ($item->kondisi === 'Rusak Berat') {
                 Rusak::updateOrCreate(
                     ['kode_barang' => $item->kode_barang],
@@ -102,7 +124,8 @@ class InventarisController extends Controller
             return $item;
         });
 
-        $this->sendNotification('ditambahkan', $inventaris->nama_barang);
+        $namaBarangMaster = optional($inventaris->peralatan)->nama_barang ?? 'Aset Baru';
+        $this->sendNotification('ditambahkan', $namaBarangMaster);
 
         return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])
             ->with('success', 'Data induk inventaris dan baris pecahan detail berhasil disimpan.');
@@ -123,7 +146,7 @@ class InventarisController extends Controller
         $validated = $request->validate([
             'nibar'           => 'nullable', 
             'nomor_register'  => 'nullable', 
-            'kode_barang'     => 'required|string|unique:inventaris,kode_barang,' . $inventari->kode_barang . ',kode_barang',
+            'kode_barang'     => 'required|string',
             'nama_barang'     => 'required', 
             'tahun_perolehan' => 'required|digits:4',
             'jumlah'          => 'required|integer|min:0', 
@@ -169,17 +192,14 @@ class InventarisController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($inventari, $newRoom, $qtyPindah, $lokasi) {
-                // 1. 🌟 TRACKING DETAIL UNIT: Ambil baris manifes stiker dari ruangan asal sebanyak jumlah unit yang dimutasi
+            DB::transaction(function () use ($inventari, $newRoom, $qtyPindah, $lokasi, $room) {
                 $detailUnitDipindah = DetailInventaris::where('id_barang', $inventari->kode_barang)
                     ->where('lokasi', $room->name)
                     ->take($qtyPindah)
                     ->get();
 
-                // 2. Kurangi volume jumlah stok di tabel induk ruangan asal
                 $inventari->decrement('jumlah', $qtyPindah);
 
-                // 3. Cek apakah barang tersebut sudah pernah didata di ruangan tujuan
                 $targetItem = Inventaris::where('kode_barang', $inventari->kode_barang)
                     ->where('room_kode', $newRoom->kode_ruangan)
                     ->first();
@@ -197,14 +217,12 @@ class InventarisController extends Controller
                     $newItem->save();
                 }
 
-                // 4. 🌟 MUTASI DETAIL OTOMATIS: Update lokasi fisik stiker unit ke nama ruangan baru
                 foreach ($detailUnitDipindah as $unit) {
                     $unit->update([
                         'lokasi' => $newRoom->name
                     ]);
                 }
 
-                // 5. Bersihkan data induk lama jika stok di ruangan asal sudah murni habis (0)
                 if ($inventari->fresh()->jumlah <= 0) {
                     Rusak::where('kode_barang', $inventari->kode_barang)->delete();
                     $inventari->delete();
@@ -232,15 +250,10 @@ class InventarisController extends Controller
         return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan])->with('success', 'Data berhasil dihapus.');
     }
 
-    /**
-     * 🌟 POIN 3: Ambil Data Riil Pecahan dari Database Detail Inventaris
-     */
     public function showDetail($lokasi, $room_kode, $kode_barang)
     {
         $room = Room::where('kode_ruangan', $room_kode)->firstOrFail();
         $item = Inventaris::where('kode_barang', $kode_barang)->where('room_kode', $room_kode)->firstOrFail();
-
-        // Ambil baris data pecahan satuan langsung dari tabel detail_inventaris di MySQL
         $unitPecahan = DetailInventaris::where('id_barang', $kode_barang)->get();
 
         return view("pages.{$lokasi}.inventaris.detail", compact('lokasi', 'room', 'item', 'unitPecahan'));

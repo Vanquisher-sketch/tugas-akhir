@@ -45,7 +45,7 @@ return new class extends Migration
             $table->date('tanggal_perolehan');   // (22)
             $table->string('status_penggunaan'); // (23)
             $table->text('keterangan')->nullable(); // (24)
-
+            $table->softDeletes();
             $table->timestamps();
         });
     }

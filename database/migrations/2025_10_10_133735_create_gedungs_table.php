@@ -34,7 +34,7 @@ return new class extends Migration
             $table->date('tanggal_perolehan');                   // Sesuai Kolom (21)
             $table->string('status_penggunaan')->nullable();     // Sesuai Kolom (22)
             $table->text('keterangan')->nullable();             // Sesuai Kolom (23)
-            
+            $table->softDeletes();
             $table->timestamps();
         });
     }
