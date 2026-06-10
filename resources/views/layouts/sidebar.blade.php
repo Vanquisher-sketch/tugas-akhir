@@ -34,7 +34,9 @@
     }
 @endphp
 
-<ul class="navbar-nav bg-gradient-secondary sidebar sidebar-dark accordion" id="accordionSidebar">
+{{-- 🌟 REVISI BIRU ELEGANT: Menggunakan kombinasi warna Deep Navy Kedinasan dan bayangan halus untuk kesan premium --}}
+<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" 
+    style="background: linear-gradient(180deg, #183059 0%, #0b1b33 100%); box-shadow: 3px 0 15px rgba(0,0,0,0.2);">
 
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard') }}">
         <div class="sidebar-brand-icon">
@@ -166,7 +168,7 @@
         </a>
     </li>
 
-    {{-- 🌟 MENU DATA PEGAWAI (Ditaruh Terpusat Di Sini) 🌟 --}}
+    {{-- MENU DATA PEGAWAI --}}
     <li class="nav-item {{ request()->is('*/pegawai*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('lokasi.pegawai.index', ['lokasi' => $currentLokasi]) }}">
             <i class="fas fa-fw fa-users"></i>
