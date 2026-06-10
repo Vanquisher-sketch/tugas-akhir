@@ -55,6 +55,7 @@ return new class extends Migration
             $table->date('dokumen_lain_tanggal')->nullable();
 
             $table->text('keterangan')->nullable(); // Catatan kondisi fisik saat diserahkan
+            $table->softDeletes();
             $table->timestamps();
         });
     }
