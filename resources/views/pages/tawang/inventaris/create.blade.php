@@ -64,7 +64,7 @@
                         </select>
                     </div>
 
-                    {{-- Kode Barang Tersembunyi / Ketik Manual --}}
+                    {{-- Kode Barang --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
                         <input type="text" id="kode_barang" name="kode_barang" class="form-control" value="{{ old('kode_barang') }}" placeholder="Contoh: 1.02.01.01.050" required>
@@ -166,30 +166,36 @@
             var val = selectedOption.val();
             
             if (val === "MANUAL") {
-                // Bersihkan form agar admin bebas ketik Meja/Kursi dari awal
+                // Bersihkan form agar admin bebas ketik dari awal
                 $('#kode_barang').val('').prop('readonly', false).focus();
                 $('#nama_barang').val('').prop('readonly', false);
                 $('#merk_tipe').val('').prop('readonly', false);
                 $('#tahun_perolehan').val('{{ date("Y") }}').prop('readonly', false);
                 $('#spesifikasi_barang').val('').prop('readonly', false);
             } else if (val !== "") {
-                // Tarik otomatis data master bermesin dari KIB B
+                // Tarik otomatis data master dari KIB B
                 var kode = val;
                 var nama = selectedOption.attr('data-nama') || '';
                 var merk = selectedOption.attr('data-merk') || '';
                 var tahun = selectedOption.attr('data-tahun') || '';
                 var spek = selectedOption.attr('data-spek') || '';
 
-                $('#kode_barang').val(kode).prop('readonly', true);
-                $('#nama_barang').val(nama).prop('readonly', true);
-                $('#merk_tipe').val(merk).prop('readonly', true);
-                $('#tahun_perolehan').val(tahun).prop('readonly', true);
-                $('#spesifikasi_barang').val(spek).prop('readonly', true);
+                // Mengisi data secara otomatis, namun properti readonly di-set FALSE agar bisa diedit kembali
+                $('#kode_barang').val(kode).prop('readonly', false);
+                $('#nama_barang').val(nama).prop('readonly', false);
+                $('#merk_tipe').val(merk).prop('readonly', false);
+                $('#tahun_perolehan').val(tahun).prop('readonly', false);
+                $('#spesifikasi_barang').val(spek).prop('readonly', false);
             }
         });
 
+        // Cek kondisi awal saat halaman dimuat (untuk menjaga error validation Laravel / 'old value')
         if ($('#sumber_aset').val() !== "") {
-            $('#sumber_aset').trigger('change');
+            $('#kode_barang').prop('readonly', false);
+            $('#nama_barang').prop('readonly', false);
+            $('#merk_tipe').prop('readonly', false);
+            $('#tahun_perolehan').prop('readonly', false);
+            $('#spesifikasi_barang').prop('readonly', false);
         }
     });
 </script>
