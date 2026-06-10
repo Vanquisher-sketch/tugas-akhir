@@ -9,6 +9,15 @@
         </a>
     </div>
 
+    {{-- ALERT ERROR FLASH --}}
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow">
+            <i class="fas fa-exclamation-triangle mr-2"></i><strong>Pemberitahuan Sistem:</strong>
+            <p class="mb-0 mt-1">{{ session('error') }}</p>
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+    @endif
+
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-primary text-white">
             <h6 class="m-0 font-weight-bold"><i class="fas fa-plus mr-2"></i>Form Entri Aset Ruangan: {{ $room->name }}</h6>
@@ -28,51 +37,78 @@
                 @csrf
                 
                 <div class="row">
-                    {{-- Kode Barang (Primary Key) --}}
+                    {{-- DROPDOWN HYBRID --}}
                     <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Kode Barang (PK) <span class="text-danger">*</span></label>
-                        <input type="text" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" placeholder="Contoh: 1.02.01.01.002" required>
+                        <label class="font-weight-bold">Pilih Sumber Aset Barang <span class="text-danger">*</span></label>
+                        <select name="sumber_aset" id="sumber_aset" class="form-control select2" style="width: 100%;" required>
+                            <option value="">-- Pilih Kode Barang Master / Input Manual --</option>
+                            <option value="MANUAL" class="font-weight-bold text-primary">✍️ [INPUT MANUAL] Meja, Kursi, Lemari, dll</option>
+                            
+                            <optgroup label="Peralatan & Mesin (KIB B)">
+                                @foreach($masterPeralatan as $peralatan)
+                                    @if($peralatan->sisa_stok > 0)
+                                        <option value="{{ $peralatan->kode_barang }}" 
+                                                data-nama="{{ $peralatan->nama_barang }}"
+                                                data-merk="{{ $peralatan->merk_tipe }}"
+                                                data-tahun="{{ $peralatan->tahun_perolehan }}"
+                                                data-spek="{{ $peralatan->spesifikasi_barang ?? $peralatan->keterangan }}">
+                                            {{ $peralatan->kode_barang }} - {{ $peralatan->nama_barang }} (Sisa Stok: {{ $peralatan->sisa_stok }} {{ $peralatan->satuan ?? 'Unit' }})
+                                        </option>
+                                    @else
+                                        <option value="" disabled class="text-danger bg-light">
+                                            🚫 {{ $peralatan->kode_barang }} - {{ $peralatan->nama_barang }} [STOK HABIS]
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </optgroup>
+                        </select>
                     </div>
 
-                    {{-- Nama Barang --}}
+                    {{-- Kode Barang Tersembunyi / Ketik Manual --}}
                     <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                        <input type="text" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" placeholder="Nama aset barang" required>
+                        <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
+                        <input type="text" id="kode_barang" name="kode_barang" class="form-control" value="{{ old('kode_barang') }}" placeholder="Contoh: 1.02.01.01.050" required>
                     </div>
                 </div>
 
                 <div class="row">
+                    {{-- Nama Barang --}}
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" id="nama_barang" name="nama_barang" class="form-control" value="{{ old('nama_barang') }}" placeholder="Contoh: Meja Kerja Kayu / Kursi Lipat" required>
+                    </div>
+
                     {{-- NIBAR --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-bold">NIBAR (Nomor Induk Barang)</label>
                         <input type="text" name="nibar" class="form-control" value="{{ old('nibar') }}" placeholder="Isi NIBAR jika ada">
                     </div>
+                </div>
 
+                <div class="row">
                     {{-- Nomor Register --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-bold">Nomor Register</label>
                         <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register') }}" placeholder="Contoh: 0001">
                     </div>
-                </div>
 
-                <div class="row">
                     {{-- Merk / Tipe --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-bold">Merk / Tipe</label>
-                        <input type="text" name="merk_tipe" class="form-control" value="{{ old('merk_tipe') }}" placeholder="Contoh: Sharp / Polytron / Lenovo">
-                    </div>
-
-                    {{-- Tahun Perolehan --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Tahun Perolehan <span class="text-danger">*</span></label>
-                        <input type="number" name="tahun_perolehan" class="form-control @error('tahun_perolehan') is-invalid @enderror" value="{{ old('tahun_perolehan', date('Y')) }}" placeholder="Contoh: 2026" required>
+                        <input type="text" id="merk_tipe" name="merk_tipe" class="form-control" value="{{ old('merk_tipe') }}" placeholder="Contoh: Meja Setengah Biro / Chitose">
                     </div>
                 </div>
 
                 <div class="row">
+                    {{-- Tahun Perolehan --}}
+                    <div class="col-md-4 form-group">
+                        <label class="font-weight-bold">Tahun Perolehan <span class="text-danger">*</span></label>
+                        <input type="number" id="tahun_perolehan" name="tahun_perolehan" class="form-control" value="{{ old('tahun_perolehan', date('Y')) }}" placeholder="Contoh: 2026" required>
+                    </div>
+
                     {{-- Jumlah --}}
                     <div class="col-md-4 form-group">
-                        <label class="font-weight-bold">Volume Jumlah <span class="text-danger">*</span></label>
+                        <label class="font-weight-bold">Volume Jumlah Penempatan <span class="text-danger">*</span></label>
                         <input type="number" name="jumlah" class="form-control @error('jumlah') is-invalid @enderror" value="{{ old('jumlah', 1) }}" min="1" required>
                     </div>
 
@@ -85,10 +121,12 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
 
-                    {{-- Poin 6: Opsi Kondisi 3 Tingkat --}}
+                <div class="row">
+                    {{-- Kondisi --}}
                     <div class="col-md-4 form-group">
-                        <label class="font-weight-bold text-primary">Kondisi Fisik Barang (Poin 6) <span class="text-danger">*</span></label>
+                        <label class="font-weight-bold text-primary">Kondisi Fisik Barang <span class="text-danger">*</span></label>
                         <select name="kondisi" class="form-control font-weight-bold text-dark" required>
                             <option value="Baik" {{ old('kondisi') == 'Baik' ? 'selected' : '' }}>🟢 Baik</option>
                             <option value="Rusak Ringan" {{ old('kondisi') == 'Rusak Ringan' ? 'selected' : '' }}>🟡 Rusak Ringan</option>
@@ -100,13 +138,13 @@
                 {{-- Spesifikasi Barang --}}
                 <div class="form-group">
                     <label class="font-weight-bold">Spesifikasi Barang</label>
-                    <textarea name="spesifikasi_barang" class="form-control" rows="2" placeholder="Detail deskripsi fisik spesifikasi barang...">{{ old('spesifikasi_barang') }}</textarea>
+                    <textarea id="spesifikasi_barang" name="spesifikasi_barang" class="form-control" rows="2" placeholder="Detail deskripsi fisik spesifikasi meja/kursi/laptop...">{{ old('spesifikasi_barang') }}</textarea>
                 </div>
 
                 {{-- Keterangan --}}
                 <div class="form-group">
-                    <label class="font-weight-bold">Keterangan / Catatan Tambahan</label>
-                    <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan opsional atau alasan jika barang rusak berat...">{{ old('keterangan') }}</textarea>
+                    <label class="font-weight-bold">Keterangan / Catatan Tambahan Ruangan</label>
+                    <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan posisi penempatan di ruangan...">{{ old('keterangan') }}</textarea>
                 </div>
 
                 <hr>
@@ -118,4 +156,41 @@
         </div>
     </div>
 </div>
+
+{{-- JAVASCRIPT LOGIKA HYBRID INPUT --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#sumber_aset').on('change select2:select', function () {
+            var selectedOption = $(this).find(':selected');
+            var val = selectedOption.val();
+            
+            if (val === "MANUAL") {
+                // Bersihkan form agar admin bebas ketik Meja/Kursi dari awal
+                $('#kode_barang').val('').prop('readonly', false).focus();
+                $('#nama_barang').val('').prop('readonly', false);
+                $('#merk_tipe').val('').prop('readonly', false);
+                $('#tahun_perolehan').val('{{ date("Y") }}').prop('readonly', false);
+                $('#spesifikasi_barang').val('').prop('readonly', false);
+            } else if (val !== "") {
+                // Tarik otomatis data master bermesin dari KIB B
+                var kode = val;
+                var nama = selectedOption.attr('data-nama') || '';
+                var merk = selectedOption.attr('data-merk') || '';
+                var tahun = selectedOption.attr('data-tahun') || '';
+                var spek = selectedOption.attr('data-spek') || '';
+
+                $('#kode_barang').val(kode).prop('readonly', true);
+                $('#nama_barang').val(nama).prop('readonly', true);
+                $('#merk_tipe').val(merk).prop('readonly', true);
+                $('#tahun_perolehan').val(tahun).prop('readonly', true);
+                $('#spesifikasi_barang').val(spek).prop('readonly', true);
+            }
+        });
+
+        if ($('#sumber_aset').val() !== "") {
+            $('#sumber_aset').trigger('change');
+        }
+    });
+</script>
 @endsection
