@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('jenis_asal', 50);
             $table->text('keterangan')->nullable(); // 🌟 Kolom baru penampung alasan kerusakan
             $table->string('lokasi', 100);
-            
+            $table->softDeletes();
             $table->timestamps();
         });
     }
