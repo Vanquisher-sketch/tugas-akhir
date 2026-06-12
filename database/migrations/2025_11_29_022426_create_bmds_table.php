@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bmds', function (Blueprint $table) {
-            $table->id(); // ID Transaksi Penggunaan
+            $table->id(); // ID Urut Transaksi Penggunaan
 
-            // 1. RELASI KIB B (Peralatan & Mesin) - Berdasarkan Kode Barang
-            $table->string('peralatan_kode');
+            // 1. RELASI KIB B (Peralatan & Mesin) - Berdasarkan Kode Barang Master
+            $table->string('peralatan_kode', 100);
             $table->foreign('peralatan_kode')
                   ->references('kode_barang')
                   ->on('peralatans')
@@ -38,25 +38,20 @@ return new class extends Migration
                   ->onDelete('set null')
                   ->onUpdate('cascade');
 
-            // 4. INFORMASI LOKASI & TRANSAKSI BMD
-            $table->string('lokasi'); // Menyimpan slug wilayah (misal: tawang, cikalang)
-            $table->string('alamat_penggunaan'); // Detail titik fisik aset (misal: Ruang Camat)
-            $table->string('pemakai_status'); // Tetap dipertahankan untuk status kontekstual (ASN / Non-ASN)
-            $table->string('pemakai_identitas'); // Untuk mencatat NIP/NIK yang aktif saat BAST dibuat
+            // 4. FILTER FILTER UTAMA & REKAM IDENTITAS KONTEKSTUAL
+            $table->string('lokasi'); // 🌟 TETAP DIPERTAHANKAN (Untuk filter tawang, cikalang, dll)
+            $table->string('pemakai_status'); // Status saat BAST dibuat (ASN / Non-ASN)
+            $table->string('pemakai_identitas'); // NIP/NIK yang aktif saat BAST dibuat
 
-            // 5. DOKUMEN SUMBER (BAST OTOMATIS)
-            $table->string('bast_nomor'); // Nomor Surat BAST Resmi
-            $table->date('bast_tanggal'); // Tanggal Penyerahan / TTD BAST
-            $table->string('bast_file')->nullable(); // Path File PDF yang di-generate otomatis oleh sistem
+            // 5. DATA REGISTER DOKUMEN BAST OTOMATIS
+            $table->string('bast_nomor'); // Nomor Surat BAST Resmi hasil generate sistem
+            $table->date('bast_tanggal'); // Tanggal Cetak / Penyerahan BAST
+            $table->string('bast_file')->nullable(); // Path PDF BAST hasil simpan otomatis/upload scan
 
-            // 6. DOKUMEN LAIN (Jika Ada Lampiran Tambahan Manually)
-            $table->string('dokumen_lain_nama')->nullable();
-            $table->string('dokumen_lain_nomor')->nullable();
-            $table->date('dokumen_lain_tanggal')->nullable();
-
-            $table->text('keterangan')->nullable(); // Catatan kondisi fisik saat diserahkan
-            $table->softDeletes();
-            $table->timestamps();
+            // 6. CATATAN & LOG DATA
+            $table->text('keterangan')->nullable(); // Catatan kondisi penempatan barang
+            $table->softDeletes(); // Fitur pengaman data terhapus sementara
+            $table->timestamps(); // created_at dan updated_at
         });
     }
 

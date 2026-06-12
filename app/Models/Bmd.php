@@ -13,21 +13,17 @@ class Bmd extends Model
 
     protected $table = 'bmds';
 
-    // Daftarkan semua kolom sesuai dengan revisi migration terbaru
+    // 🌟 REVISI FILLABLE: Hanya mendaftarkan kolom yang ada di migration terbaru
     protected $fillable = [
         'peralatan_kode',
         'pegawai_id',
         'bendahara_id',
-        'lokasi',
-        'alamat_penggunaan',
+        'lokasi', // Tetap dipertahankan untuk filter wilayah URL (tawang, cikalang, dll)
         'pemakai_status',
         'pemakai_identitas',
         'bast_nomor',
         'bast_tanggal',
         'bast_file',
-        'dokumen_lain_nama',
-        'dokumen_lain_nomor',
-        'dokumen_lain_tanggal',
         'keterangan'
     ];
 

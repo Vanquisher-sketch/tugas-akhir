@@ -37,15 +37,17 @@
                         <th rowspan="2" class="align-middle">No</th>
                         <th rowspan="2" class="align-middle">Nama Barang</th>
                         <th rowspan="2" class="align-middle">Kode Barang</th>
-                        <th rowspan="2" class="align-middle">Lokasi Penggunaan</th>
-                        <th colspan="2">Data Pemakai</th>
+                        <th colspan="2">Data Pemakai (Pihak Kedua)</th>
+                        <th rowspan="2" class="align-middle">Bendahara Barang (Pihak Pertama)</th> {{-- 🌟 3NF Upgrade: Menampilkan Penanggung Jawab --}}
                         <th colspan="2">Dokumen BAST</th>
-                        <th rowspan="2" class="align-middle">Status Pajak (Aset)</th> {{-- 🌟 Sinkron dari Tabel Peralatan --}}
+                        <th rowspan="2" class="align-middle">Status Pajak (Aset)</th>
                         <th rowspan="2" class="align-middle">Aksi</th>
                     </tr>
                     <tr>
                         <th>Nama</th>
                         <th>Identitas / Jabatan</th>
+                        <th>Nomor</th>
+                        <th>Berkas</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,18 +56,24 @@
                         <td class="text-center align-middle">{{ $loop->iteration }}</td>
                         <td class="font-weight-bold align-middle">{{ $item->peralatan->nama_barang ?? '-' }}</td>
                         <td class="align-middle">{{ $item->peralatan_kode }}</td>
-                        <td class="align-middle">{{ $item->alamat_penggunaan }}</td>
                         
-                        {{-- 🌟 Data Pemakai ditarik dari Relasi Tabel Pegawai --}}
+                        {{-- Data Pemakai ditarik dari Relasi Tabel Pegawai --}}
                         <td class="align-middle">
                             <strong>{{ $item->pegawai->nama ?? 'Bukan Pegawai Aktif' }}</strong>
                         </td>
                         <td class="align-middle">
-                            <small class="text-muted">ID: {{ $item->pemakai_identitas }}</small><br>
+                            <small class="text-muted">ID/NIP: {{ $item->pemakai_identitas }}</small><br>
+                            <small class="text-dark">Status: <span class="badge badge-light border">{{ $item->pemakai_status }}</span></small><br>
                             <small class="text-dark">Jabatan: {{ $item->pegawai->jabatan ?? '-' }}</small>
                         </td>
 
-                        <td class="align-middle text-center">{{ $item->bast_nomor ?? '-' }}</td>
+                        {{-- 🌟 Menampilkan Nama Bendahara Barang Hasil Relasi --}}
+                        <td class="align-middle">
+                            <strong>{{ $item->bendahara->nama ?? '-' }}</strong><br>
+                            <small class="text-muted">Bendahara Barang</small>
+                        </td>
+
+                        <td class="align-middle text-center font-weight-bold">{{ $item->bast_nomor ?? '-' }}</td>
                         <td class="text-center align-middle">
                             @if($item->bast_file)
                                 <a href="{{ asset('storage/' . $item->bast_file) }}" target="_blank" class="btn btn-sm btn-info btn-circle" title="Lihat Berkas Surat BAST PDF">
@@ -76,7 +84,7 @@
                             @endif
                         </td>
 
-                        {{-- 🌟 POIN 4: Status Pajak Otomatis dari Relasi Tabel Peralatan --}}
+                        {{-- Status Pajak Otomatis dari Relasi Tabel Peralatan --}}
                         <td class="text-center align-middle">
                             @if(isset($item->peralatan->tanggal_pajak) && $item->peralatan->tanggal_pajak)
                                 @php
