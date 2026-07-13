@@ -70,7 +70,7 @@
                         
                         {{-- Kolom Aksi Tunggal Tindakan Pemulihan --}}
                         <td class="text-center">
-                            <form action="{{ route('lokasi.rusak.destroy', ['lokasi' => $lokasi, 'rusak' => $item->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah barang ini sudah selesai diperbaiki? Jika ya, status kondisi barang di modul asal akan otomatis pulih menjadi Baik.')">
+                            <form action="{{ route('lokasi.rusak.destroy', ['lokasi' => $lokasi, 'id' => $item->rusak_kode_barang]) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-xs btn-outline-success font-weight-bold shadow-sm py-1">
                                     <i class="fas fa-wrench mr-1"></i> Selesai Perbaikan

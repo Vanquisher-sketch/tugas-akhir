@@ -20,3 +20,4 @@ class Rusak extends Model
         'rusak_keterangan',
         'lokasi'
     ];
+}
