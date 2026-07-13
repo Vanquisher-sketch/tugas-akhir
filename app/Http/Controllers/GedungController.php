@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Validator;
 
 class GedungController extends Controller
 {
-    /**
-     * Menampilkan daftar data gedung (KIB C).
-     */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
@@ -22,9 +19,9 @@ class GedungController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('Lok', 'LIKE', "%{$search}%");
+                $q->where('gedung_nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('gedung_kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('gedung_lokasi_fisik', 'LIKE', "%{$search}%");
             });
         }
         
@@ -32,21 +29,17 @@ class GedungController extends Controller
         return view("pages.{$lokasi}.gedung.index", compact('dataGedung', 'lokasi', 'search'));
     }
 
-    /**
-     * Fitur Saran Pencarian (Autocomplete) - AJAX
-     */
     public function autocomplete(Request $request, $lokasi)
     {
         $search = $request->query('term');
-        
         $results = Gedung::where('lokasi', $lokasi)
             ->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('Lok', 'LIKE', "%{$search}%");
+                $q->where('gedung_nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('gedung_kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('gedung_lokasi_fisik', 'LIKE', "%{$search}%");
             })
             ->limit(5)
-            ->get(['nama_barang as label', 'kode_barang as value']);
+            ->get(['gedung_nama_barang as label', 'gedung_kode_barang as value']);
 
         return response()->json($results);
     }
@@ -56,12 +49,8 @@ class GedungController extends Controller
         return view("pages.{$lokasi}.gedung.create", compact('lokasi'));
     }
 
-    /**
-     * Menyimpan data gedung baru.
-     */
     public function store(Request $request, $lokasi)
     {
-        // 1. BERSIHKAN FORMAT RUPIAH & RIBUAN
         $inputs = $request->all();
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
 
@@ -73,9 +62,8 @@ class GedungController extends Controller
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI
         $validator = Validator::make($request->all(), [
-            'kode_barang'               => 'required|string|max:100|unique:gedungs,kode_barang',
+            'kode_barang'               => 'required|string|max:100|unique:gedungs,gedung_kode_barang',
             'nama_barang'               => 'required|string|max:255',
             'nbar'                      => 'nullable|string|max:255',
             'nomor_register'            => 'required|string|max:255',
@@ -99,16 +87,32 @@ class GedungController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        $dataToStore = $validator->validated();
-        $dataToStore['lokasi'] = $lokasi;
-        
-        $gedung = Gedung::create($dataToStore);
+        $gedung = Gedung::create([
+            'gedung_kode_barang'               => $request->kode_barang,
+            'gedung_nama_barang'               => $request->nama_barang,
+            'gedung_nibar'                     => $request->nbar,
+            'gedung_nomor_register'            => $request->nomor_register,
+            'gedung_spesifikasi_barang'        => $request->spesifikasi_barang,
+            'gedung_spesifikasi_lainnya'       => $request->spesifikasi_lainnya,
+            'gedung_jumlah_lantai'             => $request->jumlah_lantai,
+            'gedung_lokasi_fisik'              => $request->Lok,
+            'gedung_titik_koordinat'           => $request->titik_koordinat,
+            'gedung_status_kepemilikan_tanah'  => $request->status_kepemilikan_tanah,
+            'gedung_jumlah'                    => $request->jumlah,
+            'gedung_satuan'                    => $request->satuan,
+            'gedung_harga_satuan'              => $request->harga_satuan,
+            'gedung_nilai_perolehan'           => $request->nilai_perolehan,
+            'gedung_cara_perolehan'            => $request->cara_perolehan,
+            'gedung_tanggal_perolehan'         => $request->tanggal_perolehan,
+            'gedung_status_penggunaan'         => $request->status_penggunaan,
+            'gedung_keterangan'                => $request->keterangan,
+            'lokasi'                           => $lokasi,
+        ]);
 
-        // 3. NOTIFIKASI
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'ditambahkan', 'Gedung & Bangunan', $gedung->nama_barang
+                Auth::user(), 'ditambahkan', 'Gedung & Bangunan', $gedung->gedung_nama_barang
             ));
         }
 
@@ -116,20 +120,18 @@ class GedungController extends Controller
                          ->with('success', 'Data Gedung & Bangunan berhasil ditambahkan.');
     }
 
-    public function edit($lokasi, Gedung $gedung)
+    public function edit($lokasi, $kode_barang)
     {
+        $gedung = Gedung::findOrFail($kode_barang);
         if ($gedung->lokasi !== $lokasi) abort(404);
         return view("pages.{$lokasi}.gedung.edit", compact('gedung', 'lokasi'));
     }
 
-    /**
-     * Memperbarui data gedung.
-     */
-    public function update(Request $request, $lokasi, Gedung $gedung)
+    public function update(Request $request, $lokasi, $kode_barang)
     {
+        $gedung = Gedung::findOrFail($kode_barang);
         if ($gedung->lokasi !== $lokasi) abort(404);
 
-        // 1. BERSIHKAN FORMAT
         $inputs = $request->all();
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
         foreach ($currencyFields as $field) {
@@ -140,9 +142,8 @@ class GedungController extends Controller
         }
         $request->replace($inputs);
 
-        // 2. VALIDASI (Kecualikan kode milik sendiri)
         $validator = Validator::make($request->all(), [
-            'kode_barang'               => "required|string|max:100|unique:gedungs,kode_barang,{$gedung->kode_barang},kode_barang",
+            'kode_barang'               => "required|string|max:100|unique:gedungs,gedung_kode_barang,{$gedung->gedung_kode_barang},gedung_kode_barang",
             'nama_barang'               => 'required|string|max:255',
             'nbar'                      => 'nullable|string|max:255',
             'nomor_register'            => 'required|string|max:255',
@@ -166,12 +167,31 @@ class GedungController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        $gedung->update($validator->validated());
+        $gedung->update([
+            'gedung_kode_barang'               => $request->kode_barang,
+            'gedung_nama_barang'               => $request->nama_barang,
+            'gedung_nibar'                     => $request->nbar,
+            'gedung_nomor_register'            => $request->nomor_register,
+            'gedung_spesifikasi_barang'        => $request->spesifikasi_barang,
+            'gedung_spesifikasi_lainnya'       => $request->spesifikasi_lainnya,
+            'gedung_jumlah_lantai'             => $request->jumlah_lantai,
+            'gedung_lokasi_fisik'              => $request->Lok,
+            'gedung_titik_koordinat'           => $request->titik_koordinat,
+            'gedung_status_kepemilikan_tanah'  => $request->status_kepemilikan_tanah,
+            'gedung_jumlah'                    => $request->jumlah,
+            'gedung_satuan'                    => $request->satuan,
+            'gedung_harga_satuan'              => $request->harga_satuan,
+            'gedung_nilai_perolehan'           => $request->nilai_perolehan,
+            'gedung_cara_perolehan'            => $request->cara_perolehan,
+            'gedung_tanggal_perolehan'         => $request->tanggal_perolehan,
+            'gedung_status_penggunaan'         => $request->status_penggunaan,
+            'gedung_keterangan'                => $request->keterangan,
+        ]);
 
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'diperbarui', 'Gedung & Bangunan', $gedung->nama_barang
+                Auth::user(), 'diperbarui', 'Gedung & Bangunan', $gedung->gedung_nama_barang
             ));
         }
 
@@ -179,14 +199,15 @@ class GedungController extends Controller
                          ->with('success', 'Data Gedung & Bangunan berhasil diperbarui.');
     }
 
-    public function destroy($lokasi, Gedung $gedung)
+    public function destroy($lokasi, $kode_barang)
     {
+        $gedung = Gedung::findOrFail($kode_barang);
         if ($gedung->lokasi !== $lokasi) abort(404);
         
-        $itemName = $gedung->nama_barang;
+        $itemName = $gedung->gedung_nama_barang;
         $gedung->delete();
         
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
                 Auth::user(), 'dihapus', 'Gedung & Bangunan', $itemName

@@ -8,23 +8,41 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Jalan extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
+    // 1. Definisikan nama tabel secara eksplisit
     protected $table = 'jalans';
 
-    // REVISI: Primary Key menggunakan kode_barang
-    protected $primaryKey = 'kode_barang';
+    // 2. Beritahu Laravel Primary Key yang baru
+    protected $primaryKey = 'jalan_kode_barang';
 
-    // REVISI: Matikan auto-increment karena PK adalah string
+    // 3. Matikan auto-increment karena PK berupa String
     public $incrementing = false;
+
+    // 4. Tentukan tipe data Primary Key adalah String
     protected $keyType = 'string';
 
+    
+    // 6. Daftarkan semua kolom yang boleh diisi data sesuai dengan migration terbaru
     protected $fillable = [
-        'kode_barang', 'lokasi', 'nama_barang', 'nibar', 'nomor_register',
-        'spesifikasi_barang', 'spesifikasi_lainnya', 'nomor_ruas_jalan_jembatan_irigasi',
-        'Lok', 'titik_koordinat', 'status_kepemilikan_tanah', 'jumlah',
-        'satuan', 'harga_satuan', 'nilai_perolehan', 'cara_perolehan',
-        'tanggal_perolehan', 'status_penggunaan', 'keterangan'
+        'jalan_kode_barang',
+        'lokasi', // Kolom murni tanpa awalan khusus jangkar filter
+        'jalan_nama_barang',
+        'jalan_nibar',
+        'jalan_nomor_register',
+        'jalan_spesifikasi_barang',
+        'jalan_spesifikasi_lainnya',
+        'jalan_nomor_ruas_jalan_jembatan_irigasi',
+        'jalan_lokasi_fisik', // Perubahan dari 'Lok' agar selaras
+        'jalan_titik_koordinat',
+        'jalan_status_kepemilikan_tanah',
+        'jalan_jumlah',
+        'jalan_satuan',
+        'jalan_harga_satuan',
+        'jalan_nilai_perolehan',
+        'jalan_cara_perolehan',
+        'jalan_tanggal_perolehan',
+        'jalan_status_penggunaan',
+        'jalan_keterangan'
     ];
 }

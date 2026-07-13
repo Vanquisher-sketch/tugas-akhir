@@ -27,7 +27,7 @@ class RoleMiddleware
         $user = Auth::user();
 
         // Cek apakah peran pengguna ada dalam daftar peran yang diizinkan
-        if (in_array($user->role_id, $roles)) {
+        if (in_array($user->user_role_id, $roles)) {
             return $next($request); // Lanjutkan permintaan jika peran sesuai
         }
 

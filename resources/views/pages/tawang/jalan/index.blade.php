@@ -35,18 +35,28 @@
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" width="100%" cellspacing="0" style="font-size: 0.75rem; color: #000;">
-                <thead class="thead-light text-center">
+            <table class="table table-bordered table-hover" width="100%" cellspacing="0" style="font-size: 0.72rem; color: #000;">
+                <thead class="thead-light text-center align-middle">
                     <tr>
                         <th>No</th>
                         <th>Kode Barang</th>
+                        <th>No. Register</th>
                         <th>Nama Barang</th>
+                        <th>Nibar</th>
+                        <th>Spesifikasi Barang</th>
+                        <th>Spesifikasi Lainnya</th>
                         <th>No. Ruas</th>
-                        <th>Panjang/Luas</th>
-                        <th>Lokasi</th>
+                        <th>Alamat/Lokasi Fisik (Lok)</th>
+                        <th>Titik Koordinat</th>
+                        <th>Status Tanah</th>
+                        <th>Volume</th>
+                        <th>Satuan</th>
+                        <th>Harga Satuan (Rp)</th>
                         <th>Nilai Perolehan (Rp)</th>
+                        <th>Cara Perolehan</th>
                         <th>Tgl Perolehan</th>
-                        <th>Status</th>
+                        <th>Status Penggunaan</th>
+                        <th>Keterangan</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -55,23 +65,39 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration + $dataJalan->firstItem() - 1 }}</td>
                         <td class="font-weight-bold text-primary">{{ $item->kode_barang }}</td>
+                        <td class="text-center">{{ $item->nomor_register }}</td>
                         <td>{{ $item->nama_barang }}</td>
+                        <td>{{ $item->nibar ?? '-' }}</td>
+                        <td>{{ $item->spesifikasi_barang ?? '-' }}</td>
+                        <td>{{ $item->spesifikasi_lainnya ?? '-' }}</td>
                         <td class="text-center">{{ $item->nomor_ruas_jalan_jembatan_irigasi ?? '-' }}</td>
-                        <td class="text-center">{{ number_format($item->jumlah, 0, ',', '.') }} {{ $item->satuan }}</td>
                         <td>{{ $item->Lok }}</td>
+                        <td>{{ $item->titik_koordinat ?? '-' }}</td>
+                        <td>{{ $item->status_kepemilikan_tanah ?? '-' }}</td>
+                        <td class="text-center">{{ number_format($item->jumlah, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ $item->satuan }}</td>
+                        <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
                         <td class="text-right font-weight-bold">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
-                        <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
-                        <td class="text-center"><span class="badge badge-info">{{ $item->status_penggunaan }}</span></td>
+                        <td>{{ $item->cara_perolehan }}</td>
+                        <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') }}</td>
                         <td class="text-center">
-                            <a href="{{ route('lokasi.jalan.edit', ['lokasi' => $lokasi, 'jalan' => $item->kode_barang]) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            @if($item->status_penggunaan)
+                                <span class="badge badge-info">{{ $item->status_penggunaan }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $item->keterangan ?? '-' }}</td>
+                        <td class="text-center">
+                            <a href="{{ route('lokasi.jalan.edit', ['lokasi' => $lokasi, 'jalan' => $item->kode_barang]) }}" class="btn btn-sm btn-warning mb-1"><i class="fas fa-edit"></i></a>
                             <form action="{{ route('lokasi.jalan.destroy', ['lokasi' => $lokasi, 'jalan' => $item->kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data ini?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-danger mb-1"><i class="fas fa-trash"></i></button>
                             </form>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="10" class="text-center py-4">Data tidak ditemukan.</td></tr>
+                    <tr><td colspan="20" class="text-center py-4">Data tidak ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -113,6 +139,7 @@
             const query = this.value;
             if (query.length < 2) return; 
             fetch(`/{{ $lokasi }}/jalan/autocomplete?term=${query}`).then(res => res.json()).then(data => {
+                list.innerHTML = ''; 
                 data.forEach(item => {
                     let option = document.createElement('option');
                     option.value = item.label;

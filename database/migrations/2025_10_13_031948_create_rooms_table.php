@@ -6,29 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('rooms', function (Blueprint $table) {
-            // 1. Hapus $table->id()
+        Schema::create('ruangans', function (Blueprint $table) {
+            // Value 10 sudah sangat pas untuk kode ruangan
+            $table->string('kode_ruangan', 10)->primary(); 
             
-            // 2. Jadikan kode_ruangan sebagai Primary Key
-            // Saya beri panjang 50 karakter agar fleksibel
-            $table->string('kode_ruangan', 50)->primary(); 
+            // 🌟 Sesuai request: murni 'lokasi' untuk kebutuhan filter
+            $table->string('lokasi', 30); 
+
+            // Value 50 untuk nama ruangan
+            $table->string('ruangan_nama', 50);
             
-            $table->string('lokasi'); 
-            $table->string('name');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('rooms');
+        Schema::dropIfExists('ruangans');
     }
 };

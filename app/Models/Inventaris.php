@@ -2,43 +2,59 @@
 
 namespace App\Models;
 
+use App\Models\Ruangan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Inventaris extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
-    // Tentukan Primary Key karena bukan pakai 'id' auto-increment
-    protected $primaryKey = 'kode_barang';
+    protected $table = 'inventaris';
+
+    // 1. Tentukan Primary Key kustom sesuai prefix
+    protected $primaryKey = 'inv_kode_barang';
+    
+    // 2. Matikan auto-increment karena PK berupa string
     public $incrementing = false;
     protected $keyType = 'string';
 
+    
+
+    // 4. Daftarkan atribut dengan prefix 'inv_' (kecuali lokasi untuk filter)
     protected $fillable = [
-        'kode_barang',
+        'inv_kode_barang',
         'lokasi',
-        'room_kode',
-        'nibar',
-        'nomor_register',
-        'nama_barang',
-        'spesifikasi_barang',
-        'merk_tipe',
-        'tahun_perolehan',
-        'jumlah',
-        'satuan',
-        'kondisi', 
-        'keterangan'
+        'inv_ruangan_kode', // Menggantikan 'room_kode' agar rapi
+        'inv_nibar',
+        'inv_nomor_register',
+        'inv_nama_barang',
+        'inv_spesifikasi_barang',
+        'inv_merk_tipe',
+        'inv_tahun_perolehan',
+        'inv_jumlah',
+        'inv_satuan',
+        'inv_kondisi', 
+        'inv_keterangan'
     ];
 
     /**
-     * 🌟 TAHAP 2 ROADMAP: KABEL RELASI KE MASTER PERALATAN (KIB B)
-     * Menghubungkan kolom kode_barang di tabel inventaris ruangan 
-     * ke kolom kode_barang di master data peralatan.
+     * 🌟 RELASI KE MASTER PERALATAN (KIB B)
+     * Menghubungkan inv_kode_barang di tabel inventaris 
+     * ke alat_kode_barang di tabel peralatans.
      */
     public function peralatan()
     {
-        return $this->belongsTo(Peralatan::class, 'kode_barang', 'kode_barang');
+        return $this->belongsTo(Peralatan::class, 'inv_kode_barang', 'alat_kode_barang');
+    }
+
+    /**
+     * 🌟 RELASI KE RUANGAN
+     * Menghubungkan inventaris ini dengan ruangan tempat barang tersebut berada
+     */
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class, 'inv_ruangan_kode', 'kode_ruangan');
     }
 }

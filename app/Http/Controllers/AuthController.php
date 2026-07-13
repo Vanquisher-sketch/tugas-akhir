@@ -30,18 +30,21 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // Asumsi form HTML kamu masih menggunakan name="name", name="email", dll.
+        // Kita sesuaikan target tabel untuk validasi unique ke kolom 'user_email'
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,user_email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        // Simpan menggunakan nama kolom kustom kita
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => 2, // Default role_id untuk 'User'
-            'status' => 'submitted', // Status default saat mendaftar
+            'user_nama' => $request->name,
+            'user_email' => $request->email,
+            'user_password' => Hash::make($request->password),
+            'user_role_id' => 3, // 🌟 REVISI: Di seeder kita, 3 adalah role untuk 'User' kelurahan
+            'user_status' => 'diajukan', // 🌟 REVISI: Menggunakan bahasa Indonesia sesuai enum
         ]);
 
         return redirect()->route('login')->with('success', 'Berhasil mendaftar, akun Anda sedang menunggu persetujuan admin.');
@@ -57,21 +60,30 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // 🌟 KUNCI PENTING: Petakan input form ke kolom database kustom
+        // Laravel mewajibkan key array 'password' tetap tertulis 'password' untuk pengecekan hash, 
+        // tapi untuk email, kita arahkan ke 'user_email'
+        $attemptData = [
+            'user_email' => $credentials['email'],
+            'password' => $credentials['password'], 
+        ];
+
+        // Jalankan proses login
+        if (Auth::attempt($attemptData)) {
             $user = Auth::user();
 
-            // Cek status akun setelah login berhasil
-            if ($user->status === 'submitted') {
-                Auth::logout(); // Langsung logout kembali
+            // Cek status akun menggunakan value baru
+            if ($user->user_status === 'diajukan') {
+                Auth::logout(); 
                 return back()->withErrors(['email' => 'Akun Anda masih menunggu persetujuan admin.'])->onlyInput('email');
             }
 
-            if ($user->status === 'rejected') {
-                Auth::logout(); // Langsung logout kembali
+            if ($user->user_status === 'ditolak') {
+                Auth::logout(); 
                 return back()->withErrors(['email' => 'Akun Anda telah ditolak oleh admin.'])->onlyInput('email');
             }
             
-            // Jika status 'approved', lanjutkan
+            // Jika status 'disetujui' (bawaan dari seeder), lanjutkan
             $request->session()->regenerate();
 
             // Peta untuk mengarahkan nama user ke slug lokasi
@@ -84,18 +96,16 @@ class AuthController extends Controller
                 'Kelurahan Tawangsari' => 'tawangsari',
             ];
 
-            // Jika user adalah Admin, arahkan ke dashboard utama
-            if ($user->name === 'Admin SINDI') {
+            // 🌟 REVISI: Ganti pemanggilan $user->name menjadi $user->user_nama
+            if ($user->user_nama === 'Admin SINDI') {
                 return redirect()->intended('dashboard');
             }
 
-            // Jika user adalah user lokasi, arahkan ke halaman aset wilayahnya (contoh ke data tanah)
-            if (array_key_exists($user->name, $locationMap)) {
-                $lokasi = $locationMap[$user->name];
+            if (array_key_exists($user->user_nama, $locationMap)) {
+                $lokasi = $locationMap[$user->user_nama];
                 return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi]);
             }
 
-            // Pengalihan default jika tidak ada peran khusus (misal user baru yang di-approve)
             return redirect()->intended('dashboard');
         }
 
@@ -115,4 +125,3 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 }
-

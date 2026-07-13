@@ -296,12 +296,12 @@
                     </div>
 
                     <button type="submit" class="btn btn-luxury-action btn-block font-weight-bold">
-                        Masuk Ke Sistem <i class="fas fa-chevron-right fa-sm ml-1"></i>
+                        Masuk Ke Halaman Utama <i class="fas fa-chevron-right fa-sm ml-1"></i>
                     </button>
                 </form>
 
                 <div class="footer-luxury-text">
-                    Pemerintah Kota Tasikmalaya &copy; 2026
+                    AIS &copy; 2026
                 </div>
 
             </div>

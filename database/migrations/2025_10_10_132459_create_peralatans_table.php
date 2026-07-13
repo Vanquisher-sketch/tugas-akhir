@@ -6,52 +6,54 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('peralatans', function (Blueprint $table) {
-            // Primary Key menggunakan kode_barang (String)
-            $table->string('kode_barang', 100)->primary();   // Sesuai Kolom (6)
+            // Primary Key dengan awalan 'alat_' dan disusutkan ke 30 (sama dengan inventaris)
+            $table->string('alat_kode_barang', 30)->primary(); 
             
-            $table->string('lokasi');
-            $table->string('nama_barang');                   // Sesuai Kolom (7)
-            $table->string('nibr')->nullable();             // Sesuai Kolom (8)
-            $table->string('nomor_register');               // Sesuai Kolom (9)
-            $table->string('spesifikasi_barang')->nullable(); // Sesuai Kolom (10)
-            $table->string('merk_tipe')->nullable();        // Sesuai Kolom (11)
-            $table->string('Lok');                          // Sesuai Kolom (12) - Lokasi Fisik
-            $table->string('spesifikasi_lainnya')->nullable(); // Sesuai Kolom (13)
+            // 🌟 TETAP MURNI 'lokasi' untuk kebutuhan filter (ukuran disamakan 30)
+            $table->string('lokasi', 30);
+            
+            // Awalan 'alat_' agar unik dan value ditekan agar efisien
+            $table->string('alat_nama_barang', 100); 
+            $table->string('alat_nibar', 30)->nullable(); 
+            $table->string('alat_nomor_register', 20); 
+            $table->string('alat_spesifikasi_barang', 255)->nullable(); 
+            $table->string('alat_merk_tipe', 50)->nullable(); 
+            
+            // Atribut 'Lok' diubah menjadi 'alat_lokasi_fisik' agar tidak rancu dengan filter
+            $table->string('alat_lokasi_fisik', 50); 
+            $table->string('alat_spesifikasi_lainnya', 255)->nullable(); 
 
-            // Kendaraan Dinas & Legalitas Pajak (Poin 4)
-            $table->string('nomor_polisi')->nullable();     // Sesuai Kolom (14)
-            $table->date('tanggal_pajak')->nullable();      // 🌟 TAMBAHAN POIN 4
-            $table->date('tanggal_stnk')->nullable();       // 🌟 TAMBAHAN POIN 4
-            $table->string('nomor_rangka')->nullable();     // Sesuai Kolom (15)
-            $table->string('nomor_bpkb')->nullable();       // Sesuai Kolom (16)
+            // Kendaraan Dinas & Legalitas Pajak (Value dirampingkan)
+            $table->string('alat_nomor_polisi', 20)->nullable(); // Nomor plat cukup 20
+            $table->date('alat_tanggal_pajak')->nullable(); 
+            $table->date('alat_tanggal_stnk')->nullable(); 
+            $table->string('alat_nomor_rangka', 50)->nullable(); // VIN/Rangka biasanya 17 digit
+            $table->string('alat_nomor_bpkb', 50)->nullable(); 
 
-            $table->unsignedInteger('jumlah');              // Sesuai Kolom (17)
-            $table->string('satuan');                       // Sesuai Kolom (18)
-            $table->decimal('harga_satuan', 15, 2);         // Sesuai Kolom (19)
-            $table->decimal('nilai_perolehan', 15, 2);      // Sesuai Kolom (20)
-            $table->string('cara_perolehan');               // Sesuai Kolom (21)
-            $table->date('tanggal_perolehan');               // Sesuai Kolom (22)
+            $table->unsignedInteger('alat_jumlah'); 
+            $table->string('alat_satuan', 20); // Satuan cukup 20
             
-            // Status Penggunaan & Kondisi Fisik (Poin 4 & 6)
-            $table->string('status_penggunaan')->default('Tidak Aktif'); // 🌟 Sesuai Kolom (23) - Default Diubah Ke Tidak Aktif
-            $table->enum('kondisi', ['Baik', 'Rusak Ringan', 'Rusak Berat'])->default('Baik'); // 🌟 TAMBAHAN POIN 6
+            // Decimal 15,2 sudah standar aman untuk nominal harga uang (hingga triliunan)
+            $table->decimal('alat_harga_satuan', 15, 2); 
+            $table->decimal('alat_nilai_perolehan', 15, 2); 
             
-            $table->text('keterangan')->nullable();          // Sesuai Kolom (24)
+            $table->string('alat_cara_perolehan', 50); 
+            $table->date('alat_tanggal_perolehan'); 
             
-            $table->softDeletes(); // 🌟 Ditambahkan karena di Model kamu menggunakan trait SoftDeletes
+            // Status Penggunaan & Kondisi (Value dirampingkan)
+            $table->string('alat_status_penggunaan', 30)->default('Tidak Aktif'); 
+            $table->enum('alat_kondisi', ['Baik', 'Rusak Ringan', 'Rusak Berat'])->default('Baik'); 
+            
+            $table->text('alat_keterangan')->nullable(); 
+            
+            $table->softDeletes(); 
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('peralatans');

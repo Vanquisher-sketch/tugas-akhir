@@ -74,6 +74,17 @@
                     </div>
                 </div>
 
+                <div class="form-group row">
+                    <label for="alamat" class="col-sm-2 col-form-label">Alamat <span class="text-danger">*</span></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control @error('alamat') is-invalid @enderror" 
+                               id="alamat" name="alamat" value="{{ old('alamat', $pegawai->alamat) }}" placeholder="Contoh: Jln. Tanuwijaya No 8" required>
+                        @error('alamat')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
                 <hr>
 
                 <div class="form-group row">

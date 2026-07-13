@@ -16,7 +16,7 @@ use App\Http\Controllers\PeralatanController;
 use App\Http\Controllers\GedungController;
 use App\Http\Controllers\JalanController;
 use App\Http\Controllers\RusakController;
-use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RuanganController; // 🌟 REVISI: Menggunakan RuanganController
 use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
@@ -59,76 +59,77 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 
     // Rute Manajemen User (Admin)
-    Route::resource('user', UserController::class);
+    Route::resource('user', UserController::class)->parameters(['user' => 'id']);
 
     // --- RUTE DINAMIS UNTUK SEMUA MODUL (PANDAWA) ---
     Route::prefix('{lokasi}')
         ->whereIn('lokasi', ['tawang', 'lengkongsari', 'cikalang', 'empang', 'kahuripan', 'tawangsari'])
         ->name('lokasi.')
-        ->middleware('lokasi.access')
+        ->middleware('lokasi.access') // Pastikan middleware ini sudah ada ya!
         ->group(function () {
 
             // Route untuk export Excel (Global)
             Route::get('export/{menu}', [ExportController::class, 'export'])->name('export.excel');
 
-            // 1. Route Ruangan
-            Route::get('room/print', [RoomController::class, 'print'])->name('room.print');
-            Route::resource('room', RoomController::class)->scoped([
-                'room' => 'kode_ruangan'
+            // 1. Route Ruangan (🌟 REVISI: Room diubah menjadi Ruangan)
+            Route::get('ruangan/print', [RuanganController::class, 'print'])->name('ruangan.print');
+            Route::resource('ruangan', RuanganController::class)->parameters([
+                'ruangan' => 'kode_ruangan'
             ]);
 
-            // 2. Route Inventaris (Autocomplete, Detail QR, & Resource)
-            Route::get('room/{room:kode_ruangan}/inventaris/autocomplete', [InventarisController::class, 'autocomplete'])->name('inventaris.autocomplete');
-            Route::get('room/{room:kode_ruangan}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
-            Route::post('room/{room:kode_ruangan}/inventaris/{inventari:kode_barang}/move', [InventarisController::class, 'move'])->name('inventaris.move');
+            // 2. Route Inventaris
+            Route::get('ruangan/{kode_ruangan}/inventaris/autocomplete', [InventarisController::class, 'autocomplete'])->name('inventaris.autocomplete');
+            Route::get('ruangan/{kode_ruangan}/inventaris/print', [InventarisController::class, 'print'])->name('inventaris.print');
+            Route::post('ruangan/{kode_ruangan}/inventaris/{inv_kode_barang}/move', [InventarisController::class, 'move'])->name('inventaris.move');
             
-            // 🌟 POIN 3: Rute Detail & Cetak Label QR Code Satuan untuk Inventaris Ruangan
-            Route::get('room/{room:kode_ruangan}/inventaris/{kode_barang}/detail', [InventarisController::class, 'showDetail'])->name('inventaris.detail');
+            // Detail & Cetak Label QR Code Satuan untuk Inventaris Ruangan
+            Route::get('ruangan/{kode_ruangan}/inventaris/{kode_barang}/detail', [InventarisController::class, 'showDetail'])->name('inventaris.detail');
 
-            Route::resource('room.inventaris', InventarisController::class)->scoped([
-                'room' => 'kode_ruangan',
-                'inventari' => 'kode_barang'
+            // 🌟 REVISI: Resource Inventaris (Menyesuaikan parameter string eksplisit)
+            Route::resource('ruangan.inventaris', InventarisController::class)->parameters([
+                'ruangan' => 'kode_ruangan',
+                'inventaris' => 'inv_kode_barang'
             ])->names('inventaris');
 
             // 3. KIB A (Tanah)
             Route::get('tanah/autocomplete', [TanahController::class, 'autocomplete'])->name('tanah.autocomplete');
             Route::get('tanah/print', [TanahController::class, 'print'])->name('tanah.print');
-            Route::resource('tanah', TanahController::class)->scoped(['tanah' => 'kode_barang']);
+            Route::resource('tanah', TanahController::class)->parameters(['tanah' => 'kode_barang']);
 
             // 4. KIB B (Peralatan)
             Route::get('peralatan/autocomplete', [PeralatanController::class, 'autocomplete'])->name('peralatan.autocomplete');
             Route::get('peralatan/print', [PeralatanController::class, 'print'])->name('peralatan.print');
             
-            // 🌟 POIN 3: Rute Detail & Cetak Label QR Code Satuan untuk Peralatan KIB B
+            // Detail & Cetak Label QR Code Satuan untuk Peralatan KIB B
             Route::get('peralatan/{kode_barang}/detail', [PeralatanController::class, 'showDetail'])->name('peralatan.detail');
 
-            Route::resource('peralatan', PeralatanController::class)->scoped(['peralatan' => 'kode_barang']);
+            Route::resource('peralatan', PeralatanController::class)->parameters(['peralatan' => 'kode_barang']);
 
             // 5. KIB C (Gedung)
             Route::get('gedung/autocomplete', [GedungController::class, 'autocomplete'])->name('gedung.autocomplete');
             Route::get('gedung/print', [GedungController::class, 'print'])->name('gedung.print');
-            Route::resource('gedung', GedungController::class)->scoped(['gedung' => 'kode_barang']);
+            Route::resource('gedung', GedungController::class)->parameters(['gedung' => 'kode_barang']);
 
             // 6. KIB D (Jalan)
             Route::get('jalan/autocomplete', [JalanController::class, 'autocomplete'])->name('jalan.autocomplete');
             Route::get('jalan/print', [JalanController::class, 'print'])->name('jalan.print');
-            Route::resource('jalan', JalanController::class)->scoped(['jalan' => 'kode_barang']);
+            Route::resource('jalan', JalanController::class)->parameters(['jalan' => 'kode_barang']);
 
-            // 7. Aset Rusak
+            // 7. Aset Rusak (🌟 REVISI: Menggunakan ID biasa, bukan no_id_pemda)
             Route::get('rusak/autocomplete', [RusakController::class, 'autocomplete'])->name('rusak.autocomplete');
             Route::get('rusak/print', [RusakController::class, 'print'])->name('rusak.print');
-            Route::resource('rusak', RusakController::class)->scoped(['rusak' => 'no_id_pemda']);
+            Route::resource('rusak', RusakController::class)->parameters(['rusak' => 'id']);
 
             // 8. PENGGUNAAN BMD
             Route::get('bmd/print', [BmdController::class, 'print'])->name('bmd.print');
             Route::get('bmd/cari-pegawai', [BmdController::class, 'cariPegawaiByNip'])->name('bmd.cari-pegawai');
-            Route::resource('bmd', BmdController::class);
             Route::get('bmd/{id}/buka-pdf', [BmdController::class, 'bukaPdf'])->name('bmd.buka_pdf');
+            Route::resource('bmd', BmdController::class)->parameters(['bmd' => 'id']);
 
             // 9. MONITORING PAJAK
             Route::get('pajak/print', [PajakController::class, 'print'])->name('pajak.print');
             Route::post('pajak/kirim-reminder', [PajakController::class, 'kirimReminderManual'])->name('pajak.kirim_reminder');
-            Route::resource('pajak', PajakController::class)->only(['index', 'edit', 'update']);
+            Route::resource('pajak', PajakController::class)->only(['index', 'edit', 'update'])->parameters(['pajak' => 'id']);
 
             // 10. RUTE ARSIP
             Route::prefix('arsip')->name('arsip.')->group(function() {
@@ -138,8 +139,8 @@ Route::middleware('auth')->group(function () {
                 Route::delete('/{kategori}/{kode}/permanen', [ArsipController::class, 'forceDelete'])->name('permanen'); 
             });
 
-            // 11. RUTE DATA PEGAWAI
-            Route::resource('pegawai', PegawaiController::class)->except(['show']);
+            // 11. RUTE DATA PEGAWAI (🌟 REVISI: Penyelarasan NIP Pegawai)
+            Route::resource('pegawai', PegawaiController::class)->except(['show'])->parameters(['pegawai' => 'nip']);
         });
 });
 

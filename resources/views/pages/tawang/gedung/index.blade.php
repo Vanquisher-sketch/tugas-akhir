@@ -26,7 +26,7 @@
                 <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
                 <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
                     <a class="dropdown-item" href="{{ route('lokasi.gedung.print', ['lokasi' => $lokasi]) }}" target="_blank">
-                        <i class="fas fa-print fa-fw mr-2 text-gray-400"></i>Cetak Data
+                        <i class="fas fa-print fa-fw mr-2 text-gray-400"></i> Cetak Data
                     </a>
                 </div>
             </div>
@@ -35,43 +35,84 @@
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" width="100%" cellspacing="0" style="font-size: 0.75rem; color: #000;">
-                <thead class="thead-light text-center">
+            <table class="table table-bordered table-hover table-sm" width="100%" cellspacing="0" style="font-size: 0.75rem; color: #000; white-space: nowrap;">
+                <thead class="thead-light text-center align-middle">
                     <tr>
                         <th>No</th>
                         <th>Kode Barang</th>
-                        <th>Nama Gedung</th>
-                        <th>Lantai</th>
-                        <th>Luas</th>
-                        <th>Lokasi / Alamat</th>
+                        <th>Lokasi</th>
+                        <th>Nama Barang</th>
+                        <th>NBAR</th>
+                        <th>No. Register</th>
+                        <th>Spesifikasi Barang</th>
+                        <th>Spesifikasi Lainnya</th>
+                        <th>Jml Lantai</th>
+                        <th>Lok (Fisik)</th>
+                        <th>Titik Koordinat</th>
+                        <th>Status Tanah</th>
+                        <th>Jumlah</th>
+                        <th>Satuan</th>
+                        <th>Harga Satuan (Rp)</th>
                         <th>Nilai Perolehan (Rp)</th>
+                        <th>Cara Perolehan</th>
                         <th>Tgl Perolehan</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
+                        <th>Status Penggunaan</th>
+                        <th>Keterangan</th>
+                        <th class="sticky-top right-0 bg-light">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($dataGedung as $item)
                     <tr>
-                        <td class="text-center">{{ $loop->iteration + $dataGedung->firstItem() - 1 }}</td>
-                        <td class="font-weight-bold text-primary">{{ $item->kode_barang }}</td>
-                        <td>{{ $item->nama_barang }}</td>
-                        <td class="text-center">{{ $item->jumlah_lantai }}</td>
-                        <td class="text-center">{{ number_format($item->jumlah, 0, ',', '.') }} {{ $item->satuan }}</td>
-                        <td>{{ $item->Lok }}</td>
-                        <td class="text-right font-weight-bold">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
-                        <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
-                        <td class="text-center"><span class="badge badge-info">{{ $item->status_penggunaan }}</span></td>
-                        <td class="text-center">
-                            <a href="{{ route('lokasi.gedung.edit', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                            <form action="{{ route('lokasi.gedung.destroy', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus gedung ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                        <td class="text-center align-middle">{{ $loop->iteration + $dataGedung->firstItem() - 1 }}</td>
+                        <td class="font-weight-bold text-primary align-middle">{{ $item->kode_barang }}</td>
+                        <td class="align-middle">{{ $item->lokasi }}</td>
+                        <td class="align-middle">{{ $item->nama_barang }}</td>
+                        <td class="text-center align-middle">{{ $item->nbar ?? '-' }}</td>
+                        <td class="text-center align-middle">{{ $item->nomor_register }}</td>
+                        <td class="align-middle">{{ $item->spesifikasi_barang ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->spesifikasi_lainnya ?? '-' }}</td>
+                        <td class="text-center align-middle">{{ $item->jumlah_lantai ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->Lok }}</td>
+                        <td class="align-middle">{{ $item->titik_koordinat ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->status_kepemilikan_tanah ?? '-' }}</td>
+                        
+                        <td class="text-center align-middle">{{ $item->jumlah }}</td>
+                        <td class="text-center align-middle">{{ $item->satuan }}</td>
+                        
+                        <td class="text-right align-middle">{{ number_format($item->harga_satuan, 2, ',', '.') }}</td>
+                        <td class="text-right font-weight-bold align-middle">{{ number_format($item->nilai_perolehan, 2, ',', '.') }}</td>
+                        
+                        <td class="align-middle">{{ $item->cara_perolehan }}</td>
+                        <td class="text-center align-middle">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
+                        
+                        <td class="text-center align-middle">
+                            @if($item->status_penggunaan)
+                                <span class="badge badge-info">{{ $item->status_penggunaan }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        
+                        <td class="align-middle">{{ Str::limit($item->keterangan, 30) ?? '-' }}</td>
+                        
+                        <td class="text-center align-middle bg-white">
+                            <a href="{{ route('lokasi.gedung.edit', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" class="btn btn-sm btn-warning mb-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ route('lokasi.gedung.destroy', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data dengan Kode {{ $item->kode_barang }} ini?')">
+                                @csrf 
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger mb-1" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="10" class="text-center py-4">Data gedung tidak ditemukan.</td></tr>
+                    <tr>
+                        <td colspan="21" class="text-center py-4 text-muted">Data gedung tidak ditemukan.</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -110,15 +151,20 @@
         });
 
         input.addEventListener('input', function() {
-            const query = this.value;
+            const query = this.value.trim();
             if (query.length < 2) return; 
-            fetch(`/{{ $lokasi }}/gedung/autocomplete?term=${query}`).then(res => res.json()).then(data => {
-                data.forEach(item => {
-                    let option = document.createElement('option');
-                    option.value = item.label;
-                    list.appendChild(option);
-                });
-            });
+            
+            fetch(`/{{ $lokasi }}/gedung/autocomplete?term=${query}`)
+                .then(res => res.json())
+                .then(data => {
+                    list.innerHTML = ''; 
+                    data.forEach(item => {
+                        let option = document.createElement('option');
+                        option.value = item.label;
+                        list.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching autocomplete:', error));
         });
     });
 </script>

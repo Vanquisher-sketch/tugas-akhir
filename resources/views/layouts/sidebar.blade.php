@@ -1,9 +1,8 @@
 @php
     $user = Auth::user();
-    $roleId = $user->role_id;
+    $roleId = $user->user_role_id;
 
-    // Mengambil semua data ruangan menggunakan kode_ruangan sebagai identitas
-    $allRoomsByLocation = \App\Models\Room::orderBy('name')->get()->groupBy('lokasi');
+    $allRoomsByLocation = \App\Models\Ruangan::orderBy('ruangan_nama')->get()->groupBy('lokasi');
     $tawangRooms = $allRoomsByLocation['tawang'] ?? collect();
 
     $fullKelurahanList = [
@@ -19,22 +18,19 @@
         $visibleKelurahan = $fullKelurahanList;
     } elseif ($roleId == 3) { 
         foreach ($fullKelurahanList as $kelurahan) {
-            if ('Kelurahan ' . $kelurahan['name'] === $user->name) {
+            if ('Kelurahan ' . $kelurahan['name'] === $user->user_nama) {
                 $visibleKelurahan[] = $kelurahan;
                 break;
             }
         }
     }
 
-    // Mendapatkan lokasi saat ini dari URL untuk link Arsip dan Pegawai 🌟
     $currentLokasi = request()->segment(1); 
-    // Jika di dashboard atau halaman luar, default ke 'tawang'
     if(in_array($currentLokasi, ['dashboard', 'user', 'profile', 'notifications', ''])) {
         $currentLokasi = 'tawang'; 
     }
 @endphp
 
-{{-- 🌟 REVISI BIRU ELEGANT: Menggunakan kombinasi warna Deep Navy Kedinasan dan bayangan halus untuk kesan premium --}}
 <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" 
     style="background: linear-gradient(180deg, #183059 0%, #0b1b33 100%); box-shadow: 3px 0 15px rgba(0,0,0,0.2);">
 
@@ -54,10 +50,7 @@
         </a>
     </li>
 
-    {{-- ============================================================ --}}
-    {{-- BAGIAN KECAMATAN TAWANG --}}
-    {{-- ============================================================ --}}
-    @if ($roleId == 1 || $roleId == 2 || $user->name == 'Kecamatan Tawang')
+    @if ($roleId == 1 || $roleId == 2 || $user->user_nama == 'Kecamatan Tawang')
     <hr class="sidebar-divider">
     @php $isTawangActive = request()->is('tawang*'); @endphp
 
@@ -69,18 +62,17 @@
         </a>
         <div id="collapseTawang" class="collapse {{ $isTawangActive ? 'show' : '' }}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                
-                <a class="collapse-item {{ request()->is('tawang/room*') && !request()->is('tawang/room/*/inventaris*') ? 'active' : '' }}" 
-                   href="{{ route('lokasi.room.index', ['lokasi' => 'tawang']) }}">Data Ruangan</a>
+                <a class="collapse-item {{ request()->is('tawang/ruangan*') && !request()->is('tawang/ruangan/*/inventaris*') ? 'active' : '' }}" 
+                   href="{{ route('lokasi.ruangan.index', ['lokasi' => 'tawang']) }}">Data Ruangan</a>
                 
                 <div class="dropdown-divider"></div>
                 <h6 class="collapse-header">Inventori Ruangan:</h6>
                 @forelse ($tawangRooms as $room)
-                    <a class="collapse-item {{ request()->is('tawang/room/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
-                       href="{{ route('lokasi.inventaris.index', ['lokasi' => 'tawang', 'room' => $room->kode_ruangan]) }}"
+                    <a class="collapse-item {{ request()->is('tawang/ruangan/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
+                       href="{{ route('lokasi.inventaris.index', ['lokasi' => 'tawang', 'kode_ruangan' => $room->kode_ruangan]) }}"
                        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;" 
-                       title="{{ $room->name }}">
-                       - {{ $room->name }}
+                       title="{{ $room->ruangan_nama }}">
+                       - {{ $room->ruangan_nama }}
                     </a>
                 @empty
                     <small class="ml-3 text-muted">Belum ada ruangan</small>
@@ -102,10 +94,6 @@
     </li>
     @endif
 
-
-    {{-- ============================================================ --}}
-    {{-- BAGIAN LOOPING KELURAHAN --}}
-    {{-- ============================================================ --}}
     @foreach ($visibleKelurahan as $kelurahan)
         @php 
             $slug = $kelurahan['slug'];
@@ -121,18 +109,17 @@
             </a>
             <div id="collapse{{ $slug }}" class="collapse {{ $isKelActive ? 'show' : '' }}" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    
-                    <a class="collapse-item {{ request()->is($slug . '/room*') && !request()->is($slug . '/room/*/inventaris*') ? 'active' : '' }}" 
-                       href="{{ route('lokasi.room.index', ['lokasi' => $slug]) }}">Data Ruangan</a>
+                    <a class="collapse-item {{ request()->is($slug . '/ruangan*') && !request()->is($slug . '/ruangan/*/inventaris*') ? 'active' : '' }}" 
+                       href="{{ route('lokasi.ruangan.index', ['lokasi' => $slug]) }}">Data Ruangan</a>
                     
                     <div class="dropdown-divider"></div>
                     <h6 class="collapse-header">Inventori Ruangan:</h6>
                     @forelse ($allRoomsByLocation[$slug] ?? [] as $room)
-                        <a class="collapse-item {{ request()->is($slug . '/room/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
-                           href="{{ route('lokasi.inventaris.index', ['lokasi' => $slug, 'room' => $room->kode_ruangan]) }}"
+                        <a class="collapse-item {{ request()->is($slug . '/ruangan/'.$room->kode_ruangan.'/inventaris*') ? 'active' : '' }}" 
+                           href="{{ route('lokasi.inventaris.index', ['lokasi' => $slug, 'kode_ruangan' => $room->kode_ruangan]) }}"
                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;"
-                           title="{{ $room->name }}">
-                           - {{ $room->name }}
+                           title="{{ $room->ruangan_nama }}">
+                           - {{ $room->ruangan_nama }}
                         </a>
                     @empty
                         <small class="ml-3 text-muted">Belum ada ruangan</small>
@@ -154,13 +141,9 @@
         </li>
     @endforeach
 
-    {{-- ============================================================ --}}
-    {{-- BAGIAN SISTEM KEAMANAN & ADMIN --}}
-    {{-- ============================================================ --}}
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Administrasi </div>
 
-    {{-- MENU ARSIP --}}
     <li class="nav-item {{ request()->is('*/arsip*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('lokasi.arsip.index', ['lokasi' => $currentLokasi]) }}">
             <i class="fas fa-fw fa-archive"></i>
@@ -168,7 +151,6 @@
         </a>
     </li>
 
-    {{-- MENU DATA PEGAWAI --}}
     <li class="nav-item {{ request()->is('*/pegawai*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('lokasi.pegawai.index', ['lokasi' => $currentLokasi]) }}">
             <i class="fas fa-fw fa-users"></i>
@@ -190,5 +172,4 @@
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>
-
 </ul>

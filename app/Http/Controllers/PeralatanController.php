@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peralatan;
-use App\Models\Rusak; // 🌟 Import model Rusak untuk pemicu otomatis Poin 6
+use App\Models\Rusak;
 use App\Models\User;
 use App\Notifications\DataModificationNotification;
 use Illuminate\Http\Request;
@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Validator;
 
 class PeralatanController extends Controller
 {
-    /**
-     * Menampilkan daftar peralatan (KIB B).
-     */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
@@ -23,35 +20,30 @@ class PeralatanController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('nibr', 'LIKE', "%{$search}%")
-                  ->orWhere('merk_tipe', 'LIKE', "%{$search}%")
-                  ->orWhere('nomor_polisi', 'LIKE', "%{$search}%");
+                $q->where('alat_nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_nibar', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_merk_tipe', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_nomor_polisi', 'LIKE', "%{$search}%");
             });
         }
         
         $dataPeralatan = $query->latest('updated_at')->paginate(10);
-        
         return view("pages.{$lokasi}.peralatan.index", compact('dataPeralatan', 'lokasi', 'search'));
     }
 
-    /**
-     * Fitur Saran Pencarian (Autocomplete) - AJAX
-     */
     public function autocomplete(Request $request, $lokasi)
     {
         $search = $request->query('term');
-        
         $results = Peralatan::where('lokasi', $lokasi)
             ->where(function($q) use ($search) {
-                $q->where('nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('merk_tipe', 'LIKE', "%{$search}%")
-                  ->orWhere('nomor_polisi', 'LIKE', "%{$search}%");
+                $q->where('alat_nama_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_kode_barang', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_merk_tipe', 'LIKE', "%{$search}%")
+                  ->orWhere('alat_nomor_polisi', 'LIKE', "%{$search}%");
             })
             ->limit(8)
-            ->get(['nama_barang as label', 'kode_barang as value']);
+            ->get(['alat_nama_barang as label', 'alat_kode_barang as value']);
 
         return response()->json($results);
     }
@@ -61,9 +53,6 @@ class PeralatanController extends Controller
         return view("pages.{$lokasi}.peralatan.create", compact('lokasi'));
     }
 
-    /**
-     * Simpan Data (STORE).
-     */
     public function store(Request $request, $lokasi)
     {
         $inputs = $request->all();
@@ -78,7 +67,7 @@ class PeralatanController extends Controller
         $request->replace($inputs);
 
         $validator = Validator::make($request->all(), [
-            'kode_barang'        => 'required|string|max:100|unique:peralatans,kode_barang',
+            'kode_barang'        => 'required|string|max:100|unique:peralatans,alat_kode_barang',
             'nama_barang'        => 'required|string|max:255',
             'nibr'               => 'nullable|string|max:255',
             'nomor_register'     => 'nullable|string|max:255',
@@ -105,28 +94,48 @@ class PeralatanController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
+        
+        $peralatan = Peralatan::create([
+            'alat_kode_barang'        => $request->kode_barang,
+            'alat_nama_barang'        => $request->nama_barang,
+            'alat_nibar'              => $request->nibr,
+            'alat_nomor_register'     => $request->nomor_register,
+            'alat_lokasi_fisik'       => $request->Lok,
+            'alat_merk_tipe'          => $request->merk_tipe,
+            'alat_spesifikasi_barang' => $request->spesifikasi_barang,
+            'alat_spesifikasi_lainnya'=> $request->spesifikasi_lainnya,
+            'alat_nomor_rangka'       => $request->nomor_rangka,
+            'alat_nomor_polisi'       => $request->nomor_polisi,
+            'alat_tanggal_pajak'      => $request->tanggal_pajak,
+            'alat_tanggal_stnk'       => $request->tanggal_stnk,
+            'alat_nomor_bpkb'         => $request->nomor_bpkb,
+            'alat_cara_perolehan'     => $request->cara_perolehan,
+            'alat_tanggal_perolehan'  => $request->tanggal_perolehan,
+            'alat_harga_satuan'       => $request->harga_satuan,
+            'alat_nilai_perolehan'    => $request->nilai_perolehan,
+            'alat_jumlah'             => $request->jumlah,
+            'alat_satuan'             => $request->satuan,
+            'alat_status_penggunaan'  => $request->status_penggunaan,
+            'alat_kondisi'            => $request->kondisi,
+            'alat_keterangan'         => $request->keterangan,
+            'lokasi'                  => $lokasi,
+        ]);
 
-        $dataToStore = $validator->validated();
-        $dataToStore['lokasi'] = $lokasi;
-
-        $peralatan = Peralatan::create($dataToStore);
-
-        // 🌟 TRIGGER POIN 6: Jika saat input awal langsung disetel 'Rusak Berat'
-        if ($peralatan->kondisi === 'Rusak Berat') {
+        if ($peralatan->alat_kondisi === 'Rusak Berat') {
             Rusak::updateOrCreate(
-                ['kode_barang' => $peralatan->kode_barang],
+                ['rusak_kode_barang' => $peralatan->alat_kode_barang],
                 [
-                    'jenis_asal'  => 'Peralatan',
-                    'keterangan'  => $peralatan->keterangan ?? 'Masuk otomatis dari modul Peralatan KIB B.',
-                    'lokasi'      => $lokasi
+                    'rusak_jenis_asal'  => 'Peralatan',
+                    'rusak_keterangan'  => $peralatan->alat_keterangan ?? 'Masuk otomatis dari modul Peralatan KIB B.',
+                    'lokasi'            => $lokasi
                 ]
             );
         }
 
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'ditambahkan', 'Peralatan (KIB B)', $peralatan->nama_barang
+                Auth::user(), 'ditambahkan', 'Peralatan (KIB B)', $peralatan->alat_nama_barang
             ));
         }
 
@@ -134,17 +143,16 @@ class PeralatanController extends Controller
                          ->with('success', 'Data Peralatan berhasil ditambahkan.');
     }
 
-    public function edit($lokasi, Peralatan $peralatan)
+    public function edit($lokasi, $kode_barang)
     {
+        $peralatan = Peralatan::findOrFail($kode_barang);
         if ($peralatan->lokasi !== $lokasi) abort(404);
         return view("pages.{$lokasi}.peralatan.edit", compact('peralatan', 'lokasi'));
     }
 
-    /**
-     * Update Data Peralatan
-     */
-    public function update(Request $request, $lokasi, Peralatan $peralatan)
+    public function update(Request $request, $lokasi, $kode_barang)
     {
+        $peralatan = Peralatan::findOrFail($kode_barang);
         if ($peralatan->lokasi !== $lokasi) abort(404);
 
         $inputs = $request->all();
@@ -158,7 +166,7 @@ class PeralatanController extends Controller
         $request->replace($inputs);
 
         $validator = Validator::make($request->all(), [
-            'kode_barang'        => "required|string|max:100|unique:peralatans,kode_barang,{$peralatan->kode_barang},kode_barang",
+            'kode_barang'        => "required|string|max:100|unique:peralatans,alat_kode_barang,{$peralatan->alat_kode_barang},alat_kode_barang",
             'nama_barang'        => 'required|string|max:255',
             'nibr'               => 'nullable|string|max:255',
             'nomor_register'     => 'nullable|string|max:255',
@@ -186,27 +194,48 @@ class PeralatanController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $peralatan->update($validator->validated());
+        $peralatan->update([
+            'alat_kode_barang'        => $request->kode_barang,
+            'alat_nama_barang'        => $request->nama_barang,
+            'alat_nibar'              => $request->nibr,
+            'alat_nomor_register'     => $request->nomor_register,
+            'alat_lokasi_fisik'       => $request->Lok,
+            'alat_merk_tipe'          => $request->merk_tipe,
+            'alat_spesifikasi_barang' => $request->spesifikasi_barang,
+            'alat_spesifikasi_lainnya'=> $request->spesifikasi_lainnya,
+            'alat_nomor_rangka'       => $request->nomor_rangka,
+            'alat_nomor_polisi'       => $request->nomor_polisi,
+            'alat_tanggal_pajak'      => $request->tanggal_pajak,
+            'alat_tanggal_stnk'       => $request->tanggal_stnk,
+            'alat_nomor_bpkb'         => $request->nomor_bpkb,
+            'alat_cara_perolehan'     => $request->cara_perolehan,
+            'alat_tanggal_perolehan'  => $request->tanggal_perolehan,
+            'alat_harga_satuan'       => $request->harga_satuan,
+            'alat_nilai_perolehan'    => $request->nilai_perolehan,
+            'alat_jumlah'             => $request->jumlah,
+            'alat_satuan'             => $request->satuan,
+            'alat_status_penggunaan'  => $request->status_penggunaan,
+            'alat_kondisi'            => $request->kondisi,
+            'alat_keterangan'         => $request->keterangan,
+        ]);
 
-        // 🌟 TRIGGER MUTAKHIR POIN 6: Kondisional Sinkronisasi Jurnal Barang Rusak
-        if ($peralatan->kondisi === 'Rusak Berat') {
+        if ($peralatan->alat_kondisi === 'Rusak Berat') {
             Rusak::updateOrCreate(
-                ['kode_barang' => $peralatan->kode_barang],
+                ['rusak_kode_barang' => $peralatan->alat_kode_barang],
                 [
-                    'jenis_asal'  => 'Peralatan',
-                    'keterangan'  => $peralatan->keterangan ?? 'Mengalami kerusakan berat operasional.',
-                    'lokasi'      => $lokasi
+                    'rusak_jenis_asal'  => 'Peralatan',
+                    'rusak_keterangan'  => $peralatan->alat_keterangan ?? 'Mengalami kerusakan berat operasional.',
+                    'lokasi'            => $lokasi
                 ]
             );
         } else {
-            // Jika kondisi diubah kembali ke 'Baik' atau 'Rusak Ringan', hapus otomatis dari daftar log rusak
-            Rusak::where('kode_barang', $peralatan->kode_barang)->delete();
+            Rusak::where('rusak_kode_barang', $peralatan->alat_kode_barang)->delete();
         }
 
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'diperbarui', 'Peralatan (KIB B)', $peralatan->nama_barang
+                Auth::user(), 'diperbarui', 'Peralatan (KIB B)', $peralatan->alat_nama_barang
             ));
         }
 
@@ -214,18 +243,17 @@ class PeralatanController extends Controller
                          ->with('success', 'Data Peralatan berhasil diperbarui.');
     }
 
-    public function destroy($lokasi, Peralatan $peralatan)
+    public function destroy($lokasi, $kode_barang)
     {
+        $peralatan = Peralatan::findOrFail($kode_barang);
         if ($peralatan->lokasi !== $lokasi) abort(404);
 
-        $namaBarang = $peralatan->nama_barang;
+        $namaBarang = $peralatan->alat_nama_barang;
         
-        // 🌟 Jika aset induk dihapus, bersihkan juga manifesnya di jurnal barang rusak agar tidak orphan
-        Rusak::where('kode_barang', $peralatan->kode_barang)->delete();
-
+        Rusak::where('rusak_kode_barang', $peralatan->alat_kode_barang)->delete();
         $peralatan->delete();
 
-        $recipients = User::whereIn('role_id', [1, 2])->get();
+        $recipients = User::whereIn('user_role_id', [1, 2])->get();
         if ($recipients->count() > 0) {
             Notification::send($recipients, new DataModificationNotification(
                 Auth::user(), 'dihapus', 'Peralatan (KIB B)', $namaBarang

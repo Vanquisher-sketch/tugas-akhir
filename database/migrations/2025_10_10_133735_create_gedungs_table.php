@@ -6,42 +6,56 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('gedungs', function (Blueprint $table) {
-            // REVISI: Hapus $table->id() dan jadikan kode_barang sebagai Primary Key
-            $table->string('kode_barang', 100)->primary();       // Sesuai Kolom (6)
+            // Primary Key disusutkan ke 30 agar selaras dengan inventaris & tabel lain
+            $table->string('gedung_kode_barang', 30)->primary();       
             
-            $table->string('lokasi');
-            $table->string('nama_barang');                       // Sesuai Kolom (7)
-            $table->string('nbar')->nullable();                 // Sesuai Kolom (8)
-            $table->string('nomor_register');                   // Sesuai Kolom (9)
-            $table->string('spesifikasi_barang')->nullable();   // Sesuai Kolom (10)
-            $table->string('spesifikasi_lainnya')->nullable();  // Sesuai Kolom (11)
-            $table->unsignedInteger('jumlah_lantai')->nullable(); // Sesuai Kolom (12)
-            $table->string('Lok');                               // Sesuai Kolom (13) - Lokasi Fisik
-            $table->string('titik_koordinat')->nullable();       // Sesuai Kolom (14)
-            $table->string('status_kepemilikan_tanah')->nullable(); // Sesuai Kolom (15)
+            // 🌟 TETAP MURNI 'lokasi' untuk kebutuhan filter (ukuran disamakan 30)
+            $table->string('lokasi', 30);
             
-            $table->unsignedInteger('jumlah');                   // Sesuai Kolom (16)
-            $table->string('satuan');                           // Sesuai Kolom (17)
-            $table->decimal('harga_satuan', 15, 2);             // Sesuai Kolom (18)
-            $table->decimal('nilai_perolehan', 15, 2);          // Sesuai Kolom (19)
-            $table->string('cara_perolehan');                   // Sesuai Kolom (20)
-            $table->date('tanggal_perolehan');                   // Sesuai Kolom (21)
-            $table->string('status_penggunaan')->nullable();     // Sesuai Kolom (22)
-            $table->text('keterangan')->nullable();             // Sesuai Kolom (23)
+            // Data Utama
+            $table->string('gedung_nama_barang', 100);                      
+            $table->string('gedung_nibar', 30)->nullable();                 
+            $table->string('gedung_nomor_register', 20);                  
+            
+            // Spesifikasi menggunakan string(255) yang lebih ringan dari text
+            $table->string('gedung_spesifikasi_barang', 255)->nullable();   
+            $table->string('gedung_spesifikasi_lainnya', 255)->nullable();  
+            
+            // Integer sangat cukup untuk jumlah lantai
+            $table->unsignedInteger('gedung_jumlah_lantai')->nullable(); 
+            
+            // Lokasi Fisik (Alamat) - 'Lok' diubah agar jelas dan tidak tabrakan dengan 'lokasi'
+            $table->string('gedung_lokasi_fisik', 255);                     
+            $table->string('gedung_titik_koordinat', 50)->nullable();       
+            $table->string('gedung_status_kepemilikan_tanah', 50)->nullable(); 
+            
+            // Jumlah, Satuan, dan Nilai Aset
+            $table->unsignedInteger('gedung_jumlah');                       
+            $table->string('gedung_satuan', 20);                            
+            $table->decimal('gedung_harga_satuan', 15, 2);                  
+            $table->decimal('gedung_nilai_perolehan', 15, 2);               
+            
+            $table->string('gedung_cara_perolehan', 50);                    
+            $table->date('gedung_tanggal_perolehan');                       
+            
+            // 🌟 REVISI ENUM: Status Penggunaan diselaraskan dengan tabel tanah
+            $table->enum('gedung_status_penggunaan', [
+                'Digunakan Sendiri', 
+                'Dipinjamkan', 
+                'Disewakan', 
+                'Tidak Digunakan'
+            ])->default('Digunakan Sendiri'); 
+            
+            $table->text('gedung_keterangan')->nullable();                  
+            
             $table->softDeletes();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('gedungs');

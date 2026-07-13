@@ -14,19 +14,18 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         Role::create([
-            'id' => '1',
-            'name' => 'Admin',
+            'role_id' => 1,
+            'role_nama' => 'Admin',
         ]);
 
         Role::create([
-            'id' => '2',
-            'name' => 'Kecamatan',
+            'role_id' => 2,
+            'role_nama' => 'Kecamatan',
         ]);
 
         Role::create([
-            'id' => '3',
-            'name' => 'User',
+            'role_id' => 3,
+            'role_nama' => 'User',
         ]);
     }
 }
-

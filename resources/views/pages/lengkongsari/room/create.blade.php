@@ -43,7 +43,7 @@
 
                 // 2. Tambahkan nomor random 3 digit (Contoh: 123)
                 // Math.random() akan menjamin kode RA-124 berbeda dengan RA-562
-                let randomNumber = Math.floor(1 + Math.random() * 100);
+                let randomNumber = Math.floor(1 + Math.random() * 10);
 
                 // 3. Gabungkan (Contoh: RA-123)
                 kodeInput.value = `${initials}-${randomNumber}`;

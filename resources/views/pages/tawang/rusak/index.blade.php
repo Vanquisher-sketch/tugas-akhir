@@ -43,8 +43,8 @@
                     <tr>
                         <td class="text-center font-weight-bold">{{ $loop->iteration + $dataRusak->firstItem() - 1 }}</td>
                         
-                        {{-- Kolom kode_barang --}}
-                        <td class="font-weight-bold text-danger text-center">{{ $item->kode_barang }}</td>
+                        {{-- Kolom kode_barang (SUDAH DIREVISI MENJADI rusak_kode_barang) --}}
+                        <td class="font-weight-bold text-danger text-center">{{ $item->rusak_kode_barang }}</td>
                         
                         {{-- Kolom nama_barang (Hasil mapping live dari Controller) --}}
                         <td class="font-weight-bold text-gray-900">{{ $item->nama_barang }}</td>

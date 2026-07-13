@@ -9,19 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pegawais', function (Blueprint $table) {
-            $table->id();
-            $table->string('nip', 20)->unique()->nullable();
-            $table->string('nama', 100);
-            $table->string('jabatan', 50);
-            $table->string('no_hp', 15)->unique();
-            $table->string('email')->unique()->nullable();
+            // REVISI 21: NIP resmi menjadi Primary Key
+            $table->string('pegawai_nip', 20)->primary(); 
 
-        // 🌟 Tambahkan kolom ini agar filter lokasi bekerja
-            $table->string('lokasi', 30); 
+            // Awalan 'pegawai_' untuk membedakan dengan tabel lain
+            $table->string('pegawai_nama', 100);
+            $table->string('pegawai_jabatan', 50);
+            $table->string('pegawai_nohp', 15)->unique();
+            $table->string('pegawai_alamat', 255); 
+            $table->string('pegawai_email', 100)->unique()->nullable();
+
+            // 🌟 Sesuai request: tetap 'lokasi' tanpa awalan
+            $table->string('lokasi', 50); 
 
             $table->timestamps();
-    });
-}
+        });
+    }
 
     public function down(): void
     {

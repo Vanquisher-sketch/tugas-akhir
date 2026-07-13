@@ -9,42 +9,44 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tanahs', function (Blueprint $table) {
-            // REVISI: Hapus $table->id()
-            // REVISI: Jadikan kode_barang sebagai Primary Key
-            $table->string('kode_barang', 100)->primary(); // (5)
+            $table->string('tanah_kode_barang', 30)->primary(); 
             
-            // Filter Sistem (tawang, kahuripan, dll)
-            $table->string('lokasi')->nullable(); 
+            $table->string('lokasi', 30)->nullable(); 
 
-            // Data Utama Sesuai KIB A
-            $table->string('nama_barang');                // (6)
-            $table->string('nibar')->nullable();          // (7)
-            $table->string('nomor_register')->nullable(); // (8)
+            $table->string('tanah_nama_barang', 100); 
+            $table->string('tanah_nibar', 30)->nullable(); 
+            $table->string('tanah_nomor_register', 20)->nullable(); 
             
-            $table->text('spesifikasi_barang')->nullable();  // (9) Luas M2
-            $table->text('spesifikasi_lainnya')->nullable(); // (10)
+            $table->string('tanah_spesifikasi_barang', 255)->nullable(); 
+            $table->string('tanah_spesifikasi_lainnya', 255)->nullable(); 
             
-            $table->decimal('jumlah', 15, 2); // (11) Luas Tanah
-            $table->string('satuan');         // (12) M2 / Ha
+            $table->decimal('tanah_jumlah', 15, 2); 
+            $table->string('tanah_satuan', 20); 
             
-            // Lokasi Fisik (Alamat) - Menggunakan 'Lok' sesuai permintaanmu
-            $table->text('Lok');              // (13) 
-            $table->string('titik_koordinat')->nullable(); // (14)
+            $table->string('tanah_lokasi_fisik', 255); 
+            $table->string('tanah_titik_koordinat', 50)->nullable(); 
 
-            // Bukti Kepemilikan
-            $table->string('bukti_nama')->nullable();    // (15) Sertifikat/Girik
-            $table->string('bukti_nomor')->nullable();   // (16)
-            $table->date('bukti_tanggal')->nullable();   // (17)
-            $table->string('nama_kepemilikan_dokumen')->nullable(); // (18)
+            $table->string('tanah_bukti_nama', 50)->nullable(); 
+            $table->string('tanah_bukti_nomor', 50)->nullable(); 
+            $table->date('tanah_bukti_tanggal')->nullable(); 
+            $table->string('tanah_nama_kepemilikan_dokumen', 100)->nullable(); 
 
-            // Nilai Aset
-            $table->decimal('nilai_perolehan', 15, 2);       // (19)
-            $table->decimal('harga_satuan', 15, 2)->nullable(); // (20)
+            $table->decimal('tanah_nilai_perolehan', 15, 2); 
+            $table->decimal('tanah_harga_satuan', 15, 2)->nullable(); 
 
-            $table->string('cara_perolehan');    // (21)
-            $table->date('tanggal_perolehan');   // (22)
-            $table->string('status_penggunaan'); // (23)
-            $table->text('keterangan')->nullable(); // (24)
+            $table->string('tanah_cara_perolehan', 50); 
+            $table->date('tanah_tanggal_perolehan'); 
+            
+            // 🌟 REVISI ENUM: Status Penggunaan dengan pilihan baku
+            $table->enum('tanah_status_penggunaan', [
+                'Digunakan Sendiri', 
+                'Dipinjamkan', 
+                'Disewakan', 
+                'Tidak Digunakan'
+            ])->default('Digunakan Sendiri'); 
+            
+            $table->text('tanah_keterangan')->nullable(); 
+            
             $table->softDeletes();
             $table->timestamps();
         });

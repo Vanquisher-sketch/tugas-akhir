@@ -10,128 +10,115 @@ class UserController extends Controller
 {
     /**
      * Menampilkan daftar semua user.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        // Mengambil semua data user, diurutkan dari yang terbaru, dan dibagi per 10 data per halaman
+        // Mengambil semua data user, diurutkan dari yang terbaru
         $users = User::latest()->paginate(10);
         
-        // Mengirim data users ke view 'users.index'
         return view('pages.user.index', compact('users'));
     }
 
     /**
      * Menampilkan form untuk membuat user baru.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function create()
     {
-        // Langsung menampilkan view 'users.create'
         return view('pages.user.create');
     }
 
     /**
      * Menyimpan data user baru ke dalam database.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        // 1. Validasi input
+        // 1. Validasi input disesuaikan dengan nama kolom tabel yang baru
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:100',
+            'email' => 'required|string|email|max:100|unique:users,user_email',
             'password' => 'required|string|min:8',
+            'role_id' => 'required|integer', // Admin harus memilih role (1=Admin, 2=Kecamatan, 3=User)
+            'status' => 'required|in:diajukan,disetujui,ditolak', // Admin menentukan status
         ]);
 
-        // 2. Jika validasi berhasil, buat user baru
+        // 2. Simpan menggunakan prefix 'user_'
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password), // Password di-hash sebelum disimpan
+            'user_nama' => $request->name,
+            'user_email' => $request->email,
+            'user_password' => Hash::make($request->password),
+            'user_role_id' => $request->role_id,
+            'user_status' => $request->status,
         ]);
 
-        // 3. Redirect ke halaman index dengan pesan sukses
         return redirect()->route('user.index')
                          ->with('success', 'User baru berhasil ditambahkan.');
     }
 
     /**
      * Menampilkan detail dari satu user.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
+    public function show(string $id)
     {
-        // Menggunakan Route-Model Binding, Laravel otomatis mencari user berdasarkan ID
+        // Menggunakan findOrFail dengan ID agar aman karena Primary Key kita kustom (user_id)
+        $user = User::findOrFail($id);
         return view('pages.user.show', compact('user'));
     }
 
     /**
      * Menampilkan form untuk mengedit data user.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
      */
-    public function edit(User $user)
+    public function edit(string $id)
     {
-        // Menggunakan Route-Model Binding
-        return view('user.edit', compact('user'));
+        $user = User::findOrFail($id);
+        // REVISI: Typo path view diperbaiki dari 'user.edit' menjadi 'pages.user.edit'
+        return view('pages.user.edit', compact('user'));
     }
 
     /**
-     * Mengupdate data user di dalam database.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
+     * Mengupdate data user di dalam database (Termasuk fitur Approve/Reject).
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, string $id)
     {
-        // 1. Validasi input
+        $user = User::findOrFail($id);
+
+        // 1. Validasi input (Pengecualian unique email diarahkan ke user_email dan user_id)
         $request->validate([
-            'name' => 'required|string|max:255',
-            // Rule unique diabaikan untuk email user saat ini
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8', // Password boleh kosong
+            'name' => 'required|string|max:100',
+            'email' => 'required|string|email|max:100|unique:users,user_email,' . $user->user_id . ',user_id',
+            'password' => 'nullable|string|min:8', 
+            'role_id' => 'required|integer',
+            'status' => 'required|in:diajukan,disetujui,ditolak',
         ]);
         
-        // 2. Menyiapkan data yang akan diupdate
+        // 2. Menyiapkan data yang akan diupdate dengan prefix 'user_'
         $dataToUpdate = [
-            'name' => $request->name,
-            'email' => $request->email,
+            'user_nama' => $request->name,
+            'user_email' => $request->email,
+            'user_role_id' => $request->role_id,
+            'user_status' => $request->status,
         ];
         
-        // 3. Cek apakah ada input password baru, jika ada hash dan tambahkan ke data update
+        // 3. Jika admin mengisi password baru, update passwordnya
         if ($request->filled('password')) {
-            $dataToUpdate['password'] = Hash::make($request->password);
+            $dataToUpdate['user_password'] = Hash::make($request->password);
         }
 
-        // 4. Update data user
+        // 4. Eksekusi update
         $user->update($dataToUpdate);
 
-        // 5. Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('users.index')
-                         ->with('success', 'Data user berhasil diperbarui.');
+        // REVISI: Typo route diperbaiki dari 'users.index' menjadi 'user.index'
+        return redirect()->route('user.index')
+                         ->with('success', 'Data user (dan status persetujuan) berhasil diperbarui.');
     }
 
     /**
      * Menghapus data user dari database.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy(string $id)
     {
-        // Menggunakan Route-Model Binding untuk mencari user lalu menghapusnya
+        $user = User::findOrFail($id);
         $user->delete();
 
-        // Redirect ke halaman index dengan pesan sukses
         return redirect()->route('user.index')
                          ->with('success', 'User berhasil dihapus.');
     }

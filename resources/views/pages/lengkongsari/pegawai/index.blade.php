@@ -37,6 +37,7 @@
                             <th>Jabatan</th>
                             <th>No. HP / WA</th>
                             <th>Email</th>
+                            <th>Alamat</th>
                             <th width="15%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -57,6 +58,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $item->email ?? '-' }}</td>
+                                <td>{{ $item->alamat }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <!-- Tombol Edit -->

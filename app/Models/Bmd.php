@@ -8,49 +8,54 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bmd extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
+    // 1. Definisikan nama tabel secara eksplisit
     protected $table = 'bmds';
 
-    // 🌟 REVISI FILLABLE: Hanya mendaftarkan kolom yang ada di migration terbaru
+    // 2. Tentukan Primary Key kustom (karena bukan 'id')
+    protected $primaryKey = 'bmd_id';
+
+
+
+    // 4. Properti fillable yang disesuaikan dengan atribut migration terbaru
     protected $fillable = [
-        'peralatan_kode',
-        'pegawai_id',
-        'bendahara_id',
-        'lokasi', // Tetap dipertahankan untuk filter wilayah URL (tawang, cikalang, dll)
-        'pemakai_status',
-        'pemakai_identitas',
-        'bast_nomor',
-        'bast_tanggal',
-        'bast_file',
-        'keterangan'
+        'bmd_alat_kode',
+        'bmd_pegawai_nip',
+        'bmd_bendahara_nip',
+        'lokasi', // Kolom murni tanpa awalan khusus jangkar filter
+        'bmd_pemakai_status',
+        'bmd_pemakai_identitas',
+        'bmd_bast_nomor',
+        'bmd_bast_tanggal',
+        'bmd_bast_file',
+        'bmd_keterangan'
     ];
 
     /**
-     * 🌟 RELASI KE KIB B (Peralatan)
-     * BMD ini terhubung ke satu Peralatan berdasarkan 'peralatan_kode'
+     * 5. RELASI KE KIB B (Peralatan)
+     * Menghubungkan bmd_alat_kode ke primary key 'alat_kode_barang' di tabel peralatans
      */
     public function peralatan()
     {
-        return $this->belongsTo(Peralatan::class, 'peralatan_kode', 'kode_barang');
+        return $this->belongsTo(Peralatan::class, 'bmd_alat_kode', 'alat_kode_barang');
     }
 
     /**
-     * 🌟 RELASI KE PEGAWAI (Sebagai Pemakai / Pihak Kedua)
-     * BMD ini dipakai oleh satu Pegawai berdasarkan 'pegawai_id'
+     * 6. RELASI KE PEGAWAI (Sebagai Pemakai / Pihak Kedua)
+     * Menghubungkan bmd_pegawai_nip ke primary key 'pegawai_nip' di tabel pegawais
      */
     public function pegawai()
     {
-        return $this->belongsTo(Pegawai::class, 'pegawai_id', 'id');
+        return $this->belongsTo(Pegawai::class, 'bmd_pegawai_nip', 'pegawai_nip');
     }
 
     /**
-     * 🌟 RELASI KE PEGAWAI (Sebagai Bendahara / Pihak Pertama)
-     * BMD ini diserahkan oleh satu Bendahara berdasarkan 'bendahara_id'
+     * 7. RELASI KE PEGAWAI (Sebagai Bendahara / Pihak Pertama)
+     * Menghubungkan bmd_bendahara_nip ke primary key 'pegawai_nip' di tabel pegawais
      */
     public function bendahara()
     {
-        return $this->belongsTo(Pegawai::class, 'bendahara_id', 'id');
+        return $this->belongsTo(Pegawai::class, 'bmd_bendahara_nip', 'pegawai_nip');
     }
 }

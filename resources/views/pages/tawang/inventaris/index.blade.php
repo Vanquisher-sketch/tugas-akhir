@@ -3,7 +3,7 @@
 @section('content')
 
 <style>
-    /* FIX MODAL TERTIMPA LAYOUT */
+    /* PERBAIKAN MODAL TERTIMPA LAYOUT */
     .modal {
         z-index: 99999 !important;
     }
@@ -28,17 +28,17 @@
 
 <div class="card shadow mb-4">
 
-    {{-- Header Modul --}}
+    {{-- Bagian Header Modul --}}
     <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">
             <i class="fas fa-table mr-2"></i>
             KARTU INVENTARIS RUANGAN (KIR) BMD - 
-            <span class="text-dark">{{ $room->name }}</span>
+            <span class="text-dark">{{ $room->ruangan_nama }}</span>
         </h6>
 
         <div class="d-flex">
-            {{-- Search Form --}}
-            <form action="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}"
+            {{-- Form Pencarian --}}
+            <form action="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}"
                   method="GET"
                   class="form-inline form-search mr-3">
 
@@ -57,9 +57,9 @@
                 </div>
             </form>
 
-            {{-- Action Buttons --}}
+            {{-- Tombol Aksi --}}
             <div class="btn-group">
-                <a href="{{ route('lokasi.inventaris.create', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}"
+                <a href="{{ route('lokasi.inventaris.create', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}"
                    class="btn btn-primary btn-sm font-weight-bold">
                     <i class="fas fa-plus-circle mr-1"></i> Tambah Data Aset
                 </a>
@@ -69,7 +69,7 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
                     <a class="dropdown-item font-weight-bold"
-                       href="{{ route('lokasi.inventaris.print', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}"
+                       href="{{ route('lokasi.inventaris.print', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}"
                        target="_blank">
                         <i class="fas fa-print fa-fw mr-2 text-gray-400"></i> Cetak Dokumen KIR
                     </a>
@@ -78,10 +78,10 @@
         </div>
     </div>
 
-    {{-- BODY --}}
+    {{-- Bagian Konten --}}
     <div class="card-body">
 
-        {{-- ALERTS --}}
+        {{-- Notifikasi --}}
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show">
                 <i class="fas fa-check-circle mr-1"></i>
@@ -98,7 +98,7 @@
             </div>
         @endif
 
-        {{-- TABLE FORMAT PERMENDAGRI + KOLOM KONDISI MANDIRI --}}
+        {{-- Format Tabel Permendagri & Kondisi Mandiri --}}
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-dark mb-0"
                    width="100%"
@@ -116,7 +116,7 @@
                         <th colspan="2" style="width: 16%;">Spesifikasi Barang</th>
                         <th rowspan="2" style="width: 4%; vertical-align: middle;">Jumlah</th>
                         <th rowspan="2" style="width: 5%; vertical-align: middle;">Satuan</th>
-                        <th rowspan="2" style="width: 9%; vertical-align: middle;">Kondisi</th> {{-- 🌟 Header Baru --}}
+                        <th rowspan="2" style="width: 9%; vertical-align: middle;">Kondisi</th>
                         <th rowspan="2" style="width: 10%; vertical-align: middle;">Keterangan</th>
                         <th rowspan="2" style="width: 12%; vertical-align: middle;">Aksi</th>
                     </tr>
@@ -134,88 +134,84 @@
                         </td>
 
                         <td class="text-center align-middle">
-                            {{ $item->nibar ?? '-' }}
+                            {{ $item->inv_nibar ?? '-' }}
                         </td>
 
                         <td class="text-center align-middle font-weight-bold text-secondary">
-                            {{ $item->nomor_register ?? '-' }}
+                            {{ $item->inv_nomor_register ?? '-' }}
                         </td>
 
                         <td class="text-center align-middle font-weight-bold text-primary">
-                            {{ $item->kode_barang }}
+                            {{ $item->inv_kode_barang }}
                         </td>
 
                         <td class="align-middle font-weight-bold">
-                            {{ optional($item->peralatan)->nama_barang ?? $item->nama_barang }}
+                            {{ optional($item->peralatan)->alat_nama_barang ?? $item->inv_nama_barang }}
                         </td>
 
                         <td class="align-middle text-muted">
-                            {{ optional($item->peralatan)->spesifikasi_barang ?? ($item->spesifikasi_barang ?? '-') }}
+                            {{ optional($item->peralatan)->alat_spesifikasi_barang ?? ($item->inv_spesifikasi_barang ?? '-') }}
                         </td>
 
                         <td class="align-middle">
-                            {{ optional($item->peralatan)->merk_tipe ?? ($item->merk_tipe ?? '-') }}
+                            {{ optional($item->peralatan)->alat_merk_tipe ?? ($item->inv_merk_tipe ?? '-') }}
                         </td>
 
                         <td class="text-center align-middle">
-                            {{ optional($item->peralatan)->tahun_perolehan ?? $item->tahun_perolehan }}
+                            {{ optional($item->peralatan)->alat_tahun_perolehan ?? ($item->inv_tahun_perolehan ?? '-') }}
                         </td>
 
                         <td class="text-center align-middle font-weight-bold text-info" style="font-size: 11.5px;">
-                            {{ $item->jumlah }}
+                            {{ $item->inv_jumlah }}
                         </td>
 
                         <td class="text-center align-middle">
-                            <span class="badge badge-light border px-2 py-1">{{ $item->satuan }}</span>
+                            <span class="badge badge-light border px-2 py-1">{{ $item->inv_satuan }}</span>
                         </td>
 
                         <td class="text-center align-middle">
-                            @if(($item->kondisi ?? 'Baik') === 'Baik')
+                            @if(($item->inv_kondisi ?? 'Baik') === 'Baik')
                                 <span class="badge badge-success px-2 py-1 font-weight-bold text-uppercase" style="font-size: 8.5px; letter-spacing: 0.3px;">
                                     <i class="fas fa-check-circle mr-1"></i> Baik
                                 </span>
-                            @elseif($item->kondisi === 'Rusak Ringan')
-                                <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold text-uppercase" style="font-size: 8.5px; letter-spacing: 0.3px;">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i> Rusak Rgn
+                            @elseif($item->inv_kondisi === 'Rusak Ringan')
+                                <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold text-uppercase" style="font-size: 8.5px; letter-spacing: 0.3px; border: 1px solid #f6c23e;">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Rusak Ringan
                                 </span>
-                            @elseif($item->kondisi === 'Rusak Berat')
+                            @elseif($item->inv_kondisi === 'Rusak Berat')
                                 <span class="badge badge-danger px-2 py-1 font-weight-bold text-uppercase shadow-sm" style="font-size: 8.5px; letter-spacing: 0.3px;">
-                                    <i class="fas fa-times-circle mr-1"></i> Rusak Brt
+                                    <i class="fas fa-times-circle mr-1"></i> Rusak Berat
                                 </span>
                             @endif
                         </td>
 
                         <td class="font-italic text-secondary align-middle">
-                            {{ $item->keterangan ?? '-' }}
+                            {{ $item->inv_keterangan ?? '-' }}
                         </td>
 
                         <td class="text-center align-middle">
                             <div class="d-flex align-items-center justify-content-center">
-                                {{-- DETAIL --}}
-                                <a href="{{ route('lokasi.inventaris.detail', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan, 'kode_barang' => $item->kode_barang]) }}"
-                                   class="btn btn-sm btn-primary mx-1 d-inline-flex align-items-center justify-content-center" 
-                                   style="width: 28px; height: 28px; border-radius: 4px;" title="Lihat Detail">
-                                    <i class="fas fa-eye" style="font-size: 11px;"></i>
-                                </a>
 
-                                {{-- EDIT --}}
-                                <a href="{{ route('lokasi.inventaris.edit', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan, 'inventari' => $item->kode_barang]) }}"
+                                {{-- Tombol Ubah / Edit --}}
+                                <a href="{{ route('lokasi.inventaris.edit', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $item->id ?? $item->inv_kode_barang]) }}"
                                    class="btn btn-sm btn-warning mx-1 d-inline-flex align-items-center justify-content-center text-white" 
-                                   style="width: 28px; height: 28px; border-radius: 4px;" title="Edit Item">
+                                   style="width: 28px; height: 28px; border-radius: 4px;" title="Ubah Kondisi Data">
                                     <i class="fas fa-edit" style="font-size: 11px;"></i>
                                 </a>
 
-                                {{-- MUTASI --}}
-                                <button type="button"
-                                        class="btn btn-sm btn-info mx-1 d-inline-flex align-items-center justify-content-center"
-                                        data-toggle="modal"
-                                        data-target="#moveModal{{ md5($item->kode_barang) }}"
-                                        style="width: 28px; height: 28px; border-radius: 4px;" title="Mutasi Barang">
-                                    <i class="fas fa-exchange-alt" style="font-size: 11px;"></i>
-                                </button>
+                                {{-- Tombol Mutasi (Hanya muncul jika kondisi barang Baik) --}}
+                                @if($item->inv_kondisi === 'Baik')
+                                    <button type="button"
+                                            class="btn btn-sm btn-info mx-1 d-inline-flex align-items-center justify-content-center"
+                                            data-toggle="modal"
+                                            data-target="#moveModal{{ md5($item->id ?? $item->inv_kode_barang) }}"
+                                            style="width: 28px; height: 28px; border-radius: 4px;" title="Mutasi Barang">
+                                        <i class="fas fa-exchange-alt" style="font-size: 11px;"></i>
+                                    </button>
+                                @endif
 
-                                {{-- DELETE --}}
-                                <form action="{{ route('lokasi.inventaris.destroy', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan, 'inventari' => $item->kode_barang]) }}"
+                                {{-- Tombol Hapus --}}
+                                <form action="{{ route('lokasi.inventaris.destroy', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $item->id ?? $item->inv_kode_barang]) }}"
                                       method="POST"
                                       class="d-inline m-0 p-0"
                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus data aset ini?')">
@@ -248,21 +244,24 @@
 
     </div>
 </div>
-
 @endsection
 
-{{-- MODAL MUTASI --}}
+{{-- Modal Mutasi --}}
 @foreach ($dataInventaris as $item)
+
+{{-- Hanya buatkan modal mutasi untuk barang berkondisi 'Baik' --}}
+@if($item->inv_kondisi === 'Baik')
+
 <div class="modal fade"
-     id="moveModal{{ md5($item->kode_barang) }}"
+     id="moveModal{{ md5($item->id ?? $item->inv_kode_barang) }}" 
      tabindex="-1"
      role="dialog"
      aria-hidden="true">
 
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg text-left">
-            <form action="{{ route('lokasi.inventaris.move', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan, 'inventari' => $item->kode_barang]) }}"
-                  method="POST">
+            
+            <form action="{{ route('lokasi.inventaris.move', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $item->id ?? $item->inv_kode_barang]) }}" method="POST">
                 @csrf
 
                 <div class="modal-header bg-primary text-white py-3">
@@ -273,7 +272,7 @@
                 </div>
 
                 <div class="modal-body text-dark" style="font-size: 13px;">
-                    <p class="mb-3">Aset yang akan dipindahkan: <b class="text-primary">{{ optional($item->peralatan)->nama_barang ?? $item->nama_barang }} ({{ $item->kode_barang }})</b></p>
+                    <p class="mb-3">Aset yang akan dipindahkan: <b class="text-primary">{{ optional($item->peralatan)->alat_nama_barang ?? $item->inv_nama_barang }} ({{ $item->inv_kode_barang }})</b></p>
 
                     <div class="form-group">
                         <label class="font-weight-bold">Pilih Ruangan Tujuan:</label>
@@ -281,15 +280,15 @@
                             <option value="" disabled selected>-- Pilih Ruangan Target --</option>
                             @foreach($allRooms as $r)
                                 @if($r->kode_ruangan !== $room->kode_ruangan)
-                                    <option value="{{ $r->kode_ruangan }}">{{ $r->name }} ({{ $r->kode_ruangan }})</option>
+                                    <option value="{{ $r->kode_ruangan }}">{{ $r->ruangan_nama }} ({{ $r->kode_ruangan }})</option>
                                 @endif
                             @endforeach
                         </select>
                     </div>
 
                     <div class="form-group mb-0">
-                        <label class="font-weight-bold">Jumlah Dipindah (Stok: {{ $item->jumlah }}):</label>
-                        <input type="number" name="qty_to_move" class="form-control font-weight-bold text-dark" min="1" max="{{ $item->jumlah }}" value="1" style="font-size: 13px;" required>
+                        <label class="font-weight-bold">Jumlah Dipindah (Stok Kondisi Baik: {{ $item->inv_jumlah }}):</label>
+                        <input type="number" name="qty_to_move" class="form-control font-weight-bold text-dark" min="1" max="{{ $item->inv_jumlah }}" value="1" style="font-size: 13px;" required>
                     </div>
                 </div>
 
@@ -301,4 +300,6 @@
         </div>
     </div>
 </div>
+
+@endif
 @endforeach

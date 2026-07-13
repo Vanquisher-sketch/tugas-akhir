@@ -19,7 +19,7 @@
             <div class="row">
                 {{-- Bagian 1: Informasi Aset --}}
                 <div class="col-md-6 border-right">
-                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">1. Informasi Aset & Lokasi</h5>
+                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">1. Informasi Aset</h5>
                     
                     <div class="form-group">
                         <label class="font-weight-bold text-dark">Pilih Barang (Peralatan & Mesin) <span class="text-danger">*</span></label>
@@ -34,8 +34,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="font-weight-bold text-dark">Lokasi/Alamat Penggunaan Saat Ini <span class="text-danger">*</span></label>
-                        <input type="text" name="alamat_penggunaan" class="form-control" value="{{ old('alamat_penggunaan', $bmd->alamat_penggunaan) }}" required>
+                        <label class="font-weight-bold text-dark">Keterangan Tambahan Kondisi Barang</label>
+                        <textarea name="keterangan" class="form-control" rows="5" placeholder="Catatan kondisi fisik barang saat diserahkan...">{{ old('keterangan', $bmd->keterangan) }}</textarea>
                     </div>
                 </div>
 
@@ -90,36 +90,32 @@
 
             <hr class="my-4">
 
-            {{-- Row 2: Dokumen & Keterangan --}}
+            {{-- Row 2: Dokumen Sistem --}}
             <div class="row">
-                <div class="col-md-6 border-right">
-                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">3. Dokumen Sumber (BAST Ter-update Otomatis)</h5>
+                <div class="col-md-12">
+                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">3. Dokumen Sumber (Referensi Sistem)</h5>
                     
                     <div class="form-row">
-                        <div class="form-group col-md-7">
-                            <label class="font-weight-bold text-dark">Nomor BAST <span class="text-danger">*</span></label>
-                            <input type="text" name="bast_nomor" class="form-control" value="{{ old('bast_nomor', $bmd->bast_nomor) }}" required>
+                        <div class="form-group col-md-6">
+                            <label class="font-weight-bold text-dark">Nomor BAST</label>
+                            {{-- Dibikin Readonly karena nomor dokumen sudah mutlak milik sistem PANDAWA --}}
+                            <input type="text" name="bast_nomor" class="form-control bg-light" value="{{ old('bast_nomor', $bmd->bast_nomor) }}" readonly required>
                         </div>
-                        <div class="form-group col-md-5">
-                            <label class="font-weight-bold text-dark">Tanggal BAST <span class="text-danger">*</span></label>
-                            <input type="date" name="bast_tanggal" class="form-control" value="{{ old('bast_tanggal', $bmd->bast_tanggal ? \Carbon\Carbon::parse($bmd->bast_tanggal)->format('Y-m-d') : '') }}" required>
+                        <div class="form-group col-md-6">
+                            <label class="font-weight-bold text-dark">Tanggal Registrasi BAST</label>
+                            <input type="date" name="bast_tanggal" class="form-control bg-light" value="{{ old('bast_tanggal', $bmd->bast_tanggal ? \Carbon\Carbon::parse($bmd->bast_tanggal)->format('Y-m-d') : '') }}" readonly required>
                         </div>
                     </div>
 
                     @if($bmd->bast_file)
-                        <div class="mt-3 alert alert-info py-2">
-                            <small class="font-weight-bold d-block mb-1"><i class="fas fa-file-pdf"></i> Surat BAST Berkas Lama Aktif:</small>
-                            <a href="{{ asset('storage/' . $bmd->bast_file) }}" target="_blank" class="btn btn-sm btn-info px-3 font-weight-bold"><i class="fas fa-external-link-alt mr-1"></i> Buka PDF BAST</a>
+                        <div class="mt-3 alert alert-info py-2 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="font-weight-bold d-block mb-1"><i class="fas fa-file-pdf"></i> Dokumen Fisik Terbitan Sistem:</small>
+                                <span class="small text-dark">Arsip Surat BAST saat ini sudah tersimpan aman di server lokal.</span>
+                            </div>
+                            <a href="{{ asset('storage/' . $bmd->bast_file) }}" target="_blank" class="btn btn-sm btn-info px-3 font-weight-bold shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Buka PDF BAST</a>
                         </div>
                     @endif
-                </div>
-
-                <div class="col-md-6">
-                    <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">4. Keterangan Pengolahan</h5>
-                    <div class="form-group">
-                        <label class="font-weight-bold text-dark">Keterangan Tambahan Kondisi Barang</label>
-                        <textarea name="keterangan" class="form-control" rows="4">{{ old('keterangan', $bmd->keterangan) }}</textarea>
-                    </div>
                 </div>
             </div>
 

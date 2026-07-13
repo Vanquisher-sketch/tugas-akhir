@@ -23,22 +23,24 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
-        // PERBAIKAN: Ambil user segar dari database, bukan dari cache session
+        // Auth::id() akan otomatis mengenali user_id berkat override di Model User
         $user = User::find(Auth::id());
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:100',
             'email' => [
                 'required',
                 'string',
                 'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
+                'max:100',
+                // 🌟 REVISI: Arahkan cek unik ke user_email dan kecualikan user_id miliknya sendiri
+                Rule::unique('users', 'user_email')->ignore($user->user_id, 'user_id'),
             ],
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        // 🌟 REVISI MAPPING: Translasi form ke kolom database baru
+        $user->user_nama = $request->name;
+        $user->user_email = $request->email;
         
         $user->save(); 
 
@@ -50,7 +52,6 @@ class ProfileController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        // PERBAIKAN UTAMA: Gunakan User::find() agar update benar-benar ke DB
         $user = User::find(Auth::id());
 
         // 1. Validasi input
@@ -60,14 +61,15 @@ class ProfileController extends Controller
         ]);
 
         // 2. Cek apakah password saat ini cocok
-        if (!Hash::check($request->current_password, $user->password)) {
+        // 🌟 REVISI: Cek hash dengan kolom user_password
+        if (!Hash::check($request->current_password, $user->user_password)) {
             return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
         }
 
         // 3. FORCE UPDATE: Gunakan update() langsung pada model database
-        // Ini lebih aman daripada $user->save() untuk kasus ganti password
+        // 🌟 REVISI: Update ke kolom user_password
         $user->update([
-            'password' => Hash::make($request->new_password)
+            'user_password' => Hash::make($request->new_password)
         ]);
 
         return redirect()->back()->with('success', 'Password berhasil diubah! Silakan logout dan login ulang untuk menguji.');

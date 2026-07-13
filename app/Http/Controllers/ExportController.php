@@ -9,15 +9,18 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
 // KIB Models
 use App\Models\Tanah;
 use App\Models\Peralatan;
 use App\Models\Gedung;
 use App\Models\Jalan;
 use App\Models\Rusak;
+
 // Ruangan & Inventaris Models
-use App\Models\Room;
+use App\Models\Ruangan; // 🌟 REVISI: Model diganti dari Room menjadi Ruangan
 use App\Models\Inventaris;
+
 // Import Model BMD
 use App\Models\Bmd;
 
@@ -30,27 +33,37 @@ class ExportController extends Controller
         
         $data = [];
         $title = 'Laporan Data';
-        $headerRowStart = 3; // Baris untuk memulai header
-        $headerEndRow = 4;   // Default, nanti diubah per case
-        $dataStartRow = 5;   // Default
+        $headerRowStart = 3; 
+        $headerEndRow = 4;   
+        $dataStartRow = 5;   
         $highestColumn = 'A'; 
         
         switch ($menu) {
             case 'tanah':
-                // ... (Kode Tanah Tetap Sama) ...
                 $title = 'Laporan Data Tanah (KIB A)';
                 $collection = Tanah::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
                     $data[] = [
-                        $key + 1, $item->kode_barang, $item->nama_barang, $item->nibar, $item->nomor_register,
-                        $item->spesifikasi_lainnya, $item->jumlah, $item->satuan, $item->lokasi,
-                        $item->titik_koordinat, $item->bukti_nomor,
-                        $item->bukti_tanggal ? \Carbon\Carbon::parse($item->bukti_tanggal)->format('d-m-Y') : '',
-                        $item->bukti_nama_kepemilikan, $item->harga_satuan, $item->nilai_perolehan,
-                        $item->cara_perolehan,
-                        $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '',
-                        $item->tanggal_penggunaan ? \Carbon\Carbon::parse($item->tanggal_penggunaan)->format('d-m-Y') : '',
-                        $item->status, $item->keterangan
+                        $key + 1, 
+                        $item->tanah_kode_barang, 
+                        $item->tanah_nama_barang, 
+                        $item->tanah_nibar, 
+                        $item->tanah_nomor_register,
+                        $item->tanah_spesifikasi_lainnya, 
+                        $item->tanah_jumlah, 
+                        $item->tanah_satuan, 
+                        $item->tanah_lokasi_fisik,
+                        $item->tanah_titik_koordinat, 
+                        $item->tanah_bukti_nomor,
+                        $item->tanah_bukti_tanggal ? \Carbon\Carbon::parse($item->tanah_bukti_tanggal)->format('d-m-Y') : '',
+                        $item->tanah_nama_kepemilikan_dokumen, 
+                        $item->tanah_harga_satuan, 
+                        $item->tanah_nilai_perolehan,
+                        $item->tanah_cara_perolehan,
+                        $item->tanah_tanggal_perolehan ? \Carbon\Carbon::parse($item->tanah_tanggal_perolehan)->format('d-m-Y') : '',
+                        '-', // Tanggal Penggunaan spesifik tidak dicatat di KIB A terbaru, dikosongkan
+                        $item->tanah_status_penggunaan, 
+                        $item->tanah_keterangan
                     ];
                 }
                 $highestColumn = 'T';
@@ -88,17 +101,30 @@ class ExportController extends Controller
                 break;
 
             case 'peralatan':
-                // ... (Kode Peralatan Tetap Sama) ...
                 $title = 'Laporan Data Peralatan & Mesin (KIB B)';
                 $collection = Peralatan::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
                     $data[] = [
-                        $key + 1, $item->kode_barang, $item->nama_barang, $item->nibar, $item->nomor_register,
-                        $item->merek_tipe, $item->ukuran, $item->spesifikasi_lainnya, $item->nomor_rangka,
-                        $item->nomor_mesin, $item->nomor_polisi, $item->nomor_bpkb, $item->jumlah,
-                        $item->satuan, $item->harga_satuan, $item->nilai_perolehan, $item->cara_perolehan,
-                        $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '',
-                        $item->status_penggunaan, $item->keterangan
+                        $key + 1, 
+                        $item->alat_kode_barang, 
+                        $item->alat_nama_barang, 
+                        $item->alat_nibar, 
+                        $item->alat_nomor_register,
+                        $item->alat_merk_tipe, 
+                        $item->alat_spesifikasi_barang, 
+                        $item->alat_spesifikasi_lainnya, 
+                        $item->alat_nomor_rangka,
+                        '-', // Nomor Mesin dihilangkan dari skema
+                        $item->alat_nomor_polisi, 
+                        $item->alat_nomor_bpkb, 
+                        $item->alat_jumlah,
+                        $item->alat_satuan, 
+                        $item->alat_harga_satuan, 
+                        $item->alat_nilai_perolehan, 
+                        $item->alat_cara_perolehan,
+                        $item->alat_tanggal_perolehan ? \Carbon\Carbon::parse($item->alat_tanggal_perolehan)->format('d-m-Y') : '',
+                        $item->alat_status_penggunaan, 
+                        $item->alat_keterangan
                     ];
                 }
                 $highestColumn = 'T';
@@ -137,31 +163,29 @@ class ExportController extends Controller
                 break;
 
             case 'gedung':
-                // REVISI: Disesuaikan dengan Model Gedung Terbaru
-                // Kolom: No, Kode, Nama, Nibar, Reg, Spesifikasi, Spesifikasi Lain, Lantai, Luas(Jml, Satuan), Lokasi(Lok), Koordinat, Status Tanah, Tgl, Harga, Nilai, Cara, Status Guna, Ket
                 $title = 'Laporan Data Gedung & Bangunan (KIB C)';
                 $collection = Gedung::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
                     $data[] = [
                         $key + 1, 
-                        $item->kode_barang, 
-                        $item->nama_barang, 
-                        $item->nibar, 
-                        $item->nomor_register,
-                        $item->spesifikasi_barang, // REVISI: nama kolom
-                        $item->spesifikasi_lainnya, // REVISI: kolom baru
-                        $item->jumlah_lantai,       // REVISI: kolom baru
-                        $item->jumlah, 
-                        $item->satuan,
-                        $item->Lok,              // REVISI: 'Lok' huruf besar
-                        $item->titik_koordinat, 
-                        $item->status_kepemilikan_tanah,
-                        $item->harga_satuan, 
-                        $item->nilai_perolehan, 
-                        $item->cara_perolehan,
-                        $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '',
-                        $item->status_penggunaan, 
-                        $item->keterangan
+                        $item->gedung_kode_barang, 
+                        $item->gedung_nama_barang, 
+                        $item->gedung_nibar, 
+                        $item->gedung_nomor_register,
+                        $item->gedung_spesifikasi_barang, 
+                        $item->gedung_spesifikasi_lainnya, 
+                        $item->gedung_jumlah_lantai,        
+                        $item->gedung_jumlah, 
+                        $item->gedung_satuan,
+                        $item->gedung_lokasi_fisik,              
+                        $item->gedung_titik_koordinat, 
+                        $item->gedung_status_kepemilikan_tanah,
+                        $item->gedung_harga_satuan, 
+                        $item->gedung_nilai_perolehan, 
+                        $item->gedung_cara_perolehan,
+                        $item->gedung_tanggal_perolehan ? \Carbon\Carbon::parse($item->gedung_tanggal_perolehan)->format('d-m-Y') : '',
+                        $item->gedung_status_penggunaan, 
+                        $item->gedung_keterangan
                     ];
                 }
                 $highestColumn = 'S';
@@ -196,34 +220,32 @@ class ExportController extends Controller
                 break;
 
             case 'jalan':
-                // REVISI: Disesuaikan dengan Model Jalan Terbaru
-                // Kolom: No, Kode, Nama, Nibar, Reg, Spesifikasi, Spesifikasi Lain, No Ruas, Lokasi(Lok), Koordinat, Status Tanah, Jml, Satuan, Harga, Nilai, Cara, Tgl, Status Guna, Ket
                 $title = 'Laporan Data Jalan, Irigasi & Jaringan (KIB D)';
                 $collection = Jalan::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
                     $data[] = [
                         $key + 1, 
-                        $item->kode_barang, 
-                        $item->nama_barang, 
-                        $item->nibar, 
-                        $item->nomor_register,
-                        $item->spesifikasi_barang,  // REVISI
-                        $item->spesifikasi_lainnya, // REVISI: kolom baru
-                        $item->nomor_ruas_jalan_jembatan_irigasi, // REVISI: nama kolom panjang
-                        $item->Lok,              // REVISI: 'Lok' huruf besar
-                        $item->titik_koordinat,
-                        $item->status_kepemilikan_tanah, // REVISI: sesuaikan nama kolom
-                        $item->jumlah, 
-                        $item->satuan, 
-                        $item->harga_satuan, 
-                        $item->nilai_perolehan,
-                        $item->cara_perolehan,
-                        $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d-m-Y') : '',
-                        $item->status_penggunaan, 
-                        $item->keterangan
+                        $item->jalan_kode_barang, 
+                        $item->jalan_nama_barang, 
+                        $item->jalan_nibar, 
+                        $item->jalan_nomor_register,
+                        $item->jalan_spesifikasi_barang,  
+                        $item->jalan_spesifikasi_lainnya, 
+                        $item->jalan_nomor_ruas_jalan_jembatan_irigasi, 
+                        $item->jalan_lokasi_fisik,              
+                        $item->jalan_titik_koordinat,
+                        $item->jalan_status_kepemilikan_tanah, 
+                        $item->jalan_jumlah, 
+                        $item->jalan_satuan, 
+                        $item->jalan_harga_satuan, 
+                        $item->jalan_nilai_perolehan,
+                        $item->jalan_cara_perolehan,
+                        $item->jalan_tanggal_perolehan ? \Carbon\Carbon::parse($item->jalan_tanggal_perolehan)->format('d-m-Y') : '',
+                        $item->jalan_status_penggunaan, 
+                        $item->jalan_keterangan
                     ];
                 }
-                $highestColumn = 'S'; // Tambah 1 kolom (Spesifikasi Lainnya)
+                $highestColumn = 'S'; 
                 $headerEndRow = 4;
                 $dataStartRow = 5;
                 $sheet->mergeCells('A1:'.$highestColumn.'1')->setCellValue('A1', strtoupper($title . ' - LOKASI: ' . $lokasi));
@@ -255,12 +277,33 @@ class ExportController extends Controller
                 break;
 
             case 'rusak':
-                // ... (Kode Rusak Tetap Sama) ...
                 $title = 'Laporan Data Barang Rusak Berat';
                 $headers = ['No.', 'No. ID Pemda', 'Nama/Jenis Barang', 'Spesifikasi', 'No. Polisi', 'Tahun Perolehan', 'Harga Perolehan (Rp)', 'Kondisi', 'Tercatat di KIB', 'Keterangan'];
                 $collection = Rusak::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
-                    $data[] = [$key + 1, $item->id_pemda, $item->nama_barang, $item->spesifikasi, $item->no_polisi, $item->tahun_perolehan, $item->harga_perolehan, $item->kondisi, $item->tercatat_di_kib, $item->keterangan];
+                    // Penyelarasan relasi Rusak ke Peralatan/Inventaris seperti di Jurnal Controller
+                    $namaBarang = 'Aset Telah Diarsip';
+                    $spesifikasi = '-';
+                    $noPolisi = '-';
+                    $tahunPerolehan = '-';
+                    $harga = 0;
+                    $kondisi = 'Rusak Berat';
+                    
+                    if ($item->rusak_jenis_asal === 'Peralatan') {
+                        $detail = Peralatan::where('lokasi', $lokasi)->where('alat_kode_barang', $item->rusak_kode_barang)->first();
+                        $namaBarang = $detail->alat_nama_barang ?? $namaBarang;
+                        $spesifikasi = $detail->alat_merk_tipe ?? '-';
+                        $noPolisi = $detail->alat_nomor_polisi ?? '-';
+                        $tahunPerolehan = $detail->alat_tanggal_perolehan ?? '-';
+                        $harga = $detail->alat_nilai_perolehan ?? 0;
+                    } elseif ($item->rusak_jenis_asal === 'Inventaris') {
+                        $detail = Inventaris::where('inv_kode_barang', $item->rusak_kode_barang)->first();
+                        $namaBarang = $detail->inv_nama_barang ?? $namaBarang;
+                        $spesifikasi = 'Inventaris Ruangan';
+                        $tahunPerolehan = $detail->inv_tahun_perolehan ?? '-';
+                    }
+
+                    $data[] = [$key + 1, $item->rusak_kode_barang, $namaBarang, $spesifikasi, $noPolisi, $tahunPerolehan, $harga, $kondisi, $item->rusak_jenis_asal, $item->rusak_keterangan];
                 }
                 
                 $highestColumn = chr(64 + count($headers));
@@ -272,12 +315,11 @@ class ExportController extends Controller
                 break;
             
             case 'ruangan':
-                // ... (Kode Ruangan Tetap Sama) ...
                 $title = 'Laporan Data Ruangan';
                 $headers = ['No.', 'Nama Ruangan', 'Kode Ruangan'];
-                $collection = Room::where('lokasi', $lokasi)->get();
+                $collection = Ruangan::where('lokasi', $lokasi)->get();
                 foreach ($collection as $key => $item) {
-                    $data[] = [$key + 1, $item->name, $item->kode_ruangan];
+                    $data[] = [$key + 1, $item->ruangan_nama, $item->kode_ruangan];
                 }
 
                 $highestColumn = chr(64 + count($headers));
@@ -289,20 +331,27 @@ class ExportController extends Controller
                 break;
             
             case 'inventaris':
-                // ... (Kode Inventaris Tetap Sama) ...
                 $roomId = $request->query('room_id');
                 if (!$roomId) {
                     return redirect()->back()->with('error', 'Ruangan tidak ditemukan untuk ekspor.');
                 }
-                $room = Room::findOrFail($roomId);
-                $title = 'Kartu Inventaris Ruangan: ' . $room->name;
+                $room = Ruangan::where('kode_ruangan', $roomId)->firstOrFail();
+                $title = 'Kartu Inventaris Ruangan: ' . $room->ruangan_nama;
 
-                $collection = Inventaris::where('room_id', $roomId)->get();
+                $collection = Inventaris::where('inv_ruangan_kode', $room->kode_ruangan)->get();
                 foreach ($collection as $key => $item) {
                     $data[] = [
-                        $key + 1, $item->nibar, $item->nomor_register, $item->kode_barang, $item->nama_barang,
-                        $item->spesifikasi_nama_barang, $item->merek_tipe, $item->tahun_perolehan,
-                        $item->jumlah, $item->satuan, $item->keterangan
+                        $key + 1, 
+                        $item->inv_nibar, 
+                        $item->inv_nomor_register, 
+                        $item->inv_kode_barang, 
+                        $item->inv_nama_barang,
+                        $item->inv_spesifikasi_barang, 
+                        $item->inv_merk_tipe, 
+                        $item->inv_tahun_perolehan,
+                        $item->inv_jumlah, 
+                        $item->inv_satuan, 
+                        $item->inv_keterangan
                     ];
                 }
                 
@@ -333,27 +382,27 @@ class ExportController extends Controller
 
             case 'bmd':
                 $title = 'DAFTAR PENGGUNAAN BMD (PERALATAN DAN MESIN)';
-                $collection = Bmd::with('peralatan')->where('lokasi', $lokasi)->get();
+                $collection = Bmd::with(['peralatan', 'pegawai'])->where('lokasi', $lokasi)->get();
 
                 foreach ($collection as $key => $item) {
                     $data[] = [
                         $key + 1,
-                        $item->peralatan->nibr ?? '-',      
-                        $item->peralatan->kode_barang ?? '-',
-                        $item->peralatan->nama_barang ?? '-',
-                        $item->peralatan->merk_tipe ?? '-', 
-                        $item->alamat_penggunaan,           
-                        $item->pemakai_nama,
-                        $item->pemakai_status,
-                        $item->pemakai_jabatan,
-                        "'" . $item->pemakai_identitas, 
-                        $item->pemakai_alamat,
-                        $item->bast_nomor,
-                        $item->bast_tanggal ? \Carbon\Carbon::parse($item->bast_tanggal)->format('d-m-Y') : '-',
-                        $item->dokumen_lain_nama,
-                        $item->dokumen_lain_nomor,
-                        $item->dokumen_lain_tanggal ? \Carbon\Carbon::parse($item->dokumen_lain_tanggal)->format('d-m-Y') : '-',
-                        $item->keterangan
+                        $item->peralatan->alat_nibar ?? '-',      
+                        $item->bmd_alat_kode ?? '-',
+                        $item->peralatan->alat_nama_barang ?? '-',
+                        $item->peralatan->alat_merk_tipe ?? '-', 
+                        '-', // Alamat penggunaan dihilangkan dari skema, di set strip            
+                        $item->pegawai->pegawai_nama ?? '-',
+                        $item->bmd_pemakai_status,
+                        $item->pegawai->pegawai_jabatan ?? '-',
+                        "'" . $item->bmd_pemakai_identitas, 
+                        $item->pegawai->pegawai_alamat ?? '-',
+                        $item->bmd_bast_nomor,
+                        $item->bmd_bast_tanggal ? \Carbon\Carbon::parse($item->bmd_bast_tanggal)->format('d-m-Y') : '-',
+                        '-', // Dokumen lain dihilangkan dari form store, di set strip
+                        '-',
+                        '-',
+                        $item->bmd_keterangan
                     ];
                 }
 
@@ -420,17 +469,6 @@ class ExportController extends Controller
         // Style Baris Nomor Kolom
         if (in_array($menu, ['tanah', 'peralatan', 'gedung', 'jalan', 'inventaris', 'bmd'])) {
              $colNumRow = $headerEndRow; 
-             // Jika ada sub-header/nomor kolom terpisah (seperti case tanah, peralatan, gedung, jalan yang headerEndRow-nya dipakai untuk sub-judul kolom)
-             // kita perlu memastikan baris nomor kolom (1), (2), (3) itu yang diwarnai abu.
-             // Di logika case di atas:
-             // Tanah/Peralatan/Inventaris/BMD: headerEndRow=5, dataStart=6. Baris 5 adalah (1),(2).
-             // Gedung/Jalan: headerEndRow=4, dataStart=5. Baris 4 adalah (1),(2).
-             // Jadi logikanya bisa pakai $headerEndRow jika di set tepat di case masing-masing.
-             
-             // KOREKSI LOGIKA WARNA ABU:
-             // Case Tanah, Peralatan, Inventaris, BMD: Baris nomor kolom ada di row 5.
-             // Case Gedung, Jalan: Baris nomor kolom ada di row 4.
-             // Variabel $headerEndRow di switch case sudah diset menunjuk ke baris terakhir sebelum data (yaitu baris nomor kolom).
              
              $sheet->getStyle('A'.$headerEndRow.':'.$highestColumn.$headerEndRow)->getFont()->setBold(false);
              $sheet->getStyle('A'.$headerEndRow.':'.$highestColumn.$headerEndRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');

@@ -6,7 +6,7 @@
         <h6 class="m-0 font-weight-bold text-primary">Data Ruangan - {{ ucfirst($lokasi) }}</h6>
         <div class="d-flex">
             {{-- Form Pencarian dengan Datalist --}}
-            <form action="{{ route('lokasi.room.index', ['lokasi' => $lokasi]) }}" method="GET" id="searchForm" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+            <form action="{{ route('lokasi.ruangan.index', ['lokasi' => $lokasi]) }}" method="GET" id="searchForm" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
                 <div class="input-group">
                     <input type="text" 
                            id="roomSearchInput"
@@ -21,7 +21,7 @@
                     <datalist id="roomSuggestions">
                         @if(isset($allRooms))
                             @foreach($allRooms as $suggestion)
-                                <option value="{{ $suggestion->name }}">
+                                <option value="{{ $suggestion->ruangan_nama }}">
                             @endforeach
                         @endif
                     </datalist>
@@ -35,7 +35,7 @@
             </form>
 
             <div class="btn-group ml-3">
-                <a href="{{ route('lokasi.room.create', ['lokasi' => $lokasi]) }}" class="btn btn-primary">
+                <a href="{{ route('lokasi.ruangan.create', ['lokasi' => $lokasi]) }}" class="btn btn-primary">
                     <i class="fas fa-plus fa-sm text-white-50"></i> Tambah Data
                 </a>
             </div>
@@ -45,7 +45,7 @@
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Tutup">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -62,33 +62,33 @@
                     </tr>
                 </thead>
                 <tbody>
-    @forelse ($dataRuangan as $room)
-    <tr>
-        <td class="text-center">{{ $loop->iteration + $dataRuangan->firstItem() - 1 }}</td>
-        <td>{{ $room->name }}</td>
-        <td>{{ $room->kode_ruangan }}</td>
-        <td class="text-center">
-            {{-- REVISI: Ganti $room->id menjadi $room->kode_ruangan --}}
-            <a href="{{ route('lokasi.room.edit', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-warning btn-sm" title="Edit">
-                <i class="fas fa-edit"></i>
-            </a>
+                    @forelse ($dataRuangan as $room)
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration + $dataRuangan->firstItem() - 1 }}</td>
+                        <td>{{ $room->ruangan_nama }}</td>
+                        <td>{{ $room->kode_ruangan }}</td>
+                        <td class="text-center">
+                            {{-- Tombol Edit --}}
+                            <a href="{{ route('lokasi.ruangan.edit', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}" class="btn btn-warning btn-sm" title="Ubah">
+                                <i class="fas fa-edit"></i>
+                            </a>
 
-            {{-- REVISI: Ganti $room->id menjadi $room->kode_ruangan --}}
-            <form action="{{ route('lokasi.room.destroy', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus ruangan ini?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>
-        </td>
-    </tr>
-    @empty
-    <tr>
-        <td colspan="4" class="text-center text-muted">Belum ada data ruangan atau hasil pencarian tidak ditemukan.</td>
-    </tr>
-    @endforelse
-</tbody>
+                            {{-- Tombol Hapus --}}
+                            <form action="{{ route('lokasi.ruangan.destroy', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus ruangan ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Belum ada data ruangan atau hasil pencarian tidak ditemukan.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
             </table>
         </div>
         
@@ -105,15 +105,12 @@
     $(document).ready(function() {
         const searchInput = document.getElementById('roomSearchInput');
         const dataList = document.getElementById('roomSuggestions');
-        const historyKey = 'search_history_' + '{{ $lokasi }}'; // History per lokasi
+        const historyKey = 'search_history_' + '{{ $lokasi }}'; 
 
-        // 1. Ambil History dari LocalStorage
         let history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-        // 2. Masukkan history ke Datalist agar muncul sebagai saran
         function loadHistory() {
             history.forEach(item => {
-                // Cek agar tidak duplikat dengan saran database
                 let exists = false;
                 $('#roomSuggestions option').each(function(){
                     if (this.value == item) exists = true;
@@ -126,15 +123,11 @@
 
         loadHistory();
 
-        // 3. Simpan Kata Kunci saat Form di-submit
         $('#searchForm').submit(function() {
             let query = searchInput.value.trim();
             if (query.length > 1) {
-                // Hapus jika sudah ada di list (biar jadi paling baru/atas)
                 history = history.filter(item => item !== query);
-                // Tambah ke awal array
                 history.unshift(query);
-                // Simpan maksimal 10 riwayat terakhir
                 if (history.length > 10) history.pop();
                 localStorage.setItem(historyKey, JSON.stringify(history));
             }

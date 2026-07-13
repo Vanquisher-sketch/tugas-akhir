@@ -30,13 +30,13 @@ class CheckLokasiAccess
 
         // --- LOGIKA UTAMA HAK AKSES ---
 
-        // A. Jika rolenya adalah Admin (role_id = 1), selalu izinkan.
-        if ($user->role_id == 1) {
+        // A. Jika rolenya adalah Admin (user_role_id = 1), selalu izinkan.
+        if ($user->user_role_id == 1) {
             return $next($request); // Lanjutkan ke controller
         }
 
-        // B. Jika rolenya adalah Kecamatan (role_id = 2)
-        if ($user->role_id == 2) {
+        // B. Jika rolenya adalah Kecamatan (user_role_id = 2)
+        if ($user->user_role_id == 2) {
             // Definisikan kelurahan mana saja yang berada di bawah kecamatan ini.
             // Anda bisa membuatnya lebih dinamis nanti jika ada lebih dari 1 kecamatan.
             $kelurahan_di_bawah_tawang = [
@@ -54,8 +54,8 @@ class CheckLokasiAccess
             }
         }
 
-        // C. Jika rolenya adalah Kelurahan (role_id = 3)
-        if ($user->role_id == 3) {
+        // C. Jika rolenya adalah Kelurahan (user_role_id = 3)
+        if ($user->user_role_id == 3) {
             // Kita perlu mencocokkan nama user dengan lokasi yang diakses.
             // Contoh: User "Kelurahan Lengkongsari" harus cocok dengan lokasi "lengkongsari".
             // Kita ubah nama user menjadi format slug (lowercase, tanpa spasi dan "Kelurahan ")
