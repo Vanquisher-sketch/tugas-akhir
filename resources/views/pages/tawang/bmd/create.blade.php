@@ -46,9 +46,10 @@
                         <select name="peralatan_kode" class="form-control select2 @error('peralatan_kode') is-invalid @enderror" required>
                             <option value="">-- Cari Nama atau Kode Barang --</option>
                             @forelse($peralatans as $alat)
-                                <option value="{{ $alat->kode_barang }}" {{ old('peralatan_kode') == $alat->kode_barang ? 'selected' : '' }}>
-                                    [{{ $alat->kode_barang }}] {{ $alat->nama_barang }} 
-                                    @if($alat->nomor_polisi) | Plat: {{ $alat->nomor_polisi }} @endif
+                                {{-- 🌟 Penyesuaian ke alat_kode_barang dan alat_nama_barang --}}
+                                <option value="{{ $alat->alat_kode_barang }}" {{ old('peralatan_kode') == $alat->alat_kode_barang ? 'selected' : '' }}>
+                                    [{{ $alat->alat_kode_barang }}] {{ $alat->alat_nama_barang }} 
+                                    @if($alat->alat_nomor_polisi) | Plat: {{ $alat->alat_nomor_polisi }} @endif
                                 </option>
                             @empty
                                 <option value="" disabled>-- Tidak ada aset tersedia di lokasi ini --</option>
@@ -62,7 +63,7 @@
                     </div>
                 </div>
 
-                {{-- ====== POIN 2: DATA PEGAWAI (PILIH NAMA -> OTOMATIS SELESAI) ====== --}}
+                {{-- ====== POIN 2: DATA PEGAWAI ====== --}}
                 <div class="col-md-6">
                     <h5 class="font-weight-bold text-gray-800 border-bottom pb-2 mb-3">2. Data Pemakai & Penyerah</h5>
                     
@@ -71,8 +72,9 @@
                         <select name="pegawai_id" id="pegawai_id" class="form-control select2 @error('pegawai_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Pegawai --</option>
                             @foreach($pegawais as $pegawai)
-                                <option value="{{ $pegawai->id }}" data-nip="{{ $pegawai->nip }}" data-jabatan="{{ $pegawai->jabatan }}" {{ old('pegawai_id') == $pegawai->id ? 'selected' : '' }}>
-                                    {{ $pegawai->nama }}
+                                {{-- 🌟 REVISI: Value sekarang mengirimkan pegawai_nip --}}
+                                <option value="{{ $pegawai->pegawai_nip }}" data-nip="{{ $pegawai->pegawai_nip }}" data-jabatan="{{ $pegawai->pegawai_jabatan }}" {{ old('pegawai_id') == $pegawai->pegawai_nip ? 'selected' : '' }}>
+                                    {{ $pegawai->pegawai_nama }}
                                 </option>
                             @endforeach
                         </select>
@@ -102,8 +104,9 @@
                         <select name="bendahara_id" class="form-control select2 @error('bendahara_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Bendahara --</option>
                             @foreach($pegawais as $bendahara)
-                                <option value="{{ $bendahara->id }}" {{ old('bendahara_id') == $bendahara->id ? 'selected' : '' }}>
-                                    {{ $bendahara->nama }}
+                                {{-- 🌟 REVISI: Value sekarang mengirimkan pegawai_nip --}}
+                                <option value="{{ $bendahara->pegawai_nip }}" {{ old('bendahara_id') == $bendahara->pegawai_nip ? 'selected' : '' }}>
+                                    {{ $bendahara->pegawai_nama }}
                                 </option>
                             @endforeach
                         </select>
@@ -141,7 +144,7 @@
             isiDataPegawaiOtomatis();
         });
 
-        // Trigger 2: Jalankan fungsi saat halaman pertama kali dimuat (menangani old value jika validasi sempat gagal)
+        // Trigger 2: Jalankan fungsi saat halaman pertama kali dimuat (menangani old value)
         if ($('#pegawai_id').val() !== '') {
             isiDataPegawaiOtomatis();
         }

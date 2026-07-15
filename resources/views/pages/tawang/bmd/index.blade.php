@@ -38,7 +38,7 @@
                         <th rowspan="2" class="align-middle">Nama Barang</th>
                         <th rowspan="2" class="align-middle">Kode Barang</th>
                         <th colspan="2">Data Pemakai (Pihak Kedua)</th>
-                        <th rowspan="2" class="align-middle">Bendahara Barang (Pihak Pertama)</th> {{-- 🌟 3NF Upgrade: Menampilkan Penanggung Jawab --}}
+                        <th rowspan="2" class="align-middle">Bendahara Barang (Pihak Pertama)</th>
                         <th colspan="2">Dokumen BAST</th>
                         <th rowspan="2" class="align-middle">Status Pajak (Aset)</th>
                         <th rowspan="2" class="align-middle">Aksi</th>
@@ -54,29 +54,33 @@
                     @forelse($bmds as $item)
                     <tr>
                         <td class="text-center align-middle">{{ $loop->iteration }}</td>
-                        <td class="font-weight-bold align-middle">{{ $item->peralatan->nama_barang ?? '-' }}</td>
-                        <td class="align-middle">{{ $item->peralatan_kode }}</td>
+                        {{-- 🌟 Penyesuaian ke alat_nama_barang --}}
+                        <td class="font-weight-bold align-middle">{{ $item->peralatan->alat_nama_barang ?? '-' }}</td>
+                        {{-- 🌟 Penyesuaian ke bmd_alat_kode --}}
+                        <td class="align-middle">{{ $item->bmd_alat_kode }}</td>
                         
-                        {{-- Data Pemakai ditarik dari Relasi Tabel Pegawai --}}
                         <td class="align-middle">
-                            <strong>{{ $item->pegawai->nama ?? 'Bukan Pegawai Aktif' }}</strong>
+                            {{-- 🌟 Penyesuaian ke pegawai_nama --}}
+                            <strong>{{ $item->pegawai->pegawai_nama ?? 'Bukan Pegawai Aktif' }}</strong>
                         </td>
                         <td class="align-middle">
-                            <small class="text-muted">ID/NIP: {{ $item->pemakai_identitas }}</small><br>
-                            <small class="text-dark">Status: <span class="badge badge-light border">{{ $item->pemakai_status }}</span></small><br>
-                            <small class="text-dark">Jabatan: {{ $item->pegawai->jabatan ?? '-' }}</small>
+                            {{-- 🌟 Penyesuaian ke bmd_pemakai_identitas, bmd_pemakai_status, dan pegawai_jabatan --}}
+                            <small class="text-muted">ID/NIP: {{ $item->bmd_pemakai_identitas }}</small><br>
+                            <small class="text-dark">Status: <span class="badge badge-light border">{{ $item->bmd_pemakai_status }}</span></small><br>
+                            <small class="text-dark">Jabatan: {{ $item->pegawai->pegawai_jabatan ?? '-' }}</small>
                         </td>
 
-                        {{-- 🌟 Menampilkan Nama Bendahara Barang Hasil Relasi --}}
                         <td class="align-middle">
-                            <strong>{{ $item->bendahara->nama ?? '-' }}</strong><br>
+                            {{-- 🌟 Penyesuaian ke pegawai_nama milik relasi bendahara --}}
+                            <strong>{{ $item->bendahara->pegawai_nama ?? '-' }}</strong><br>
                             <small class="text-muted">Bendahara Barang</small>
                         </td>
 
-                        <td class="align-middle text-center font-weight-bold">{{ $item->bast_nomor ?? '-' }}</td>
+                        {{-- 🌟 Penyesuaian ke bmd_bast_nomor dan bmd_bast_file --}}
+                        <td class="align-middle text-center font-weight-bold">{{ $item->bmd_bast_nomor ?? '-' }}</td>
                         <td class="text-center align-middle">
-                            @if($item->bast_file)
-                                <a href="{{ asset('storage/' . $item->bast_file) }}" target="_blank" class="btn btn-sm btn-info btn-circle" title="Lihat Berkas Surat BAST PDF">
+                            @if($item->bmd_bast_file)
+                                <a href="{{ asset('storage/' . $item->bmd_bast_file) }}" target="_blank" class="btn btn-sm btn-info btn-circle" title="Lihat Berkas Surat BAST PDF">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                             @else 
@@ -84,7 +88,6 @@
                             @endif
                         </td>
 
-                        {{-- Status Pajak Otomatis dari Relasi Tabel Peralatan --}}
                         <td class="text-center align-middle">
                             @if(isset($item->peralatan->tanggal_pajak) && $item->peralatan->tanggal_pajak)
                                 @php
@@ -105,8 +108,9 @@
                         </td>
 
                         <td class="text-center align-middle">
-                            <a href="{{ route('lokasi.bmd.edit', [$lokasi, $item->id]) }}" class="btn btn-sm btn-warning" title="Ubah Transaksi"><i class="fas fa-edit"></i></a>
-                            <form action="{{ route('lokasi.bmd.destroy', [$lokasi, $item->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data pemakaian ini? Berkas PDF Surat BAST juga akan dihapus di server.')">
+                            {{-- 🌟 Penyesuaian rute menggunakan parameter id => bmd_id --}}
+                            <a href="{{ route('lokasi.bmd.edit', ['lokasi' => $lokasi, 'id' => $item->bmd_id]) }}" class="btn btn-sm btn-warning" title="Ubah Transaksi"><i class="fas fa-edit"></i></a>
+                            <form action="{{ route('lokasi.bmd.destroy', ['lokasi' => $lokasi, 'id' => $item->bmd_id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data pemakaian ini? Berkas PDF Surat BAST juga akan dihapus di server.')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger" title="Hapus Transaksi"><i class="fas fa-trash"></i></button>
                             </form>
@@ -153,11 +157,11 @@
             const query = this.value;
             if (query.length < 2) return; 
             fetch(`/{{ $lokasi }}/bmd/autocomplete?term=${query}`).then(res => res.json()).then(data => {
-                list.innerHTML = ''; // Clear options sebelum menambahkan baru
+                list.innerHTML = ''; 
                 data.forEach(item => {
                     let option = document.createElement('option');
-                    option.value = item.value; // Nama pemakai
-                    option.label = item.label; // Info Lengkap
+                    option.value = item.value; 
+                    option.label = item.label; 
                     list.appendChild(option);
                 });
             });

@@ -11,7 +11,7 @@ class PegawaiController extends Controller
     public function index($lokasi)
     {
         // Menyaring data pegawai yang kolom lokasinya sesuai dengan lokasi di URL
-        $pegawai = Pegawai::where('lokasi', $lokasi)->get(); 
+        $pegawai = Pegawai::where('lokasi', $lokasi)->orderBy('pegawai_nip', 'desc')->get(); 
         
         return view("pages.{$lokasi}.pegawai.index", compact('pegawai', 'lokasi'));
     }
@@ -25,25 +25,23 @@ class PegawaiController extends Controller
     // 3. Proses Simpan Data dari Form Tambah
     public function store(Request $request, $lokasi)
     {
-        // Validasi: arahkan pengecekan unik ke nama kolom database kita yang baru
         $request->validate([
-            'nip' => 'required|unique:pegawais,pegawai_nip|digits:18', // 🌟 REVISI: Wajib diisi karena ini Primary Key
-            'nama' => 'required|string|max:100',
+            'nip'     => 'required|unique:pegawais,pegawai_nip|digits:18', // Validasi unik ke kolom pegawai_nip
+            'nama'    => 'required|string|max:100',
             'jabatan' => 'required|string|max:50',
-            'alamat' => 'required|string|max:100',
-            'no_hp' => 'required|numeric|unique:pegawais,pegawai_no_hp|digits_between:10,15',
-            'email' => 'nullable|email|unique:pegawais,pegawai_email',
+            'alamat'  => 'required|string|max:100',
+            'no_hp'   => 'required|numeric|unique:pegawais,pegawai_no_hp|digits_between:10,15',
+            'email'   => 'nullable|email|unique:pegawais,pegawai_email',
         ]);
 
-        // Simpan data dengan memetakan input form ke kolom 'pegawai_'
         Pegawai::create([
-            'pegawai_nip' => $request->nip,
-            'pegawai_nama' => $request->nama,
+            'pegawai_nip'     => $request->nip,
+            'pegawai_nama'    => $request->nama,
             'pegawai_jabatan' => $request->jabatan,
-            'pegawai_alamat' => $request->alamat,
-            'pegawai_no_hp' => $request->no_hp,
-            'pegawai_email' => $request->email,
-            'lokasi' => $lokasi, // Disisipkan otomatis dari URL
+            'pegawai_alamat'  => $request->alamat,
+            'pegawai_no_hp'   => $request->no_hp,
+            'pegawai_email'   => $request->email,
+            'lokasi'          => $lokasi,
         ]);
 
         return redirect()->route('lokasi.pegawai.index', $lokasi)
@@ -51,9 +49,10 @@ class PegawaiController extends Controller
     }
 
     // 4. Tampilkan Halaman Form Edit Pegawai
-    public function edit($lokasi, $nip) // 🌟 REVISI: Ubah nama parameter dari $id jadi $nip agar logis
+    public function edit($lokasi, $nip) 
     {
-        $pegawai = Pegawai::findOrFail($nip); 
+        // 🌟 REVISI: Cari spesifik menggunakan where('pegawai_nip') agar tidak mencari kolom 'id'
+        $pegawai = Pegawai::where('pegawai_nip', $nip)->firstOrFail(); 
         
         return view("pages.{$lokasi}.pegawai.edit", compact('pegawai', 'lokasi'));
     }
@@ -61,26 +60,27 @@ class PegawaiController extends Controller
     // 5. Proses Update Data dari Form Edit
     public function update(Request $request, $lokasi, $nip)
     {
-        $pegawai = Pegawai::findOrFail($nip);
+        // Pastikan datanya ada terlebih dahulu
+        $exists = Pegawai::where('pegawai_nip', $nip)->exists();
+        if (!$exists) { abort(404); }
 
-        // Validasi Update: pengecualian unique harus sangat spesifik mencari PK pegawai_nip
         $request->validate([
-            'nip' => 'required|digits:18|unique:pegawais,pegawai_nip,' . $nip . ',pegawai_nip',
-            'nama' => 'required|string|max:100', // 🌟 Tambahkan required untuk keamanan
+            'nip'     => 'required|digits:18|unique:pegawais,pegawai_nip,' . $nip . ',pegawai_nip',
+            'nama'    => 'required|string|max:100', 
             'jabatan' => 'required|string|max:50',
-            'alamat' => 'required|string|max:100',
-            'no_hp' => 'required|numeric|digits_between:10,15|unique:pegawais,pegawai_no_hp,' . $nip . ',pegawai_nip',
-            'email' => 'nullable|email|unique:pegawais,pegawai_email,' . $nip . ',pegawai_nip',
+            'alamat'  => 'required|string|max:100',
+            'no_hp'   => 'required|numeric|digits_between:10,15|unique:pegawais,pegawai_no_hp,' . $nip . ',pegawai_nip',
+            'email'   => 'nullable|email|unique:pegawais,pegawai_email,' . $nip . ',pegawai_nip',
         ]);
 
-        // Eksekusi pembaruan data
-        $pegawai->update([
-            'pegawai_nip' => $request->nip,
-            'pegawai_nama' => $request->nama,
+        // 🌟 REVISI: Gunakan Query Builder murni untuk update demi menghindari jebakan kolom 'id'
+        Pegawai::where('pegawai_nip', $nip)->update([
+            'pegawai_nip'     => $request->nip,
+            'pegawai_nama'    => $request->nama,
             'pegawai_jabatan' => $request->jabatan,
-            'pegawai_alamat' => $request->alamat,
-            'pegawai_no_hp' => $request->no_hp,
-            'pegawai_email' => $request->email,
+            'pegawai_alamat'  => $request->alamat,
+            'pegawai_no_hp'   => $request->no_hp,
+            'pegawai_email'   => $request->email,
         ]);
 
         return redirect()->route('lokasi.pegawai.index', $lokasi)
@@ -90,8 +90,8 @@ class PegawaiController extends Controller
     // 6. Proses Hapus Data
     public function destroy($lokasi, $nip)
     {
-        $pegawai = Pegawai::findOrFail($nip);
-        $pegawai->delete();
+        // 🌟 REVISI: Hapus menggunakan Query Builder murni berbasis pegawai_nip
+        Pegawai::where('pegawai_nip', $nip)->delete();
 
         return redirect()->route('lokasi.pegawai.index', $lokasi)
             ->with('success', 'Data pegawai berhasil dihapus!');

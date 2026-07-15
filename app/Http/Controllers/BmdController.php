@@ -17,9 +17,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class BmdController extends Controller
 {
-    /**
-     * Tampilkan Halaman Utama (Daftar Penggunaan BMD)
-     */
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
@@ -30,10 +27,10 @@ class BmdController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('bmd_bast_nomor', 'LIKE', "%{$search}%")
                       ->orWhereHas('pegawai', function ($subQ) use ($search) {
-                          $subQ->where('pegawai_nama', 'LIKE', "%{$search}%"); // 🌟 REVISI
+                          $subQ->where('pegawai_nama', 'LIKE', "%{$search}%"); 
                       })
                       ->orWhereHas('peralatan', function ($subQ) use ($search) {
-                          $subQ->where('alat_nama_barang', 'LIKE', "%{$search}%") // 🌟 REVISI
+                          $subQ->where('alat_nama_barang', 'LIKE', "%{$search}%") 
                                ->orWhere('alat_kode_barang', 'LIKE', "%{$search}%")
                                ->orWhere('alat_nomor_polisi', 'LIKE', "%{$search}%");
                       });
@@ -46,9 +43,6 @@ class BmdController extends Controller
         return view("pages.{$lokasi}.bmd.index", compact('bmds', 'lokasi', 'search'));
     }
 
-    /**
-     * Fitur Saran Pencarian (Autocomplete) via AJAX
-     */
     public function autocomplete(Request $request, $lokasi)
     {
         $search = $request->query('term');
@@ -57,18 +51,18 @@ class BmdController extends Controller
             ->where(function($q) use ($search) {
                 $q->where('bmd_bast_nomor', 'LIKE', "%{$search}%")
                   ->orWhereHas('pegawai', function($subQ) use ($search) {
-                      $subQ->where('pegawai_nama', 'LIKE', "%{$search}%"); // 🌟 REVISI
+                      $subQ->where('pegawai_nama', 'LIKE', "%{$search}%"); 
                   })
                   ->orWhereHas('peralatan', function($subQ) use ($search) {
-                      $subQ->where('alat_nama_barang', 'LIKE', "%{$search}%"); // 🌟 REVISI
+                      $subQ->where('alat_nama_barang', 'LIKE', "%{$search}%"); 
                   });
             })
             ->limit(5)
             ->get();
 
         $formatted = $results->map(function($item) {
-            $namaPemakai = $item->pegawai->pegawai_nama ?? 'Tidak Diketahui'; // 🌟 REVISI
-            $namaBarang = $item->peralatan->alat_nama_barang ?? 'Aset'; // 🌟 REVISI
+            $namaPemakai = $item->pegawai->pegawai_nama ?? 'Tidak Diketahui'; 
+            $namaBarang = $item->peralatan->alat_nama_barang ?? 'Aset'; 
             return [
                 'label' => $namaPemakai . " (" . $namaBarang . ")",
                 'value' => $namaPemakai
@@ -78,32 +72,28 @@ class BmdController extends Controller
         return response()->json($formatted);
     }
 
-    /**
-     * Tampilkan Form Hubungkan Data (Tambah BMD)
-     */
     public function create($lokasi)
     {
-        // Menampilkan peralatan yang 'Tidak Aktif' 
+        // 🌟 REVISI CERDAS: Tampilkan semua barang yang BELUM 'Aktif' (termasuk yang masih kosong/NULL)
         $peralatans = Peralatan::where('lokasi', $lokasi)
-            ->where('alat_status_penggunaan', 'Tidak Aktif') // 🌟 REVISI
+            ->where(function($query) {
+                $query->where('alat_status_penggunaan', '!=', 'Aktif')
+                      ->orWhereNull('alat_status_penggunaan')
+                      ->orWhere('alat_status_penggunaan', '');
+            })
             ->select('alat_kode_barang', 'alat_nama_barang', 'alat_nomor_polisi')
             ->get();
 
-        $pegawais = Pegawai::where('lokasi', $lokasi)->orderBy('pegawai_nama')->get(); // 🌟 REVISI
+        $pegawais = Pegawai::where('lokasi', $lokasi)->orderBy('pegawai_nama')->get(); 
 
         return view("pages.{$lokasi}.bmd.create", compact('lokasi', 'peralatans', 'pegawais'));
     }
 
-    /**
-     * Proses Simpan Transaksi & Auto Generate PDF BAST Ramping (3NF)
-     */
     public function store(Request $request, $lokasi)
     {
-        // Validasi masih menggunakan 'name' bawaan form HTML, 
-        // pastikan rule exists mengecek ke kolom database yang baru
         $validated = $request->validate([
             'peralatan_kode'    => 'required|exists:peralatans,alat_kode_barang', 
-            'pegawai_id'        => 'required|exists:pegawais,pegawai_nip', // 🌟 REVISI: Acuan sekarang NIP
+            'pegawai_id'        => 'required|exists:pegawais,pegawai_nip', 
             'bendahara_id'      => 'required|exists:pegawais,pegawai_nip', 
             'pemakai_status'    => 'required|string',
             'pemakai_identitas' => 'required|string',
@@ -116,12 +106,11 @@ class BmdController extends Controller
             $totalData = Bmd::where('lokasi', $lokasi)->count() + 1;
             $nomorOtomatis = str_pad($totalData, 3, '0', STR_PAD_LEFT) . '/BAST/' . strtoupper($lokasi) . '/' . date('Y');
 
-            // 🌟 MAPPING DATA KE TABEL BMDS
             $bmd = Bmd::create([
                 'bmd_bast_nomor'        => $nomorOtomatis,
                 'bmd_bast_tanggal'      => $bastTanggal,
                 'bmd_alat_kode'         => $request->peralatan_kode,
-                'bmd_pegawai_nip'       => $request->pegawai_id, // Walau namanya id, isinya nip
+                'bmd_pegawai_nip'       => $request->pegawai_id, 
                 'bmd_bendahara_nip'     => $request->bendahara_id,
                 'bmd_pemakai_status'    => $request->pemakai_status,
                 'bmd_pemakai_identitas' => $request->pemakai_identitas,
@@ -129,12 +118,10 @@ class BmdController extends Controller
                 'lokasi'                => $lokasi
             ]);
 
-            // UPDATE STATUS KIB B Menjadi 'Aktif'
             Peralatan::where('alat_kode_barang', $request->peralatan_kode)->update([
                 'alat_status_penggunaan' => 'Aktif'
             ]);
 
-            // AMBIL DATA UTUH UNTUK INJEKSI DOMPDF
             $peralatanData = Peralatan::where('alat_kode_barang', $request->peralatan_kode)->first();
             $pegawaiData = Pegawai::where('pegawai_nip', $request->pegawai_id)->first();
             $bendaharaData = Pegawai::where('pegawai_nip', $request->bendahara_id)->first();
@@ -143,7 +130,6 @@ class BmdController extends Controller
                 Storage::disk('public')->makeDirectory('uploads/bast', 0755, true);
             }
 
-            // SUNTIK DATA KE PDF
             $pdf = Pdf::loadView("pages.{$lokasi}.bmd.cetak_bast", [
                 'bast_nomor'        => $nomorOtomatis,
                 'bast_tanggal'      => $bastTanggal,
@@ -177,15 +163,18 @@ class BmdController extends Controller
         }
     }
 
-    public function edit($lokasi, $id) // Gunakan ID Bmd secara eksplisit
+    public function edit($lokasi, $id) 
     {
         $bmd = Bmd::findOrFail($id);
         if ($bmd->lokasi !== $lokasi) abort(404);
 
+        // 🌟 REVISI CERDAS: Tampilkan yang belum 'Aktif' ATAU barang yang memang sedang dipakai di transaksi ini
         $peralatans = Peralatan::where('lokasi', $lokasi)
             ->where(function($query) use ($bmd) {
-                $query->where('alat_status_penggunaan', 'Tidak Aktif')
-                      ->orWhere('alat_kode_barang', $bmd->bmd_alat_kode);
+                $query->where('alat_status_penggunaan', '!=', 'Aktif')
+                      ->orWhereNull('alat_status_penggunaan')
+                      ->orWhere('alat_status_penggunaan', '')
+                      ->orWhere('alat_kode_barang', $bmd->bmd_alat_kode); 
             })
             ->select('alat_kode_barang', 'alat_nama_barang', 'alat_nomor_polisi')
             ->get();
@@ -211,13 +200,11 @@ class BmdController extends Controller
 
         DB::beginTransaction();
         try {
-            // Sinkronisasi otomatis status penggunaan peralatan
             if ($bmd->bmd_alat_kode !== $request->peralatan_kode) {
                 Peralatan::where('alat_kode_barang', $bmd->bmd_alat_kode)->update(['alat_status_penggunaan' => 'Tidak Aktif']);
                 Peralatan::where('alat_kode_barang', $request->peralatan_kode)->update(['alat_status_penggunaan' => 'Aktif']);
             }
 
-            // MAPPING UPDATE
             $bmd->update([
                 'bmd_alat_kode'         => $request->peralatan_kode,
                 'bmd_pegawai_nip'       => $request->pegawai_id, 
@@ -227,17 +214,14 @@ class BmdController extends Controller
                 'bmd_keterangan'        => $request->keterangan,
             ]);
 
-            // Bersihkan berkas PDF lama 
             if ($bmd->bmd_bast_file && Storage::disk('public')->exists($bmd->bmd_bast_file)) {
                 Storage::disk('public')->delete($bmd->bmd_bast_file);
             }
 
-            // AMBIL DATA RE-GENERATE
             $peralatanData = Peralatan::where('alat_kode_barang', $request->peralatan_kode)->first();
             $pegawaiData = Pegawai::where('pegawai_nip', $request->pegawai_id)->first();
             $bendaharaData = Pegawai::where('pegawai_nip', $request->bendahara_id)->first();
 
-            // Pembuatan ulang PDF BAST 
             $pdf = Pdf::loadView("pages.{$lokasi}.bmd.cetak_bast", [
                 'bast_nomor'        => $bmd->bmd_bast_nomor,
                 'bast_tanggal'      => $bmd->bmd_bast_tanggal,
@@ -275,7 +259,6 @@ class BmdController extends Controller
         
         DB::beginTransaction();
         try {
-            // Kembalikan status peralatan 
             Peralatan::where('alat_kode_barang', $bmd->bmd_alat_kode)->update([
                 'alat_status_penggunaan' => 'Tidak Aktif'
             ]);
@@ -314,7 +297,6 @@ class BmdController extends Controller
     {
         $recipients = User::whereIn('user_role_id', [1, 2])->get();
         
-        // 🌟 REVISI: Penamaan kolom relasi
         $namaBarang = $bmd->peralatan->alat_nama_barang ?? 'Aset'; 
         $namaPemakai = $bmd->pegawai->pegawai_nama ?? 'Pegawai';
         
