@@ -44,18 +44,21 @@
                     <tbody>
                         @forelse($pajaks as $item)
                         @php
-                            $tglPajak = \Carbon\Carbon::parse($item->tanggal_pajak);
-                            $diffDays = \Carbon\Carbon::today()->diffInDays($tglPajak, false);
+                            // 🌟 REVISI: Menggunakan prefix 'alat_' sesuai Controller
+                            $tglPajak = $item->alat_tanggal_pajak ? \Carbon\Carbon::parse($item->alat_tanggal_pajak) : null;
+                            $diffDays = $tglPajak ? \Carbon\Carbon::today()->diffInDays($tglPajak, false) : 0;
                             
                             $rowStyle = '';
-                            if ($diffDays < 0) {
+                            if ($tglPajak && $diffDays < 0) {
                                 $rowStyle = 'background-color: #f8d7da;'; 
-                            } elseif ($diffDays <= 30) {
+                            } elseif ($tglPajak && $diffDays <= 30) {
                                 $rowStyle = 'background-color: #fff3cd;'; 
                             }
 
-                            // Ambil data jembatan penggunaan bmd
-                            $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('peralatan_kode', $item->kode_barang)->first();
+                            // 🌟 REVISI UTAMA: Mengganti 'kode_barang' menjadi 'bmd_kode_barang' 
+                            // PERHATIAN: Jika nama kolom di tabel bmds kamu bukan bmd_kode_barang, 
+                            // silakan ubah teks 'bmd_kode_barang' di bawah ini sesuai database kamu.
+                            $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('bmd_alat_kode', $item->alat_kode_barang)->first();
                             
                             // Ambil data nomor HP secara hirarki (Cek tabel pegawai dulu, baru fallback ke tabel bmd)
                             $nomorWaHp = '-';
@@ -74,11 +77,11 @@
                             
                             {{-- Identitas Kendaraan --}}
                             <td class="align-middle">
-                                <div class="font-weight-bold text-primary">{{ $item->nama_barang }}</div>
+                                <div class="font-weight-bold text-primary">{{ $item->alat_nama_barang }}</div>
                                 <div class="small font-weight-bold mt-1">
-                                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-car-side mr-1"></i> {{ $item->nomor_polisi ?? '-' }}</span>
+                                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-car-side mr-1"></i> {{ $item->alat_nomor_polisi ?? '-' }}</span>
                                 </div>
-                                <div class="small text-muted mt-1">Merk/Type: {{ $item->merk_tipe ?? '-' }}</div>
+                                <div class="small text-muted mt-1">Merk/Type: {{ $item->alat_merk_tipe ?? '-' }}</div>
                             </td>
                             
                             {{-- Data Pemakai --}}
@@ -98,7 +101,7 @@
 
                             {{-- Jatuh Tempo Pajak --}}
                             <td class="text-center align-middle font-weight-bold">
-                                @if($item->tanggal_pajak)
+                                @if($item->alat_tanggal_pajak)
                                     @if($diffDays < 0)
                                         <span class="badge badge-danger p-1 text-uppercase shadow-sm">
                                             <i class="fas fa-times-circle"></i> {{ $tglPajak->format('d/m/Y') }}
@@ -119,7 +122,7 @@
 
                             {{-- STNK 5 Tahunan --}}
                             <td class="text-center align-middle font-weight-bold">
-                                {{ $item->tanggal_stnk ? \Carbon\Carbon::parse($item->tanggal_stnk)->format('d/m/Y') : '-' }}
+                                {{ $item->alat_tanggal_stnk ? \Carbon\Carbon::parse($item->alat_tanggal_stnk)->format('d/m/Y') : '-' }}
                             </td>
 
                             {{-- WhatsApp Warning Trigger (Aktif Otomatis jika nomor HP ada) --}}
@@ -132,7 +135,7 @@
                                         $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->nama : 'Bapak/Ibu';
                                         $txtStatus = $diffDays < 0 ? "TELAH LEWAT JATUH TEMPO" : "AKAN SEGERA JATUH TEMPO";
                                         
-                                        $msgUser = "Halo Pak/Bu {$namaPemakai}, menginfokan bahwa pajak kendaraan dinas {$item->nama_barang} ({$item->nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . $tglPajak->format('d/m/Y') . ". Mohon berkas pendukung segera disiapkan untuk proses perpanjangan. Terima kasih.";
+                                        $msgUser = "Halo Pak/Bu {$namaPemakai}, menginfokan bahwa pajak kendaraan dinas {$item->alat_nama_barang} ({$item->alat_nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . ($tglPajak ? $tglPajak->format('d/m/Y') : '') . ". Mohon berkas pendukung segera disiapkan untuk proses perpanjangan. Terima kasih.";
                                     @endphp
                                     <a href="https://wa.me/{{ $cleanNumber }}?text={{ urlencode($msgUser) }}" target="_blank" class="btn btn-success btn-sm shadow-sm font-weight-bold" title="Kirim Pesan Warning Ke Pemegang">
                                         <i class="fab fa-whatsapp mr-1"></i> WA Pemegang

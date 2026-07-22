@@ -16,7 +16,7 @@ use App\Http\Controllers\PeralatanController;
 use App\Http\Controllers\GedungController;
 use App\Http\Controllers\JalanController;
 use App\Http\Controllers\RusakController;
-use App\Http\Controllers\RuanganController; // 🌟 REVISI: Menggunakan RuanganController
+use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\InventarisController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BmdController;
@@ -71,7 +71,7 @@ Route::middleware('auth')->group(function () {
             // Route untuk export Excel (Global)
             Route::get('export/{menu}', [ExportController::class, 'export'])->name('export.excel');
 
-            // 1. Route Ruangan (🌟 REVISI: Room diubah menjadi Ruangan)
+            // 1. Route Ruangan
             Route::get('ruangan/print', [RuanganController::class, 'print'])->name('ruangan.print');
             Route::resource('ruangan', RuanganController::class)->parameters([
                 'ruangan' => 'kode_ruangan'
@@ -85,7 +85,6 @@ Route::middleware('auth')->group(function () {
             // Detail & Cetak Label QR Code Satuan untuk Inventaris Ruangan
             Route::get('ruangan/{kode_ruangan}/inventaris/{kode_barang}/detail', [InventarisController::class, 'showDetail'])->name('inventaris.detail');
 
-            // 🌟 REVISI: Resource Inventaris (Menyesuaikan parameter string eksplisit)
             Route::resource('ruangan.inventaris', InventarisController::class)->parameters([
                 'ruangan' => 'kode_ruangan',
                 'inventaris' => 'inv_kode_barang'
@@ -100,9 +99,11 @@ Route::middleware('auth')->group(function () {
             Route::get('peralatan/autocomplete', [PeralatanController::class, 'autocomplete'])->name('peralatan.autocomplete');
             Route::get('peralatan/print', [PeralatanController::class, 'print'])->name('peralatan.print');
             
-            // Detail & Cetak Label QR Code Satuan untuk Peralatan KIB B
-            Route::get('peralatan/{kode_barang}/detail', [PeralatanController::class, 'showDetail'])->name('peralatan.detail');
+            // 🌟 REVISI DI SINI: Route post untuk Modal Tambah Barcode (Disesuaikan agar tidak dobel nama/prefix)
+            Route::post('peralatan/{kode_barang}/detail', [PeralatanController::class, 'storeDetail'])->name('peralatan.detail.store');
 
+            
+            
             Route::resource('peralatan', PeralatanController::class)->parameters(['peralatan' => 'kode_barang']);
 
             // 5. KIB C (Gedung)
@@ -115,7 +116,7 @@ Route::middleware('auth')->group(function () {
             Route::get('jalan/print', [JalanController::class, 'print'])->name('jalan.print');
             Route::resource('jalan', JalanController::class)->parameters(['jalan' => 'kode_barang']);
 
-            // 7. Aset Rusak (🌟 REVISI: Menggunakan ID biasa, bukan no_id_pemda)
+            // 7. Aset Rusak
             Route::get('rusak/autocomplete', [RusakController::class, 'autocomplete'])->name('rusak.autocomplete');
             Route::get('rusak/print', [RusakController::class, 'print'])->name('rusak.print');
             Route::resource('rusak', RusakController::class)->parameters(['rusak' => 'id']);
@@ -139,10 +140,13 @@ Route::middleware('auth')->group(function () {
                 Route::delete('/{kategori}/{kode}/permanen', [ArsipController::class, 'forceDelete'])->name('permanen'); 
             });
 
-            // 11. RUTE DATA PEGAWAI (🌟 REVISI: Penyelarasan NIP Pegawai)
+            // 11. RUTE DATA PEGAWAI
             Route::resource('pegawai', PegawaiController::class)->except(['show'])->parameters(['pegawai' => 'nip']);
         });
 });
+
+// --- RUTE PUBLIK (BISA DIAKSES HASIL SCAN DARI HP TANPA LOGIN) ---
+Route::get('/{lokasi}/peralatan/scan/{barcode}', [\App\Http\Controllers\PeralatanController::class, 'scan'])->name('lokasi.peralatan.scan');
 
 // --- KHUSUS UNTUK VERCEL CRON ---
 Route::get('/run-scheduler', function () {

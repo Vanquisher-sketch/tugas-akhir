@@ -36,6 +36,13 @@ return new class extends Migration
             
             $table->date('dt_alat_tanggal_cek'); 
 
+            // 🌟 REVISI BARU: Tambahan untuk kelengkapan Audit Fisik 🌟
+            // Menyimpan path/nama file foto kondisi fisik yang sebenarnya
+            $table->string('dt_alat_foto', 255)->nullable();
+            
+            // Catatan spesifik untuk item ini (misal: "Kaca spion pecah" atau "Dipinjam Pak Camat")
+            $table->text('dt_alat_keterangan')->nullable();
+
             $table->softDeletes();
             $table->timestamps();
         });

@@ -13,10 +13,11 @@
                     <input type="text" class="form-control bg-light border-0 small" 
                            placeholder="Cari kode/nama/nopol..." 
                            name="search" id="autoSearch" list="searchList"
-                           value="{{ request('search') }}" autocomplete="off">
+                           value="{{ request('search') }}" autocomplete="off"
+                           data-url="{{ url($lokasi . '/peralatan/autocomplete') }}">
                     <datalist id="searchList"></datalist>
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit"><i class="fas fa-search fa-sm"></i></button>
+                        <button class="btn btn-primary" type="submit" title="Cari Data"><i class="fas fa-search fa-sm"></i></button>
                     </div>
                 </div>
             </form>
@@ -37,9 +38,11 @@
 
     <div class="card-body">
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                 <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         @endif
 
@@ -48,6 +51,7 @@
                 <thead class="thead-light text-center">
                     <tr class="font-weight-bold">
                         <th rowspan="2" class="align-middle" style="width: 3%;">No</th>
+                        <th rowspan="2" class="align-middle">Foto</th>
                         <th rowspan="2" class="align-middle">Kode Barang</th>
                         <th rowspan="2" class="align-middle">Nama Barang</th>
                         <th rowspan="2" class="align-middle">NIBAR</th>
@@ -78,6 +82,19 @@
                     @forelse ($dataPeralatan as $item)
                     <tr>
                         <td class="text-center align-middle font-weight-bold">{{ $loop->iteration + $dataPeralatan->firstItem() - 1 }}</td>
+                        
+                        {{-- Tampilkan Foto --}}
+                        <td class="text-center align-middle">
+                            @if($item->alat_foto)
+                                <a href="{{ asset('storage/' . $item->alat_foto) }}" target="_blank">
+                                    <!-- UBAH MENJADI SEPERTI INI -->
+<img src="{{ asset('storage/' . $item->alat_foto) }}" alt="foto" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+                                </a>
+                            @else
+                                <span class="badge badge-light border text-muted px-2 py-1" style="font-size: 9px;">NO IMG</span>
+                            @endif
+                        </td>
+
                         <td class="font-weight-bold text-primary align-middle text-center">{{ $item->alat_kode_barang }}</td>
                         <td class="align-middle font-weight-bold text-gray-900">{{ $item->alat_nama_barang }}</td>
                         <td class="align-middle text-center">{{ $item->alat_nibar ?? '-' }}</td>
@@ -111,7 +128,7 @@
                         </td>
 
                         {{-- Jumlah & Satuan --}}
-                        <td class="text-center align-middle font-weight-bold text-blue">{{ $item->alat_jumlah }}</td>
+                        <td class="text-center align-middle font-weight-bold text-primary">{{ $item->alat_jumlah }}</td>
                         <td class="text-center align-middle text-uppercase"><span class="badge badge-secondary px-1">{{ $item->alat_satuan }}</span></td>
                         
                         {{-- Finansial Harga --}}
@@ -158,24 +175,24 @@
                         
                         {{-- Kolom Aksi Transaksional --}}
                         <td class="text-center align-middle">
-    <div class="btn-group-vertical">
-        {{-- UBAH 'peralatan' MENJADI 'kode_barang' --}}
-        <a href="{{ route('lokasi.peralatan.edit', ['lokasi' => $lokasi, 'kode_barang' => $item->alat_kode_barang]) }}" class="btn btn-sm btn-warning py-1" title="Ubah Aset">
-            <i class="fas fa-edit"></i>
-        </a>
-        
-        {{-- UBAH 'peralatan' MENJADI 'kode_barang' JUGA DI SINI --}}
-        <form action="{{ route('lokasi.peralatan.destroy', ['lokasi' => $lokasi, 'kode_barang' => $item->alat_kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data aset KIB B ini?')">
-            @csrf @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger py-1" title="Hapus Aset"><i class="fas fa-trash"></i></button>
-        </form>
-    </div>
-</td>
+                            <div class="btn-group shadow-sm">
+                                <a href="{{ route('lokasi.peralatan.show', ['lokasi' => $lokasi, 'kode_barang' => $item->alat_kode_barang]) }}" class="btn btn-sm btn-info py-1 text-white" title="Detail Aset">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('lokasi.peralatan.edit', ['lokasi' => $lokasi, 'kode_barang' => $item->alat_kode_barang]) }}" class="btn btn-sm btn-warning py-1" title="Ubah Aset">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('lokasi.peralatan.destroy', ['lokasi' => $lokasi, 'kode_barang' => $item->alat_kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data aset KIB B ini?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger py-1" title="Hapus Aset"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="20" class="text-center py-5 text-gray-500 font-weight-bold">
-                            <i class="fas fa-folder-open fa-2x mb-2 text-muted"></i><br>
+                        <td colspan="22" class="text-center py-5 text-gray-500 font-weight-bold">
+                            <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i><br>
                             Data Peralatan & Mesin (KIB B) belum terisi untuk lokasi wilayah operasional ini.
                         </td>
                     </tr>
@@ -193,6 +210,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById('autoSearch');
         const list = document.getElementById('searchList');
+        let timeout = null; 
 
         input.addEventListener('focus', function() {
             let history = JSON.parse(localStorage.getItem('search_history_peralatan')) || [];
@@ -217,17 +235,25 @@
         });
 
         input.addEventListener('input', function() {
+            clearTimeout(timeout);
             const query = this.value;
+            const baseUrl = this.getAttribute('data-url');
+            
             if (query.length < 2) return; 
-            const url = `/{{ $lokasi }}/peralatan/autocomplete?term=${query}`;
-            fetch(url).then(res => res.json()).then(data => {
-                list.innerHTML = '';
-                data.forEach(item => {
-                    let option = document.createElement('option');
-                    option.value = item.label;
-                    list.appendChild(option);
-                });
-            });
+            
+            timeout = setTimeout(() => {
+                fetch(`${baseUrl}?term=${query}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        list.innerHTML = '';
+                        data.forEach(item => {
+                            let option = document.createElement('option');
+                            option.value = item.label;
+                            list.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching autocomplete:', err));
+            }, 300);
         });
     });
 </script>

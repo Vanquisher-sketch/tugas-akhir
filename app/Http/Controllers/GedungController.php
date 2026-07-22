@@ -62,24 +62,25 @@ class GedungController extends Controller
         }
         $request->replace($inputs);
 
+        // REVISI: Max length dan enum disesuaikan dengan limit di Migration
         $validator = Validator::make($request->all(), [
-            'kode_barang'               => 'required|string|max:100|unique:gedungs,gedung_kode_barang',
-            'nama_barang'               => 'required|string|max:255',
-            'nbar'                      => 'nullable|string|max:255',
-            'nomor_register'            => 'required|string|max:255',
-            'spesifikasi_barang'        => 'nullable|string',
-            'spesifikasi_lainnya'       => 'nullable|string',
+            'kode_barang'               => 'required|string|max:30|unique:gedungs,gedung_kode_barang',
+            'nama_barang'               => 'required|string|max:100',
+            'nbar'                      => 'nullable|string|max:30',
+            'nomor_register'            => 'required|string|max:20',
+            'spesifikasi_barang'        => 'nullable|string|max:255',
+            'spesifikasi_lainnya'       => 'nullable|string|max:255',
             'jumlah_lantai'             => 'nullable|integer|min:0',
-            'Lok'                       => 'required|string', 
-            'titik_koordinat'           => 'nullable|string|max:255',
-            'status_kepemilikan_tanah'  => 'nullable|string|max:255',
-            'jumlah'                    => 'required|numeric|min:0',
-            'satuan'                    => 'required|string|max:255',
+            'Lok'                       => 'required|string|max:255', 
+            'titik_koordinat'           => 'nullable|string|max:50',
+            'status_kepemilikan_tanah'  => 'nullable|string|max:50',
+            'jumlah'                    => 'required|integer|min:0', // disesuaikan dengan unsignedInteger
+            'satuan'                    => 'required|string|max:20',
             'harga_satuan'              => 'required|numeric|min:0',
             'nilai_perolehan'           => 'required|numeric|min:0',
-            'cara_perolehan'            => 'required|string|max:255',
+            'cara_perolehan'            => 'required|string|max:50',
             'tanggal_perolehan'         => 'required|date',
-            'status_penggunaan'         => 'nullable|string|max:255',
+            'status_penggunaan'         => 'nullable|string|in:Digunakan Sendiri,Dipinjamkan,Disewakan,Tidak Digunakan',
             'keterangan'                => 'nullable|string'
         ]);
 
@@ -104,7 +105,7 @@ class GedungController extends Controller
             'gedung_nilai_perolehan'           => $request->nilai_perolehan,
             'gedung_cara_perolehan'            => $request->cara_perolehan,
             'gedung_tanggal_perolehan'         => $request->tanggal_perolehan,
-            'gedung_status_penggunaan'         => $request->status_penggunaan,
+            'gedung_status_penggunaan'         => $request->status_penggunaan ?? 'Digunakan Sendiri',
             'gedung_keterangan'                => $request->keterangan,
             'lokasi'                           => $lokasi,
         ]);
@@ -142,24 +143,25 @@ class GedungController extends Controller
         }
         $request->replace($inputs);
 
+        // REVISI: Max length dan enum disesuaikan dengan limit di Migration
         $validator = Validator::make($request->all(), [
-            'kode_barang'               => "required|string|max:100|unique:gedungs,gedung_kode_barang,{$gedung->gedung_kode_barang},gedung_kode_barang",
-            'nama_barang'               => 'required|string|max:255',
-            'nbar'                      => 'nullable|string|max:255',
-            'nomor_register'            => 'required|string|max:255',
-            'spesifikasi_barang'        => 'nullable|string',
-            'spesifikasi_lainnya'       => 'nullable|string',
+            'kode_barang'               => "required|string|max:30|unique:gedungs,gedung_kode_barang,{$gedung->gedung_kode_barang},gedung_kode_barang",
+            'nama_barang'               => 'required|string|max:100',
+            'nbar'                      => 'nullable|string|max:30',
+            'nomor_register'            => 'required|string|max:20',
+            'spesifikasi_barang'        => 'nullable|string|max:255',
+            'spesifikasi_lainnya'       => 'nullable|string|max:255',
             'jumlah_lantai'             => 'nullable|integer|min:0',
-            'Lok'                       => 'required|string', 
-            'titik_koordinat'           => 'nullable|string|max:255',
-            'status_kepemilikan_tanah'  => 'nullable|string|max:255',
-            'jumlah'                    => 'required|numeric|min:0',
-            'satuan'                    => 'required|string|max:255',
+            'Lok'                       => 'required|string|max:255', 
+            'titik_koordinat'           => 'nullable|string|max:50',
+            'status_kepemilikan_tanah'  => 'nullable|string|max:50',
+            'jumlah'                    => 'required|integer|min:0', // disesuaikan dengan unsignedInteger
+            'satuan'                    => 'required|string|max:20',
             'harga_satuan'              => 'required|numeric|min:0',
             'nilai_perolehan'           => 'required|numeric|min:0',
-            'cara_perolehan'            => 'required|string|max:255',
+            'cara_perolehan'            => 'required|string|max:50',
             'tanggal_perolehan'         => 'required|date',
-            'status_penggunaan'         => 'nullable|string|max:255',
+            'status_penggunaan'         => 'nullable|string|in:Digunakan Sendiri,Dipinjamkan,Disewakan,Tidak Digunakan',
             'keterangan'                => 'nullable|string'
         ]);
 
@@ -184,7 +186,7 @@ class GedungController extends Controller
             'gedung_nilai_perolehan'           => $request->nilai_perolehan,
             'gedung_cara_perolehan'            => $request->cara_perolehan,
             'gedung_tanggal_perolehan'         => $request->tanggal_perolehan,
-            'gedung_status_penggunaan'         => $request->status_penggunaan,
+            'gedung_status_penggunaan'         => $request->status_penggunaan ?? 'Digunakan Sendiri',
             'gedung_keterangan'                => $request->keterangan,
         ]);
 

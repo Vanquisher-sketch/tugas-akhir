@@ -23,7 +23,7 @@
             <th width="5%">No</th>
             <th>Nama</th>
             <th>Email</th>
-            <th>Password</th>
+            <th>Status</th>
             <th width="20%">Aksi</th>
         </tr>
     </thead>
@@ -31,13 +31,28 @@
         @foreach ($users as $user)
         <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $user->name }}</td>
-            <td>{{ $user->email }}</td>
-            <td>{{ $user->password }}</td>
+            {{-- Menyesuaikan dengan kolom di database / fillable --}}
+            <td>{{ $user->user_nama }}</td>
+            <td>{{ $user->user_email }}</td>
+            
+            {{-- 
+               Saran Praktik Terbaik: Menampilkan hash password di tabel tidak informatif bagi pengguna. 
+               Lebih baik ganti dengan kolom Status atau Role. 
+               Di bawah ini saya ganti menjadi user_status. 
+            --}}
             <td>
-                <form action="{{ route('user.destroy', $user->id) }}" method="POST">
-                    <a class="btn btn-info btn-sm" href="{{ route('user.show', $user->id) }}">Detail</a>
-                    <a class="btn btn-primary btn-sm" href="{{ route('user.edit', $user->id) }}">Edit</a>
+                @if($user->user_status == 'Aktif')
+                    <span class="badge bg-success">{{ $user->user_status }}</span>
+                @else
+                    <span class="badge bg-secondary">{{ $user->user_status ?? 'Tidak Diketahui' }}</span>
+                @endif
+            </td>
+            
+            <td>
+                {{-- Pemanggilan ID sudah benar menggunakan user_id --}}
+                <form action="{{ route('user.destroy', $user->user_id) }}" method="POST">
+                    <a class="btn btn-info btn-sm" href="{{ route('user.show', $user->user_id) }}">Detail</a>
+                    <a class="btn btn-primary btn-sm" href="{{ route('user.edit', $user->user_id) }}">Edit</a>
                     
                     @csrf
                     @method('DELETE')

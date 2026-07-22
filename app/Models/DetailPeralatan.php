@@ -23,7 +23,9 @@ class DetailPeralatan extends Model
         'dt_alat_kondisi',
         'lokasi', // Tetap murni tanpa awalan untuk filter
         'dt_alat_status_pinjam',
-        'dt_alat_tanggal_cek'
+        'dt_alat_tanggal_cek',
+        'dt_alat_foto',       // 🌟 KOLOM FOTO DITAMBAHKAN
+        'dt_alat_keterangan'  // 🌟 KOLOM KETERANGAN DITAMBAHKAN
     ];
 
     /**

@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Notifications\DataModificationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,19 +20,19 @@ class TanahController extends Controller
     public function index(Request $request, $lokasi)
     {
         $search = $request->query('search');
-        $query = Tanah::where('lokasi', $lokasi);
-
-        if ($search) {
-            // 🌟 REVISI: Sesuaikan pencarian dengan nama kolom berawalan 'tanah_'
-            $query->where(function($q) use ($search) {
-                $q->where('tanah_nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('tanah_lokasi_fisik', 'LIKE', "%{$search}%") // Perubahan dari 'Lok'
-                  ->orWhere('tanah_kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('tanah_bukti_nomor', 'LIKE', "%{$search}%");
-            });
-        }
         
-        $dataTanah = $query->latest('updated_at')->paginate(10);
+        $dataTanah = Tanah::where('lokasi', $lokasi)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('tanah_nama_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('tanah_lokasi_fisik', 'LIKE', "%{$search}%") 
+                      ->orWhere('tanah_kode_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('tanah_bukti_nomor', 'LIKE', "%{$search}%");
+                });
+            })
+            ->latest('updated_at')
+            ->paginate(10);
+
         return view("pages.{$lokasi}.tanah.index", compact('dataTanah', 'lokasi', 'search'));
     }
 
@@ -42,13 +44,14 @@ class TanahController extends Controller
         $search = $request->query('term');
         
         $results = Tanah::where('lokasi', $lokasi)
-            ->where(function($q) use ($search) {
-                $q->where('tanah_nama_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('tanah_kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('tanah_lokasi_fisik', 'LIKE', "%{$search}%");
+            ->when($search, function ($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('tanah_nama_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('tanah_kode_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('tanah_lokasi_fisik', 'LIKE', "%{$search}%");
+                });
             })
             ->limit(5)
-            // 🌟 REVISI: Alias pencarian diubah sesuai kolom database baru
             ->get(['tanah_nama_barang as label', 'tanah_kode_barang as value']);
 
         return response()->json($results);
@@ -64,88 +67,42 @@ class TanahController extends Controller
      */
     public function store(Request $request, $lokasi)
     {
-        // 1. BERSIHKAN FORMAT RUPIAH & RIBUAN (Sesuai dengan nama input dari form)
-        $inputs = $request->all();
-        $currencyFields = ['nilai_perolehan', 'harga_satuan', 'jumlah'];
+        $this->cleanCurrencyInputs($request);
 
-        foreach ($currencyFields as $field) {
-            if (isset($inputs[$field])) {
-                $cleanValue = str_replace('.', '', $inputs[$field]);
-                $inputs[$field] = str_replace(',', '.', $cleanValue);
-            }
-        }
-        $request->replace($inputs);
-
-        // 2. VALIDASI (Pengecekan unik diarahkan ke tanah_kode_barang)
-        $validator = Validator::make($request->all(), [
-            'kode_barang'        => 'required|string|max:100|unique:tanahs,tanah_kode_barang',
-            'nama_barang'        => 'required|string|max:255',
-            'nibar'              => 'nullable|string|max:255',
-            'nomor_register'     => 'nullable|string|max:255',
-            'spesifikasi_barang' => 'nullable|string',
-            'spesifikasi_lainnya'=> 'nullable|string',
-            'jumlah'             => 'required|numeric', 
-            'satuan'             => 'required|string|max:255',
-            'Lok'                => 'required|string', 
-            'titik_koordinat'    => 'nullable|string|max:255',
-            'bukti_nama'         => 'nullable|string|max:255',
-            'bukti_nomor'        => 'nullable|string|max:255',
-            'bukti_tanggal'      => 'nullable|date',
-            'nama_kepemilikan_dokumen' => 'nullable|string|max:255',
-            'nilai_perolehan'    => 'required|numeric|min:0',
-            'harga_satuan'       => 'nullable|numeric|min:0',
-            'cara_perolehan'     => 'required|string|max:255',
-            'tanggal_perolehan'  => 'required|date',
-            'status_penggunaan'  => 'required|string|max:255',
-            'keterangan'         => 'nullable|string',
-        ]);
+        $validator = Validator::make($request->all(), $this->validationRules());
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        // 3. MAPPING KE DATABASE DENGAN PREFIX 'tanah_'
-        $tanah = Tanah::create([
-            'tanah_kode_barang'        => $request->kode_barang,
-            'tanah_nama_barang'        => $request->nama_barang,
-            'tanah_nibar'              => $request->nibar,
-            'tanah_nomor_register'     => $request->nomor_register,
-            'tanah_spesifikasi_barang' => $request->spesifikasi_barang,
-            'tanah_spesifikasi_lainnya'=> $request->spesifikasi_lainnya,
-            'tanah_jumlah'             => $request->jumlah,
-            'tanah_satuan'             => $request->satuan,
-            'tanah_lokasi_fisik'       => $request->Lok,
-            'tanah_titik_koordinat'    => $request->titik_koordinat,
-            'tanah_bukti_nama'         => $request->bukti_nama,
-            'tanah_bukti_nomor'        => $request->bukti_nomor,
-            'tanah_bukti_tanggal'      => $request->bukti_tanggal,
-            'tanah_nama_kepemilikan_dokumen' => $request->nama_kepemilikan_dokumen,
-            'tanah_nilai_perolehan'    => $request->nilai_perolehan,
-            'tanah_harga_satuan'       => $request->harga_satuan,
-            'tanah_cara_perolehan'     => $request->cara_perolehan,
-            'tanah_tanggal_perolehan'  => $request->tanggal_perolehan,
-            'tanah_status_penggunaan'  => $request->status_penggunaan,
-            'tanah_keterangan'         => $request->keterangan,
-            'lokasi'                   => $lokasi,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // 4. NOTIFIKASI
-        $recipients = User::whereIn('user_role_id', [1, 2])->get(); // REVISI: Kolom role
-        if ($recipients->count() > 0) {
-            Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'ditambahkan', 'Tanah', $tanah->tanah_nama_barang
-            ));
+            // Gunakan validated() agar hanya data yang lolos validasi yang masuk ke DB
+            $validatedData = $validator->validated();
+            $validatedData['lokasi'] = $lokasi;
+            
+            $tanah = Tanah::create($validatedData);
+
+            $this->sendNotification('ditambahkan', $tanah->tanah_nama_barang);
+
+            DB::commit();
+            return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
+                             ->with('success', 'Data Tanah berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error Store Tanah: " . $e->getMessage());
+            
+            // Mengembalikan error ke halaman sebelumnya, bukan halaman 500
+            return redirect()->back()->withInput()
+                             ->with('error', 'Gagal menyimpan data. Cek kembali isian Anda. (Error: ' . $e->getMessage() . ')');
         }
-
-        return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
-                         ->with('success', 'Data Tanah berhasil ditambahkan.');
     }
 
-    // 🌟 REVISI: Gunakan string eksplisit $kode_barang untuk pencarian Primary Key
     public function edit($lokasi, $kode_barang)
     {
-        $tanah = Tanah::findOrFail($kode_barang);
-        if ($tanah->lokasi !== $lokasi) abort(404);
+        $tanah = Tanah::where('lokasi', $lokasi)->findOrFail($kode_barang);
         return view("pages.{$lokasi}.tanah.edit", compact('tanah', 'lokasi'));
     }
 
@@ -154,104 +111,133 @@ class TanahController extends Controller
      */
     public function update(Request $request, $lokasi, $kode_barang)
     {
-        $tanah = Tanah::findOrFail($kode_barang);
-        if ($tanah->lokasi !== $lokasi) abort(404);
+        $tanah = Tanah::where('lokasi', $lokasi)->findOrFail($kode_barang);
 
-        $inputs = $request->all();
-        $currencyFields = ['nilai_perolehan', 'harga_satuan', 'jumlah'];
-        foreach ($currencyFields as $field) {
-            if (isset($inputs[$field])) {
-                $cleanValue = str_replace('.', '', $inputs[$field]);
-                $inputs[$field] = str_replace(',', '.', $cleanValue);
-            }
-        }
-        $request->replace($inputs);
+        $this->cleanCurrencyInputs($request);
 
-        $validator = Validator::make($request->all(), [
-            // Pengecualian unik disesuaikan secara eksplisit ke kolom database
-            'kode_barang'        => "required|string|max:100|unique:tanahs,tanah_kode_barang,{$tanah->tanah_kode_barang},tanah_kode_barang",
-            'nama_barang'        => 'required|string|max:255',
-            'nibar'              => 'nullable|string|max:255',
-            'nomor_register'     => 'nullable|string|max:255',
-            'spesifikasi_barang' => 'nullable|string',
-            'spesifikasi_lainnya'=> 'nullable|string',
-            'jumlah'             => 'required|numeric',
-            'satuan'             => 'required|string|max:255',
-            'Lok'                => 'required|string', 
-            'titik_koordinat'    => 'nullable|string|max:255',
-            'bukti_nama'         => 'nullable|string|max:255',
-            'bukti_nomor'        => 'nullable|string|max:255',
-            'bukti_tanggal'      => 'nullable|date',
-            'nama_kepemilikan_dokumen' => 'nullable|string|max:255',
-            'nilai_perolehan'    => 'required|numeric|min:0',
-            'harga_satuan'       => 'nullable|numeric|min:0',
-            'cara_perolehan'     => 'required|string|max:255',
-            'tanggal_perolehan'  => 'required|date',
-            'status_penggunaan'  => 'required|string|max:255',
-            'keterangan'         => 'nullable|string',
-        ]);
+        $validator = Validator::make($request->all(), $this->validationRules($tanah->tanah_kode_barang));
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        // Eksekusi Update menggunakan Mapping
-        $tanah->update([
-            'tanah_kode_barang'        => $request->kode_barang,
-            'tanah_nama_barang'        => $request->nama_barang,
-            'tanah_nibar'              => $request->nibar,
-            'tanah_nomor_register'     => $request->nomor_register,
-            'tanah_spesifikasi_barang' => $request->spesifikasi_barang,
-            'tanah_spesifikasi_lainnya'=> $request->spesifikasi_lainnya,
-            'tanah_jumlah'             => $request->jumlah,
-            'tanah_satuan'             => $request->satuan,
-            'tanah_lokasi_fisik'       => $request->Lok,
-            'tanah_titik_koordinat'    => $request->titik_koordinat,
-            'tanah_bukti_nama'         => $request->bukti_nama,
-            'tanah_bukti_nomor'        => $request->bukti_nomor,
-            'tanah_bukti_tanggal'      => $request->bukti_tanggal,
-            'tanah_nama_kepemilikan_dokumen' => $request->nama_kepemilikan_dokumen,
-            'tanah_nilai_perolehan'    => $request->nilai_perolehan,
-            'tanah_harga_satuan'       => $request->harga_satuan,
-            'tanah_cara_perolehan'     => $request->cara_perolehan,
-            'tanah_tanggal_perolehan'  => $request->tanggal_perolehan,
-            'tanah_status_penggunaan'  => $request->status_penggunaan,
-            'tanah_keterangan'         => $request->keterangan,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $recipients = User::whereIn('user_role_id', [1, 2])->get();
-        if ($recipients->count() > 0) {
-            Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'diperbarui', 'Tanah', $tanah->tanah_nama_barang
-            ));
+            $validatedData = $validator->validated();
+            $tanah->update($validatedData);
+
+            $this->sendNotification('diperbarui', $tanah->tanah_nama_barang);
+
+            DB::commit();
+            return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
+                             ->with('success', 'Data Tanah berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error Update Tanah: " . $e->getMessage());
+            
+            return redirect()->back()->withInput()
+                             ->with('error', 'Gagal memperbarui data. (Error: ' . $e->getMessage() . ')');
         }
-
-        return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
-                         ->with('success', 'Data Tanah berhasil diperbarui.');
     }
 
     public function destroy($lokasi, $kode_barang)
     {
-        $tanah = Tanah::findOrFail($kode_barang);
-        if ($tanah->lokasi !== $lokasi) abort(404);
-        
-        $itemName = $tanah->tanah_nama_barang;
-        $tanah->delete();
+        try {
+            $tanah = Tanah::where('lokasi', $lokasi)->findOrFail($kode_barang);
+            $itemName = $tanah->tanah_nama_barang;
+            
+            $tanah->delete();
 
-        $recipients = User::whereIn('user_role_id', [1, 2])->get();
-        if ($recipients->count() > 0) {
-            Notification::send($recipients, new DataModificationNotification(
-                Auth::user(), 'dihapus', 'Tanah', $itemName
-            ));
+            $this->sendNotification('dihapus', $itemName);
+
+            return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
+                             ->with('success', 'Data Tanah berhasil dihapus.');
+                             
+        } catch (\Exception $e) {
+            Log::error("Error Delete Tanah: " . $e->getMessage());
+            return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
+                             ->with('error', 'Gagal menghapus data.');
         }
-
-        return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
-                         ->with('success', 'Data Tanah berhasil dihapus.');
     }
 
     public function print($lokasi)
     {
         $dataTanah = Tanah::where('lokasi', $lokasi)->latest('updated_at')->get();
         return view("pages.{$lokasi}.tanah.print", compact('dataTanah', 'lokasi'));
+    }
+
+    // ==========================================
+    // HELPER METHODS (Untuk mencegah kode berulang)
+    // ==========================================
+
+    /**
+     * Membersihkan format Rupiah & Ribuan
+     */
+    private function cleanCurrencyInputs(Request $request)
+    {
+        $inputs = $request->all();
+        $currencyFields = ['tanah_nilai_perolehan', 'tanah_harga_satuan', 'tanah_jumlah'];
+
+        foreach ($currencyFields as $field) {
+            if (isset($inputs[$field])) {
+                $cleanValue = str_replace('.', '', $inputs[$field]);
+                $inputs[$field] = str_replace(',', '.', $cleanValue);
+            }
+        }
+        
+        $request->replace($inputs);
+    }
+
+    /**
+     * Aturan validasi (dinamis untuk store & update)
+     */
+    private function validationRules($ignoreKodeBarang = null)
+    {
+        // Disinkronkan dengan ->string('tanah_kode_barang', 30) pada migration
+        $kodeBarangRule = $ignoreKodeBarang 
+            ? "required|string|max:30|unique:tanahs,tanah_kode_barang,{$ignoreKodeBarang},tanah_kode_barang"
+            : 'required|string|max:30|unique:tanahs,tanah_kode_barang';
+
+        return [
+            'tanah_kode_barang'              => $kodeBarangRule,
+            'tanah_nama_barang'              => 'required|string|max:100', // Sesuai migration string max 100
+            'tanah_nibar'                    => 'nullable|string|max:30',  // Sesuai migration string max 30
+            'tanah_nomor_register'           => 'nullable|string|max:20',  // Sesuai migration string max 20
+            'tanah_spesifikasi_barang'       => 'nullable|string|max:255', // Sesuai migration string max 255
+            'tanah_spesifikasi_lainnya'      => 'nullable|string|max:255', // Sesuai migration string max 255
+            'tanah_jumlah'                   => 'required|numeric', 
+            'tanah_satuan'                   => 'required|string|max:20',  // Sesuai migration string max 20
+            'tanah_lokasi_fisik'             => 'required|string|max:255', // Sesuai migration string max 255
+            'tanah_titik_koordinat'          => 'nullable|string|max:50',  // Sesuai migration string max 50
+            'tanah_bukti_nama'               => 'nullable|string|max:50',  // Sesuai migration string max 50
+            'tanah_bukti_nomor'              => 'nullable|string|max:50',  // Sesuai migration string max 50
+            'tanah_bukti_tanggal'            => 'nullable|date',
+            'tanah_nama_kepemilikan_dokumen' => 'nullable|string|max:100', // Sesuai migration string max 100
+            'tanah_nilai_perolehan'          => 'required|numeric|min:0',
+            'tanah_harga_satuan'             => 'nullable|numeric|min:0',
+            'tanah_cara_perolehan'           => 'required|string|max:50',  // Sesuai migration string max 50
+            'tanah_tanggal_perolehan'        => 'required|date',
+            
+            // Wajib menggunakan opsi enum yang ada di database agar tidak memicu error data truncated
+            'tanah_status_penggunaan'        => 'required|in:Digunakan Sendiri,Dipinjamkan,Disewakan,Tidak Digunakan',
+            
+            'tanah_keterangan'               => 'nullable|string',
+        ];
+    }
+
+    /**
+     * Mengirim notifikasi ke admin/user terkait
+     */
+    private function sendNotification($action, $itemName)
+    {
+        $recipients = User::whereIn('user_role_id', [1, 2])->get(); 
+        
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new DataModificationNotification(
+                Auth::user(), $action, 'Tanah', $itemName
+            ));
+        }
     }
 }

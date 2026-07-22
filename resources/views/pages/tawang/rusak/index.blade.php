@@ -5,7 +5,7 @@
     {{-- Header Card --}}
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between border-bottom-danger">
         <h6 class="m-0 font-weight-bold text-danger">
-            <i class="fas fa-exclamation-triangle mr-2"></i>Jurnal Pemantauan Barang Rusak Berat - {{ ucfirst($lokasi) }}
+            <i class="fas fa-exclamation-triangle mr-2"></i>Pemantauan Barang Rusak Berat - {{ ucfirst($lokasi) }}
         </h6>
         
         <div>

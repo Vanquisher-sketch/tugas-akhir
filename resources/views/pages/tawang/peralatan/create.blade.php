@@ -8,7 +8,7 @@
         </h6>
     </div>
     <div class="card-body">
-        <form action="{{ route('lokasi.peralatan.store', ['lokasi' => $lokasi]) }}" method="POST">
+        <form action="{{ route('lokasi.peralatan.store', ['lokasi' => $lokasi]) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             {{-- 1. IDENTITAS UTAMA BARANG --}}
@@ -16,12 +16,14 @@
             <div class="row">
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                    <input type="text" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" placeholder="Contoh: 02.06.01.01" required>
+                    {{-- 🌟 Tambahkan id="kode_barang" di sini --}}
+                    <input type="text" id="kode_barang" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" placeholder="Contoh: HM-1234" required>
                     @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_barang" class="form-control" value="{{ old('nama_barang') }}" required>
+                    {{-- 🌟 Tambahkan id="nama_barang" di sini --}}
+                    <input type="text" id="nama_barang" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" required>
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Lokasi Fisik <span class="text-danger">*</span></label>
@@ -54,7 +56,7 @@
             <div class="row">
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor Polisi</label>
-                    <input type="text" name="nomor_polisi" class="form-control" value="{{ old('nomor_polisi') }}" placeholder="Contoh: Z 1234 XY">
+                    <input type="text" name="nomor_polisi" class="form-control text-uppercase" value="{{ old('nomor_polisi') }}" placeholder="Contoh: Z 1234 XY">
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor BPKB</label>
@@ -93,7 +95,7 @@
                     <input type="date" name="tanggal_perolehan" class="form-control" value="{{ old('tanggal_perolehan') }}" required>
                 </div>
                 <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Tenggat Pajak Tahunan (Kendaraan)</label>
+                    <label class="font-weight-bold">Tenggat Pajak Tahunan</label>
                     <input type="date" name="tanggal_pajak" class="form-control" value="{{ old('tanggal_pajak') }}">
                 </div>
             </div>
@@ -107,17 +109,23 @@
                     <input type="text" name="satuan" class="form-control" value="{{ old('satuan', 'Unit') }}" required>
                 </div>
                 <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
-                    <input type="text" id="harga_satuan" name="harga_satuan" class="form-control format-rupiah" value="{{ old('harga_satuan') }}" required oninput="hitungNilaiPerolehan()">
+                    <label class="font-weight-bold">Harga Satuan <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
+                        <input type="text" id="harga_satuan" name="harga_satuan" class="form-control format-rupiah" value="{{ old('harga_satuan') }}" required oninput="hitungNilaiPerolehan()">
+                    </div>
                 </div>
                 <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Nilai Perolehan Total (Rp) <span class="text-danger">*</span></label>
-                    <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control format-rupiah bg-light" value="{{ old('nilai_perolehan') }}" readonly required>
+                    <label class="font-weight-bold">Nilai Perolehan Total <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
+                        <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control bg-light font-weight-bold" value="{{ old('nilai_perolehan') }}" readonly required>
+                    </div>
                 </div>
             </div>
 
-            {{-- 4. STATUS & KONDISI --}}
-            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">4. Status & Kondisi</h6>
+            {{-- 4. STATUS, KONDISI & FOTO --}}
+            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">4. Status, Kondisi & Foto</h6>
             <div class="row">
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
@@ -135,6 +143,14 @@
                     </select>
                 </div>
             </div>
+            
+            <div class="form-group">
+                <label class="font-weight-bold">Foto Barang (Opsional)</label>
+                <input type="file" name="foto" class="form-control-file @error('foto') is-invalid @enderror" accept="image/*">
+                <small class="text-muted">Format yang diizinkan: JPG, JPEG, PNG. Ukuran maksimal: 2MB.</small>
+                @error('foto') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+            </div>
+
             <div class="form-group">
                 <label class="font-weight-bold">Keterangan / Catatan Lainnya</label>
                 <textarea name="keterangan" class="form-control" rows="2">{{ old('keterangan') }}</textarea>
@@ -143,23 +159,55 @@
             <hr>
             <div class="d-flex justify-content-end">
                 <a href="{{ route('lokasi.peralatan.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary mr-2">Batal</a>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan Data Peralatan</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan Data</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // Format Rupiah Otomatis
+    // 🌟 SCRIPT AUTO-GENERATE KODE BARANG
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputNamaBarang = document.getElementById('nama_barang');
+        const inputKodeBarang = document.getElementById('kode_barang');
+
+        inputNamaBarang.addEventListener('input', function() {
+            let nama = this.value.trim();
+            
+            if (nama) {
+                // 1. Ambil inisial huruf depan dari setiap kata (Contoh: "Honda Mobilio" -> "HM")
+                let inisial = nama.split(/\s+/)
+                                  .map(word => word.charAt(0))
+                                  .join('')
+                                  .toUpperCase()
+                                  .substring(0, 3); // Maksimal 3 huruf agar rapi
+                
+                // 2. Buat angka acak 4 digit agar pasti unik di database
+                let randomNum = Math.floor(1000 + Math.random() * 9000);
+                
+                // 3. Gabungkan dan masukkan. (Hanya jika kode barang kosong atau memang hasil generate sebelumnya)
+                if (!inputKodeBarang.value || inputKodeBarang.dataset.auto === "true") {
+                    inputKodeBarang.value = inisial + '-' + randomNum;
+                    inputKodeBarang.dataset.auto = "true"; // Penanda ini adalah hasil generate otomatis
+                }
+            } else {
+                // Bersihkan field kode jika nama barang dihapus sampai habis
+                if (inputKodeBarang.dataset.auto === "true") {
+                    inputKodeBarang.value = '';
+                }
+            }
+        });
+    });
+
+    // Script format rupiah & perhitungan total tetap aman di bawah ini
     const formatRupiahElements = document.querySelectorAll('.format-rupiah');
-    
     formatRupiahElements.forEach(function(element) {
         element.addEventListener('keyup', function(e) {
             this.value = formatRupiah(this.value);
         });
     });
 
-    function formatRupiah(angka, prefix) {
+    function formatRupiah(angka) {
         let number_string = angka.replace(/[^,\d]/g, '').toString(),
             split         = number_string.split(','),
             sisa          = split[0].length % 3,
@@ -170,22 +218,16 @@
             let separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
         }
-
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
 
-    // Kalkulasi Total Nilai Perolehan
     function hitungNilaiPerolehan() {
-        let jumlah = document.getElementById('jumlah').value;
-        let hargaSatuanStr = document.getElementById('harga_satuan').value.replace(/\./g, '').replace(/,/g, '.');
+        let jumlah = parseInt(document.getElementById('jumlah').value) || 0;
+        let hargaSatuanStr = document.getElementById('harga_satuan').value.replace(/\./g, '').split(',')[0];
+        let hargaSatuan = parseInt(hargaSatuanStr) || 0;
         
-        let hargaSatuan = parseFloat(hargaSatuanStr) || 0;
-        let total = parseInt(jumlah) * hargaSatuan;
-
-        // Tampilkan format ke input readonly
-        let totalFormatted = total.toString().replace(/\./g, ',');
-        document.getElementById('nilai_perolehan').value = formatRupiah(totalFormatted);
+        let total = jumlah * hargaSatuan;
+        document.getElementById('nilai_perolehan').value = formatRupiah(total.toString());
     }
 </script>
 @endsection

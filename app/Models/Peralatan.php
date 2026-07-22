@@ -20,19 +20,16 @@ class Peralatan extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // 4. Beritahu Laravel nama kolom arsip (Soft Delete) kustom
- 
-
-    // 5. Daftarkan semua atribut dengan prefix 'alat_' (kecuali lokasi untuk filter)
+    // 4. Daftarkan semua atribut yang diizinkan untuk diisi massal (Mass Assignment)
     protected $fillable = [
         'alat_kode_barang', 
         'lokasi', 
         'alat_nama_barang', 
-        'alat_nibar', // Diselaraskan dari 'nibr' menjadi 'nibar'
+        'alat_nibar', 
         'alat_nomor_register',
         'alat_spesifikasi_barang', 
         'alat_merk_tipe', 
-        'alat_lokasi_fisik', // Diubah dari 'Lok' agar seragam dengan tabel lain
+        'alat_lokasi_fisik', 
         'alat_spesifikasi_lainnya',
         'alat_nomor_polisi', 
         'alat_tanggal_pajak', 
@@ -47,7 +44,8 @@ class Peralatan extends Model
         'alat_tanggal_perolehan', 
         'alat_status_penggunaan', 
         'alat_kondisi', 
-        'alat_keterangan'
+        'alat_keterangan',
+        'alat_foto' // 🌟 ATRIBUT FOTO DITAMBAHKAN DI SINI
     ];
 
     /**

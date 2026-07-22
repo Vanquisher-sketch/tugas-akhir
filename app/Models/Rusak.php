@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Rusak extends Model
 {
+    use SoftDeletes;
     protected $table = 'rusaks';
 
     // 🌟 TAMBAHKAN 3 BARIS INI AGAR LARAVEL TIDAK MENCARI 'id'

@@ -3,12 +3,12 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3 bg-white">
-        <h6 class="m-0 font-weight-bold text-primary">
-            <i class="fas fa-edit mr-2"></i> Ubah Data Peralatan & Mesin (KIB B) - {{ ucfirst($lokasi) }}
+        <h6 class="m-0 font-weight-bold text-warning">
+            <i class="fas fa-edit mr-2"></i> Edit Data Peralatan & Mesin (KIB B) - {{ ucfirst($lokasi) }}
         </h6>
     </div>
     <div class="card-body">
-        <form action="{{ route('lokasi.peralatan.update', ['lokasi' => $lokasi, 'kode_barang' => $peralatan->alat_kode_barang]) }}" method="POST">
+        <form action="{{ route('lokasi.peralatan.update', ['lokasi' => $lokasi, 'kode_barang' => $peralatan->alat_kode_barang]) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -16,13 +16,12 @@
             <h6 class="font-weight-bold text-secondary mb-3 border-bottom pb-2">1. Identitas Utama Barang</h6>
             <div class="row">
                 <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Kode Barang (ID Paten)</label>
+                    <label class="font-weight-bold">Kode Barang</label>
                     <input type="text" name="kode_barang" class="form-control bg-light" value="{{ old('kode_barang', $peralatan->alat_kode_barang) }}" readonly required>
-                    @error('kode_barang') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_barang" class="form-control" value="{{ old('nama_barang', $peralatan->alat_nama_barang) }}" required>
+                    <input type="text" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang', $peralatan->alat_nama_barang) }}" required>
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Lokasi Fisik <span class="text-danger">*</span></label>
@@ -55,7 +54,7 @@
             <div class="row">
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor Polisi</label>
-                    <input type="text" name="nomor_polisi" class="form-control" value="{{ old('nomor_polisi', $peralatan->alat_nomor_polisi) }}">
+                    <input type="text" name="nomor_polisi" class="form-control text-uppercase" value="{{ old('nomor_polisi', $peralatan->alat_nomor_polisi) }}">
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor BPKB</label>
@@ -94,7 +93,7 @@
                     <input type="date" name="tanggal_perolehan" class="form-control" value="{{ old('tanggal_perolehan', $peralatan->alat_tanggal_perolehan) }}" required>
                 </div>
                 <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Tenggat Pajak Tahunan (Kendaraan)</label>
+                    <label class="font-weight-bold">Tenggat Pajak Tahunan</label>
                     <input type="date" name="tanggal_pajak" class="form-control" value="{{ old('tanggal_pajak', $peralatan->alat_tanggal_pajak) }}">
                 </div>
             </div>
@@ -108,17 +107,23 @@
                     <input type="text" name="satuan" class="form-control" value="{{ old('satuan', $peralatan->alat_satuan) }}" required>
                 </div>
                 <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
-                    <input type="text" id="harga_satuan" name="harga_satuan" class="form-control format-rupiah" value="{{ old('harga_satuan', number_format($peralatan->alat_harga_satuan, 0, ',', '.')) }}" required oninput="hitungNilaiPerolehan()">
+                    <label class="font-weight-bold">Harga Satuan <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
+                        <input type="text" id="harga_satuan" name="harga_satuan" class="form-control format-rupiah" value="{{ old('harga_satuan', number_format($peralatan->alat_harga_satuan, 0, ',', '.')) }}" required oninput="hitungNilaiPerolehan()">
+                    </div>
                 </div>
                 <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Nilai Perolehan Total (Rp) <span class="text-danger">*</span></label>
-                    <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control format-rupiah bg-light" value="{{ old('nilai_perolehan', number_format($peralatan->alat_nilai_perolehan, 0, ',', '.')) }}" readonly required>
+                    <label class="font-weight-bold">Nilai Perolehan Total <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
+                        <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control bg-light font-weight-bold" value="{{ old('nilai_perolehan', number_format($peralatan->alat_nilai_perolehan, 0, ',', '.')) }}" readonly required>
+                    </div>
                 </div>
             </div>
 
-            {{-- 4. STATUS & KONDISI --}}
-            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">4. Status & Kondisi</h6>
+            {{-- 4. STATUS, KONDISI & FOTO --}}
+            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">4. Status, Kondisi & Foto</h6>
             <div class="row">
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
@@ -136,6 +141,21 @@
                     </select>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label class="font-weight-bold">Foto Barang</label>
+                
+                @if(isset($peralatan->alat_foto) && $peralatan->alat_foto != '')
+                    <div class="mb-2">
+                        <img src="{{ asset('storage/' . $peralatan->alat_foto) }}" alt="Foto Barang" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                @endif
+                
+                <input type="file" name="foto" class="form-control-file @error('foto') is-invalid @enderror" accept="image/*">
+                <small class="text-muted">Biarkan kosong jika tidak ingin mengubah foto. Format: JPG, JPEG, PNG. Ukuran maksimal: 2MB.</small>
+                @error('foto') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+            </div>
+
             <div class="form-group">
                 <label class="font-weight-bold">Keterangan / Catatan Lainnya</label>
                 <textarea name="keterangan" class="form-control" rows="2">{{ old('keterangan', $peralatan->alat_keterangan) }}</textarea>
@@ -144,23 +164,21 @@
             <hr>
             <div class="d-flex justify-content-end">
                 <a href="{{ route('lokasi.peralatan.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary mr-2">Batal</a>
-                <button type="submit" class="btn btn-warning"><i class="fas fa-edit mr-1"></i> Perbarui Data Peralatan</button>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Perbarui Data</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // Format Rupiah Otomatis
     const formatRupiahElements = document.querySelectorAll('.format-rupiah');
-    
     formatRupiahElements.forEach(function(element) {
         element.addEventListener('keyup', function(e) {
             this.value = formatRupiah(this.value);
         });
     });
 
-    function formatRupiah(angka, prefix) {
+    function formatRupiah(angka) {
         let number_string = angka.replace(/[^,\d]/g, '').toString(),
             split         = number_string.split(','),
             sisa          = split[0].length % 3,
@@ -171,21 +189,16 @@
             let separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
         }
-
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
 
-    // Kalkulasi Total Nilai Perolehan
     function hitungNilaiPerolehan() {
-        let jumlah = document.getElementById('jumlah').value;
-        let hargaSatuanStr = document.getElementById('harga_satuan').value.replace(/\./g, '').replace(/,/g, '.');
+        let jumlah = parseInt(document.getElementById('jumlah').value) || 0;
+        let hargaSatuanStr = document.getElementById('harga_satuan').value.replace(/\./g, '').split(',')[0];
+        let hargaSatuan = parseInt(hargaSatuanStr) || 0;
         
-        let hargaSatuan = parseFloat(hargaSatuanStr) || 0;
-        let total = parseInt(jumlah) * hargaSatuan;
-
-        let totalFormatted = total.toString().replace(/\./g, ',');
-        document.getElementById('nilai_perolehan').value = formatRupiah(totalFormatted);
+        let total = jumlah * hargaSatuan;
+        document.getElementById('nilai_perolehan').value = formatRupiah(total.toString());
     }
 </script>
 @endsection

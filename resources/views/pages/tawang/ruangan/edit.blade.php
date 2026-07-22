@@ -11,7 +11,7 @@
             @method('PUT')
             
             <div class="form-group">
-                <label for="kode_ruangan">Kode Ruangan (ID Paten)</label>
+                <label for="kode_ruangan">Kode Ruangan (Permanen tidak bisa diubah)</label>
                 {{-- Input dibuat readonly karena ini primary key, tidak boleh diubah user --}}
                 <input type="text" class="form-control bg-light" id="kode_ruangan" name="kode_ruangan" value="{{ $room->kode_ruangan }}" readonly>
             </div>

@@ -47,7 +47,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Nilai Kapitalisasi Aset</div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Nilai Aset</div>
                             <div class="h5 mb-0 font-weight-bold text-success">Rp {{ number_format($kpiTotalNilai, 0, ',', '.') }}</div>
                         </div>
                         <div class="col-auto">
@@ -110,7 +110,7 @@
                     <thead class="bg-gray-100 text-center text-uppercase" style="font-size: 11px;">
                         <tr>
                             <th class="py-3">No</th>
-                            <th>No. Registrasi No Plat</th>
+                            <th>Nomor Polisi </th>
                             <th>Wilayah Kerja</th>
                             <th>Tanggal Jatuh Tempo</th>
                             <th>Status Tindakan</th>
@@ -120,7 +120,7 @@
                         @forelse($asetPajakMendatang as $pajak)
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="text-primary font-weight-bold text-center">{{ $pajak->no_regristrasi }}</td>
+                            <td class="text-primary font-weight-bold text-center">{{ $pajak->alat_nomor_polisi }}</td>
                             <td class="text-center text-uppercase"><span class="badge badge-dark">{{ $pajak->lokasi }}</span></td>
                             <td class="text-center font-weight-bold text-danger">{{ \Carbon\Carbon::parse($pajak->tanggal_pajak)->translatedFormat('d F Y') }}</td>
                             <td class="text-center">

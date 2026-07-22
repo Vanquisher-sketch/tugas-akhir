@@ -49,6 +49,9 @@ return new class extends Migration
             
             $table->text('alat_keterangan')->nullable(); 
             
+            // 🌟 ATRIBUT BARU: Untuk menyimpan path/nama file foto peralatan
+            $table->string('alat_foto', 255)->nullable();
+            
             $table->softDeletes(); 
             $table->timestamps();
         });

@@ -32,7 +32,7 @@
     <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">
             <i class="fas fa-table mr-2"></i>
-            KARTU INVENTARIS RUANGAN (KIR) BMD - 
+            KARTU INVENTARIS RUANGAN (KIR) - 
             <span class="text-dark">{{ $room->ruangan_nama }}</span>
         </h6>
 

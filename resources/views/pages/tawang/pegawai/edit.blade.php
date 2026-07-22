@@ -15,7 +15,7 @@
             <h6 class="m-0 font-weight-bold text-secondary">Formulir Pembaruan Data Pegawai</h6>
         </div>
         <div class="card-body">
-            <form action="{{ route('lokasi.pegawai.update', [$lokasi, $pegawai->id]) }}" method="POST">
+            <form action="{{ route('lokasi.pegawai.update', [$lokasi, $pegawai->pegawai_nip]) }}" method="POST">
                 @csrf
                 @method('PUT') {{-- Wajib digunakan untuk proses update data di Laravel --}}
 
