@@ -15,7 +15,7 @@ return new class extends Migration
             // Awalan 'pegawai_' untuk membedakan dengan tabel lain
             $table->string('pegawai_nama', 100);
             $table->string('pegawai_jabatan', 50);
-            $table->string('pegawai_nohp', 15)->unique();
+            $table->string('pegawai_no_hp', 15)->unique();
             $table->string('pegawai_alamat', 255); 
             $table->string('pegawai_email', 100)->unique()->nullable();
 

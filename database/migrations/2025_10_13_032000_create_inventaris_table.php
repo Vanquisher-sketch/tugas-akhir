@@ -9,6 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventaris', function (Blueprint $table) {
+            // 🌟 PERBAIKAN 1: Tambahkan ID standar bawaan Laravel untuk menghindari bug Eloquent
+            $table->id(); 
+
             // Value ditekan ke 30 (Sangat cukup untuk kode aset resmi)
             $table->string('inv_kode_barang', 30); 
 
@@ -18,7 +21,7 @@ return new class extends Migration
             // Wajib 10 (Sesuai dengan tabel rooms)
             $table->string('inv_ruangan_kode', 10); 
             
-            // 🌟 Relasi dikembalikan ke tabel 'rooms'
+            // 🌟 Relasi dikembalikan ke tabel 'ruangans'
             $table->foreign('inv_ruangan_kode')
                   ->references('kode_ruangan')
                   ->on('ruangans')
@@ -47,7 +50,12 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->primary(['inv_kode_barang', 'inv_ruangan_kode']);
+            // 🌟 PERBAIKAN 2: Mengganti Primary Key menjadi Unique Index dengan menyertakan kondisi
+            // Ini memungkinkan 1 barang di 1 ruangan yang sama memiliki 2 baris (satu 'Baik', satu 'Rusak')
+            $table->unique(
+                ['inv_kode_barang', 'inv_ruangan_kode', 'inv_kondisi'], 
+                'inventaris_barang_ruangan_kondisi_unique'
+            );
         });
     }
 

@@ -14,24 +14,24 @@
             <div class="form-group">
                 <label class="font-weight-bold text-danger">Pilih Barang dari Master Peralatan (KIB B) <span class="text-danger">*</span></label>
                 
-                {{-- Dropdown Cerdas: Menyimpan semua data dari database KIB B --}}
+                {{-- Dropdown Cerdas dengan Fallback Nama Kolom --}}
                 <select id="peralatan_select" class="form-control font-weight-bold" style="border: 2px solid #4e73df; font-size: 14px;" required>
                     <option value="" disabled selected>-- Klik di sini untuk memilih Aset Master KIB B --</option>
                     @foreach($allPeralatan as $p)
-                        {{-- Kita ambil langsung dari properti asli tabel Peralatan agar lengkap --}}
-                        <option value="{{ $p->alat_kode_barang }}" 
-                                data-kode="{{ $p->alat_kode_barang }}"
-                                data-nama="{{ $p->alat_nama_barang }}"
-                                data-merk="{{ $p->alat_merk_tipe ?? '-' }}"
-                                data-tahun="{{ $p->alat_tahun_perolehan ?? '' }}"
-                                data-satuan="{{ $p->alat_satuan ?? 'Buah' }}"
-                                data-nibar="{{ $p->alat_nibar ?? $p->nibar ?? '' }}"
-                                data-register="{{ $p->alat_nomor_register ?? $p->nomor_register ?? '' }}"
+                        <option value="{{ $p->alat_kode_barang ?? $p->kode_barang }}" 
+                                data-kode="{{ $p->alat_kode_barang ?? $p->kode_barang }}"
+                                data-nama="{{ $p->alat_nama_barang ?? $p->nama_barang }}"
+                                data-merk="{{ $p->alat_merk_tipe ?? $p->merk_tipe ?? $p->merk ?? '-' }}"
+                                {{-- 🌟 PERBAIKAN: Fallback nama kolom tahun & default ke tahun saat ini jika master kosong --}}
+                                data-tahun="{{ $p->alat_tahun_perolehan ?? $p->tahun_perolehan ?? $p->tahun ?? date('Y') }}"
+                                data-satuan="{{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }}"
+                                data-nibar="{{ $p->alat_nibar ?? $p->nibar ?? '-' }}"
+                                data-register="{{ $p->alat_nomor_register ?? $p->nomor_register ?? '-' }}"
                                 data-kondisi="{{ $p->alat_kondisi ?? $p->kondisi ?? 'Baik' }}"
-                                data-spesifikasi="{{ $p->alat_spesifikasi_barang ?? $p->spesifikasi_barang ?? '' }}"
-                                data-keterangan="{{ $p->alat_keterangan ?? $p->keterangan ?? '' }}"
+                                data-spesifikasi="{{ $p->alat_spesifikasi_barang ?? $p->spesifikasi_barang ?? '-' }}"
+                                data-keterangan="{{ $p->alat_keterangan ?? $p->keterangan ?? '-' }}"
                                 data-sisa="{{ $p->sisa_stok }}">
-                            {{ $p->alat_kode_barang }} - {{ $p->alat_nama_barang }} (Sisa Stok: {{ $p->sisa_stok }} {{ $p->alat_satuan ?? 'Buah' }})
+                            {{ $p->alat_kode_barang ?? $p->kode_barang }} - {{ $p->alat_nama_barang ?? $p->nama_barang }} (Sisa Stok: {{ $p->sisa_stok }} {{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }})
                         </option>
                     @endforeach
                 </select>
@@ -81,7 +81,8 @@
                 </div>
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Tahun Perolehan</label>
-                    <input type="text" id="tahun_perolehan" name="tahun_perolehan" class="form-control bg-light text-muted" readonly>
+                    {{-- 🌟 Ditambahkan atribut required agar form memvalidasi input ini --}}
+                    <input type="number" id="tahun_perolehan" name="tahun_perolehan" class="form-control bg-light text-muted" readonly required>
                 </div>
             </div>
 
@@ -96,7 +97,6 @@
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Kondisi Barang</label>
-                    {{-- Kondisi diubah jadi text readonly, mengikuti master --}}
                     <input type="text" id="kondisi" name="kondisi" class="form-control bg-light text-muted font-weight-bold" readonly required>
                 </div>
             </div>
@@ -127,25 +127,28 @@
 
 @push('scripts')
 <script>
-    // JS Cerdas untuk menarik data dari Option Dropdown
     document.getElementById('peralatan_select').addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
         
         // Isi Form Readonly
-        document.getElementById('kode_barang').value = opt.getAttribute('data-kode');
-        document.getElementById('nama_barang').value = opt.getAttribute('data-nama');
-        document.getElementById('merk_tipe').value = opt.getAttribute('data-merk');
-        document.getElementById('tahun_perolehan').value = opt.getAttribute('data-tahun');
+        document.getElementById('kode_barang').value = opt.getAttribute('data-kode') || '';
+        document.getElementById('nama_barang').value = opt.getAttribute('data-nama') || '';
+        document.getElementById('merk_tipe').value = opt.getAttribute('data-merk') || '-';
         
-        document.getElementById('nibar').value = opt.getAttribute('data-nibar');
-        document.getElementById('nomor_register').value = opt.getAttribute('data-register');
-        document.getElementById('kondisi').value = opt.getAttribute('data-kondisi');
+        // 🌟 PERBAIKAN JS: Jika data-tahun dari database kosong/null, gunakan Tahun Berjalan secara otomatis
+        const dataTahun = opt.getAttribute('data-tahun');
+        const currentYear = new Date().getFullYear();
+        document.getElementById('tahun_perolehan').value = (dataTahun && dataTahun !== '' && dataTahun !== 'null') ? dataTahun : currentYear;
         
-        document.getElementById('spesifikasi_barang').value = opt.getAttribute('data-spesifikasi');
-        document.getElementById('keterangan').value = opt.getAttribute('data-keterangan');
+        document.getElementById('nibar').value = opt.getAttribute('data-nibar') || '-';
+        document.getElementById('nomor_register').value = opt.getAttribute('data-register') || '-';
+        document.getElementById('kondisi').value = opt.getAttribute('data-kondisi') || 'Baik';
+        
+        document.getElementById('spesifikasi_barang').value = opt.getAttribute('data-spesifikasi') || '-';
+        document.getElementById('keterangan').value = opt.getAttribute('data-keterangan') || '-';
 
         // Update Satuan
-        const satuanText = opt.getAttribute('data-satuan');
+        const satuanText = opt.getAttribute('data-satuan') || 'Buah';
         document.getElementById('satuan_addon').innerText = satuanText;
         document.getElementById('satuan_hidden').value = satuanText;
 

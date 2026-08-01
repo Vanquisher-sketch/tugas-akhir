@@ -68,10 +68,10 @@ class InventarisController extends Controller
         if ($room->lokasi !== $lokasi) { abort(404); }
 
         $request->validate([
-            'kode_barang'        => 'required|string|max:100', 
-            'jumlah'             => 'required|integer|min:1',
-            'satuan'             => 'required|string',
-            'kondisi'            => 'required|in:Baik,Rusak Ringan,Rusak Berat', 
+            'kode_barang' => 'required|string|max:100', 
+            'jumlah'      => 'required|integer|min:1',
+            'satuan'      => 'required|string',
+            'kondisi'     => 'required|in:Baik,Rusak Ringan,Rusak Berat', 
         ]);
 
         $masterPeralatan = Peralatan::where('alat_kode_barang', $request->kode_barang)->first();
@@ -87,7 +87,21 @@ class InventarisController extends Controller
             return redirect()->back()->withInput()->with('error', "Gagal! Stok tidak mencukupi.");
         }
 
-        DB::transaction(function () use ($request, $room, $lokasi) {
+        // 🌟 PERBAIKAN: Penanganan Tahun Perolehan & Field Nullable
+        $tahunPerolehan = $request->tahun_perolehan;
+        if (empty($tahunPerolehan) || $tahunPerolehan === '-') {
+            $tahunPerolehan = $masterPeralatan->alat_tahun_perolehan 
+                ?? $masterPeralatan->tahun_perolehan 
+                ?? date('Y');
+        }
+
+        $namaBarang = $request->nama_barang ?? $masterPeralatan->alat_nama_barang ?? '-';
+        $merkTipe = $request->merk_tipe ?? $masterPeralatan->alat_merk_tipe ?? '-';
+        $nibar = $request->nibar ?? $masterPeralatan->alat_nibar ?? null;
+        $nomorRegister = $request->nomor_register ?? $masterPeralatan->alat_nomor_register ?? null;
+        $spesifikasi = $request->spesifikasi_barang ?? $masterPeralatan->alat_spesifikasi_barang ?? null;
+
+        DB::transaction(function () use ($request, $room, $lokasi, $masterPeralatan, $tahunPerolehan, $namaBarang, $merkTipe, $nibar, $nomorRegister, $spesifikasi) {
             
             $item = Inventaris::where('inv_kode_barang', $request->kode_barang)
                               ->where('inv_ruangan_kode', $room->kode_ruangan)
@@ -98,17 +112,17 @@ class InventarisController extends Controller
                 Inventaris::where('inv_kode_barang', $request->kode_barang)
                           ->where('inv_ruangan_kode', $room->kode_ruangan)
                           ->where('inv_kondisi', $request->kondisi)
-                          ->update(['inv_jumlah' => $item->inv_jumlah + $request->jumlah]);
+                          ->increment('inv_jumlah', $request->jumlah);
             } else {
                 Inventaris::create([
                     'inv_kode_barang'        => $request->kode_barang,
                     'inv_ruangan_kode'       => $room->kode_ruangan,
-                    'inv_nibar'              => $request->nibar,
-                    'inv_nomor_register'     => $request->nomor_register,
-                    'inv_nama_barang'        => $request->nama_barang,
-                    'inv_spesifikasi_barang' => $request->spesifikasi_barang,
-                    'inv_merk_tipe'          => $request->merk_tipe,
-                    'inv_tahun_perolehan'    => ($request->tahun_perolehan === '-' || empty($request->tahun_perolehan)) ? null : $request->tahun_perolehan,
+                    'inv_nibar'              => $nibar,
+                    'inv_nomor_register'     => $nomorRegister,
+                    'inv_nama_barang'        => $namaBarang,
+                    'inv_spesifikasi_barang' => $spesifikasi,
+                    'inv_merk_tipe'          => $merkTipe,
+                    'inv_tahun_perolehan'    => $tahunPerolehan,
                     'inv_jumlah'             => $request->jumlah,
                     'inv_satuan'             => $request->satuan,
                     'inv_kondisi'            => $request->kondisi,
@@ -134,7 +148,7 @@ class InventarisController extends Controller
             }
         });
 
-        $this->sendNotification('ditambahkan', $request->nama_barang);
+        $this->sendNotification('ditambahkan', $namaBarang);
 
         return redirect()->route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan])
             ->with('success', 'Data inventaris berhasil disimpan.');
@@ -143,7 +157,7 @@ class InventarisController extends Controller
     public function edit(Request $request, $lokasi, $kode_ruangan, $inv_kode_barang)
     {
         $room = Ruangan::findOrFail($kode_ruangan);
-        $kondisi = $request->query('kond'); // 🌟 MENANGKAP KONDISI DARI URL PARAMETER
+        $kondisi = $request->query('kond'); 
         
         $query = Inventaris::where('inv_kode_barang', $inv_kode_barang)
                            ->where('inv_ruangan_kode', $kode_ruangan);
@@ -162,7 +176,7 @@ class InventarisController extends Controller
     public function update(Request $request, $lokasi, $kode_ruangan, $inv_kode_barang)
     {
         $room = Ruangan::findOrFail($kode_ruangan);
-        $kondisiLama = $request->query('kond'); // 🌟 MENANGKAP KONDISI LAMA DARI URL
+        $kondisiLama = $request->query('kond'); 
         
         $query = Inventaris::where('inv_kode_barang', $inv_kode_barang)
                            ->where('inv_ruangan_kode', $kode_ruangan);
@@ -192,7 +206,6 @@ class InventarisController extends Controller
                                          ->first();
                 
                 if ($barisTarget && $kondisiBaru !== $kondisiLama) {
-                    // Gabungkan kuantitas ke baris tujuan, lalu hapus baris lama
                     Inventaris::where('inv_kode_barang', $inventari->inv_kode_barang)->where('inv_ruangan_kode', $room->kode_ruangan)->where('inv_kondisi', $kondisiBaru)->increment('inv_jumlah', $qtyUbah);
                     Inventaris::where('inv_kode_barang', $inventari->inv_kode_barang)->where('inv_ruangan_kode', $room->kode_ruangan)->where('inv_kondisi', $kondisiLama)->delete();
                 } else {
@@ -202,7 +215,6 @@ class InventarisController extends Controller
             } 
             // SKENARIO 2: Jika PECAH BARIS SEBAGIAN
             else {
-                // Kurangi stok pada baris lama
                 Inventaris::where('inv_kode_barang', $inventari->inv_kode_barang)->where('inv_ruangan_kode', $room->kode_ruangan)->where('inv_kondisi', $kondisiLama)->decrement('inv_jumlah', $qtyUbah);
 
                 $barisBaru = Inventaris::where('inv_kode_barang', $inventari->inv_kode_barang)
@@ -211,10 +223,8 @@ class InventarisController extends Controller
                                        ->first();
                 
                 if ($barisBaru) {
-                    // Jika baris target sudah ada, tinggal ditambahkan kuantitasnya
                     Inventaris::where('inv_kode_barang', $inventari->inv_kode_barang)->where('inv_ruangan_kode', $room->kode_ruangan)->where('inv_kondisi', $kondisiBaru)->increment('inv_jumlah', $qtyUbah);
                 } else {
-                    // Buat baris baru pecahan kondisinya
                     Inventaris::create([
                         'inv_kode_barang'        => $inventari->inv_kode_barang,
                         'inv_ruangan_kode'       => $inventari->inv_ruangan_kode,
@@ -223,7 +233,7 @@ class InventarisController extends Controller
                         'inv_nama_barang'        => $inventari->inv_nama_barang,
                         'inv_spesifikasi_barang' => $inventari->inv_spesifikasi_barang,
                         'inv_merk_tipe'          => $inventari->inv_merk_tipe,
-                        'inv_tahun_perolehan'    => $inventari->inv_tahun_perolehan,
+                        'inv_tahun_perolehan'    => $inventari->inv_tahun_perolehan ?? date('Y'),
                         'inv_jumlah'             => $qtyUbah,
                         'inv_satuan'             => $inventari->inv_satuan,
                         'inv_kondisi'            => $kondisiBaru,
@@ -258,7 +268,7 @@ class InventarisController extends Controller
     public function move(Request $request, $lokasi, $kode_ruangan, $inv_kode_barang)
     {
         $room = Ruangan::findOrFail($kode_ruangan);
-        $kondisi = 'Baik'; // Hanya izinkan baris 'Baik' yang bisa dipindahkan
+        $kondisi = 'Baik'; 
         
         $inventari = Inventaris::where('inv_kode_barang', $inv_kode_barang)
                                ->where('inv_ruangan_kode', $kode_ruangan)
@@ -308,7 +318,7 @@ class InventarisController extends Controller
                         'inv_nama_barang'        => $inventari->inv_nama_barang,
                         'inv_spesifikasi_barang' => $inventari->inv_spesifikasi_barang,
                         'inv_merk_tipe'          => $inventari->inv_merk_tipe,
-                        'inv_tahun_perolehan'    => $inventari->inv_tahun_perolehan,
+                        'inv_tahun_perolehan'    => $inventari->inv_tahun_perolehan ?? date('Y'),
                         'inv_jumlah'             => $qtyPindah,
                         'inv_satuan'             => $inventari->inv_satuan,
                         'inv_kondisi'            => $kondisi,
