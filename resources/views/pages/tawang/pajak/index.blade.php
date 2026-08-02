@@ -32,7 +32,7 @@
                         </tr>
                         <tr class="font-weight-bold">
                             <th class="bg-light">Nama Pegawai</th>
-                            <th class="bg-light text-center">Hubungi WA</th>
+                            <th class="bg-light text-center">Email Pegawai</th>
                             <th style="background-color: #fff3cd;">Jatuh Tempo Pajak</th>
                             <th style="background-color: #fff3cd;">Masa Berlaku STNK</th>
                             <th style="background-color: #fff3cd;" title="Kirim Pesan Pengingat Pajak">Kirim Warning</th>
@@ -44,7 +44,6 @@
                     <tbody>
                         @forelse($pajaks as $item)
                         @php
-                            // 🌟 REVISI: Menggunakan prefix 'alat_' sesuai Controller
                             $tglPajak = $item->alat_tanggal_pajak ? \Carbon\Carbon::parse($item->alat_tanggal_pajak) : null;
                             $diffDays = $tglPajak ? \Carbon\Carbon::today()->diffInDays($tglPajak, false) : 0;
                             
@@ -55,21 +54,12 @@
                                 $rowStyle = 'background-color: #fff3cd;'; 
                             }
 
-                            // 🌟 REVISI UTAMA: Mengganti 'kode_barang' menjadi 'bmd_kode_barang' 
-                            // PERHATIAN: Jika nama kolom di tabel bmds kamu bukan bmd_kode_barang, 
-                            // silakan ubah teks 'bmd_kode_barang' di bawah ini sesuai database kamu.
                             $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('bmd_alat_kode', $item->alat_kode_barang)->first();
                             
-                            // Ambil data nomor HP secara hirarki (Cek tabel pegawai dulu, baru fallback ke tabel bmd)
-                            $nomorWaHp = '-';
-                            if ($bmdAktif) {
-                                if ($bmdAktif->pegawai && $bmdAktif->pegawai->no_hp) {
-                                    $nomorWaHp = $bmdAktif->pegawai->no_hp;
-                                } elseif ($bmdAktif->pegawai && $bmdAktif->pegawai->telepon) {
-                                    $nomorWaHp = $bmdAktif->pegawai->telepon;
-                                } elseif ($bmdAktif->nomor_pemakai) {
-                                    $nomorWaHp = $bmdAktif->nomor_pemakai;
-                                }
+                            $emailPemegang = '-';
+                            // ✅ REVISI: Ubah pemanggilan email menjadi pegawai_email sesuai dengan database
+                            if ($bmdAktif && $bmdAktif->pegawai && $bmdAktif->pegawai->pegawai_email) {
+                                $emailPemegang = $bmdAktif->pegawai->pegawai_email;
                             }
                         @endphp
                         <tr style="{{ $rowStyle }}">
@@ -87,16 +77,17 @@
                             {{-- Data Pemakai --}}
                             <td class="align-middle">
                                 @if($bmdAktif && $bmdAktif->pegawai)
-                                    <b class="text-gray-900">{{ $bmdAktif->pegawai->nama }}</b><br>
+                                    {{-- ✅ REVISI: Ubah pemanggilan nama menjadi pegawai_nama sesuai dengan database --}}
+                                    <b class="text-gray-900">{{ $bmdAktif->pegawai->pegawai_nama }}</b><br>
                                     <span class="badge badge-primary small mt-1">{{ $bmdAktif->pemakai_status ?? 'ASN' }}</span>
                                 @else
                                     <span class="badge badge-secondary p-1 font-weight-bold"><i class="fas fa-warehouse mr-1"></i> Stand-by di Kantor</span>
                                 @endif
                             </td>
 
-                            {{-- Kontak No HP Pemakai (Otomatis Terisi) --}}
-                            <td class="align-middle text-center font-weight-bold text-success">
-                                {{ $nomorWaHp }}
+                            {{-- Tampilkan Teks Email Pemakai --}}
+                            <td class="align-middle text-center font-weight-bold text-info">
+                                {{ $emailPemegang }}
                             </td>
 
                             {{-- Jatuh Tempo Pajak --}}
@@ -106,12 +97,12 @@
                                         <span class="badge badge-danger p-1 text-uppercase shadow-sm">
                                             <i class="fas fa-times-circle"></i> {{ $tglPajak->format('d/m/Y') }}
                                         </span>
-                                        <div style="font-size: 10px;" class="text-danger font-weight-bold mt-1 uppercase">TERLEWAT {{ abs($diffDays) }} HARI</div>
+                                        <div style="font-size: 10px;" class="text-danger font-weight-bold mt-1 text-uppercase">TERLEWAT {{ abs($diffDays) }} HARI</div>
                                     @elseif($diffDays <= 30)
                                         <span class="badge badge-warning text-dark p-1 shadow-sm">
                                             <i class="fas fa-exclamation-triangle"></i> {{ $tglPajak->format('d/m/Y') }}
                                         </span>
-                                        <div style="font-size: 10px;" class="text-dark font-weight-bold mt-1 uppercase">{{ $diffDays }} HARI LAGI</div>
+                                        <div style="font-size: 10px;" class="text-dark font-weight-bold mt-1 text-uppercase">{{ $diffDays }} HARI LAGI</div>
                                     @else
                                         <span class="badge badge-success p-1 shadow-sm">
                                             <i class="fas fa-check-circle"></i> {{ $tglPajak->format('d/m/Y') }}
@@ -125,24 +116,31 @@
                                 {{ $item->alat_tanggal_stnk ? \Carbon\Carbon::parse($item->alat_tanggal_stnk)->format('d/m/Y') : '-' }}
                             </td>
 
-                            {{-- WhatsApp Warning Trigger (Aktif Otomatis jika nomor HP ada) --}}
+                            {{-- Email Warning Trigger (Tombol Mailto diubah ke Form Auto-Send) --}}
                             <td class="text-center align-middle">
-                                @if($nomorWaHp !== '-')
+                                @if($emailPemegang !== '-')
                                     @php
-                                        $cleanNumber = preg_replace('/[^0-9]/', '', $nomorWaHp);
-                                        $cleanNumber = preg_replace('/^0/', '62', $cleanNumber);
-                                        
-                                        $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->nama : 'Bapak/Ibu';
+                                        // ✅ REVISI: Ubah pemanggilan nama menjadi pegawai_nama untuk subjek/body email
+                                        $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->pegawai_nama : 'Bapak/Ibu';
                                         $txtStatus = $diffDays < 0 ? "TELAH LEWAT JATUH TEMPO" : "AKAN SEGERA JATUH TEMPO";
                                         
-                                        $msgUser = "Halo Pak/Bu {$namaPemakai}, menginfokan bahwa pajak kendaraan dinas {$item->alat_nama_barang} ({$item->alat_nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . ($tglPajak ? $tglPajak->format('d/m/Y') : '') . ". Mohon berkas pendukung segera disiapkan untuk proses perpanjangan. Terima kasih.";
+                                        $subjectEmail = "Pemberitahuan Pajak Kendaraan Dinas - " . $item->alat_nomor_polisi;
+                                        $msgUser = "Halo Pak/Bu {$namaPemakai},\r\n\r\nMenginfokan bahwa pajak kendaraan dinas {$item->alat_nama_barang} ({$item->alat_nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . ($tglPajak ? $tglPajak->format('d/m/Y') : '') . ".\r\n\r\nMohon berkas pendukung segera disiapkan untuk proses perpanjangan pajak.\r\n\r\nTerima kasih.";
                                     @endphp
-                                    <a href="https://wa.me/{{ $cleanNumber }}?text={{ urlencode($msgUser) }}" target="_blank" class="btn btn-success btn-sm shadow-sm font-weight-bold" title="Kirim Pesan Warning Ke Pemegang">
-                                        <i class="fab fa-whatsapp mr-1"></i> WA Pemegang
-                                    </a>
+                                    
+                                    {{-- 🌟 INI BAGIAN YANG BERUBAH: Menggunakan Form untuk Auto-Send SMTP --}}
+                                    <form action="{{ route('lokasi.pajak.kirim_email', $lokasi) }}" method="POST" style="display: inline-block;">
+                                        @csrf
+                                        <input type="hidden" name="email" value="{{ $emailPemegang }}">
+                                        <input type="hidden" name="subject" value="{{ $subjectEmail }}">
+                                        <input type="hidden" name="pesan" value="{{ $msgUser }}">
+                                        <button type="submit" class="btn btn-info btn-sm shadow-sm font-weight-bold" title="Kirim Email Otomatis" onclick="return confirm('Kirim email peringatan otomatis ke {{ $namaPemakai }} ({{ $emailPemegang }})?')">
+                                            <i class="fas fa-paper-plane mr-1"></i> Auto-Send
+                                        </button>
+                                    </form>
                                 @else
-                                    <button class="btn btn-sm btn-light border text-muted" style="font-size: 11px;" disabled>
-                                        <i class="fas fa-phone-slash mr-1"></i> No Kontak
+                                    <button class="btn btn-sm btn-light border text-muted" style="font-size: 11px;" disabled title="Data email tidak ditemukan di database">
+                                        <i class="fas fa-envelope-open mr-1"></i> No Email
                                     </button>
                                 @endif
                             </td>

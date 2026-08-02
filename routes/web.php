@@ -147,7 +147,7 @@ Route::middleware('auth')->group(function () {
 
 // --- RUTE PUBLIK (BISA DIAKSES HASIL SCAN DARI HP TANPA LOGIN) ---
 Route::get('/{lokasi}/peralatan/scan/{barcode}', [\App\Http\Controllers\PeralatanController::class, 'scan'])->name('lokasi.peralatan.scan');
-
+Route::post('/{lokasi}/pajak/kirim-email-warning', [\App\Http\Controllers\BmdController::class, 'kirimWarningEmail'])->name('lokasi.pajak.kirim_email');
 // --- KHUSUS UNTUK VERCEL CRON ---
 Route::get('/run-scheduler', function () {
     Artisan::call('schedule:run');

@@ -29,14 +29,26 @@
                 </h6>
                 @forelse ($notifications as $notification)
                     <a class="dropdown-item d-flex align-items-center" href="#">
-                        <div class="mr-3">
-                            <div class="icon-circle bg-primary">
-                                <i class="fas fa-file-alt text-white"></i>
+                        
+                        {{-- 🌟 REVISI: Pengecekan Tipe Notifikasi untuk Ikon yang Berbeda --}}
+                        @if($notification->type === 'App\Notifications\DataModificationNotification')
+                            <div class="mr-3">
+                                <div class="icon-circle bg-primary">
+                                    <i class="fas fa-edit text-white"></i>
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <div class="mr-3">
+                                <div class="icon-circle bg-warning">
+                                    <i class="fas fa-file-invoice-dollar text-white"></i>
+                                </div>
+                            </div>
+                        @endif
+
                         <div>
                             <div class="small text-gray-500">{{ $notification->created_at->locale('id')->diffForHumans() }}</div>
-                            <span class="font-weight-bold">{{ $notification->data['message'] }}</span>
+                            {{-- 🌟 REVISI: Tambahan Sabuk Pengaman (??) agar kebal Error --}}
+                            <span class="font-weight-bold">{{ $notification->data['message'] ?? $notification->data['pesan'] ?? 'Ada pemberitahuan baru' }}</span>
                         </div>
                     </a>
                 @empty
@@ -46,14 +58,12 @@
                 @if (isset($notifications) && $notifications->count() > 0)
                     <form action="{{ route('notifications.markAllAsRead') }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="dropdown-item text-center small text-gray-500">Tandai semua sudah dibaca</button>
+                        <button type="submit" class="dropdown-item text-center small text-gray-500" style="border: none; background: none; width: 100%;">Tandai semua sudah dibaca</button>
                     </form>
                 @endif
             </div>
         </li>
         
-        
-
         <div class="topbar-divider d-none d-sm-block"></div>
 
         @auth

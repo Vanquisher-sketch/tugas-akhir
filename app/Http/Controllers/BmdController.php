@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+// 🌟 REVISI: Tambahan import untuk fitur pengiriman Email
+use Illuminate\Support\Facades\Mail;
 
 class BmdController extends Controller
 {
@@ -21,8 +23,9 @@ class BmdController extends Controller
     {
         $search = $request->query('search');
 
+        // Menggunakan LIKE agar data tidak hilang hanya karena beda huruf besar/kecil di database
         $bmds = Bmd::with(['peralatan', 'pegawai', 'bendahara'])
-            ->where('lokasi', $lokasi)
+            ->where('lokasi', 'LIKE', "%{$lokasi}%")
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('bmd_bast_nomor', 'LIKE', "%{$search}%")
@@ -46,8 +49,9 @@ class BmdController extends Controller
     public function autocomplete(Request $request, $lokasi)
     {
         $search = $request->query('term');
+        
         $results = Bmd::with(['peralatan', 'pegawai'])
-            ->where('lokasi', $lokasi)
+            ->where('lokasi', 'LIKE', "%{$lokasi}%")
             ->where(function($q) use ($search) {
                 $q->where('bmd_bast_nomor', 'LIKE', "%{$search}%")
                   ->orWhereHas('pegawai', function($subQ) use ($search) {
@@ -74,17 +78,17 @@ class BmdController extends Controller
 
     public function create($lokasi)
     {
-        // 🌟 REVISI CERDAS: Tampilkan semua barang yang BELUM 'Aktif' (termasuk yang masih kosong/NULL)
-        $peralatans = Peralatan::where('lokasi', $lokasi)
+        $peralatans = Peralatan::where('lokasi', 'LIKE', "%{$lokasi}%")
             ->where(function($query) {
-                $query->where('alat_status_penggunaan', '!=', 'Aktif')
-                      ->orWhereNull('alat_status_penggunaan')
-                      ->orWhere('alat_status_penggunaan', '');
+                $query->whereNull('alat_status_penggunaan')
+                      ->orWhere('alat_status_penggunaan', '')
+                      ->orWhere('alat_status_penggunaan', 'Tidak Aktif')
+                      ->orWhere('alat_status_penggunaan', '!=', 'Aktif');
             })
-            ->select('alat_kode_barang', 'alat_nama_barang', 'alat_nomor_polisi')
+            ->select('alat_kode_barang', 'alat_nama_barang', 'alat_nomor_polisi', 'alat_status_penggunaan', 'lokasi')
             ->get();
 
-        $pegawais = Pegawai::where('lokasi', $lokasi)->orderBy('pegawai_nama')->get(); 
+        $pegawais = Pegawai::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('pegawai_nama')->get(); 
 
         return view("pages.{$lokasi}.bmd.create", compact('lokasi', 'peralatans', 'pegawais'));
     }
@@ -103,7 +107,7 @@ class BmdController extends Controller
         DB::beginTransaction();
         try {
             $bastTanggal = date('Y-m-d'); 
-            $totalData = Bmd::where('lokasi', $lokasi)->count() + 1;
+            $totalData = Bmd::where('lokasi', 'LIKE', "%{$lokasi}%")->count() + 1;
             $nomorOtomatis = str_pad($totalData, 3, '0', STR_PAD_LEFT) . '/BAST/' . strtoupper($lokasi) . '/' . date('Y');
 
             $bmd = Bmd::create([
@@ -166,20 +170,22 @@ class BmdController extends Controller
     public function edit($lokasi, $id) 
     {
         $bmd = Bmd::findOrFail($id);
-        if ($bmd->lokasi !== $lokasi) abort(404);
+        
+        // Pencegahan Error 404 akibat perbedaan case sensitivity (Tawang vs tawang)
+        if (stripos($bmd->lokasi, $lokasi) === false) abort(404);
 
-        // 🌟 REVISI CERDAS: Tampilkan yang belum 'Aktif' ATAU barang yang memang sedang dipakai di transaksi ini
-        $peralatans = Peralatan::where('lokasi', $lokasi)
+        $peralatans = Peralatan::where('lokasi', 'LIKE', "%{$lokasi}%")
             ->where(function($query) use ($bmd) {
-                $query->where('alat_status_penggunaan', '!=', 'Aktif')
+                $query->where('alat_kode_barang', $bmd->bmd_alat_kode) 
                       ->orWhereNull('alat_status_penggunaan')
                       ->orWhere('alat_status_penggunaan', '')
-                      ->orWhere('alat_kode_barang', $bmd->bmd_alat_kode); 
+                      ->orWhere('alat_status_penggunaan', 'Tidak Aktif')
+                      ->orWhere('alat_status_penggunaan', '!=', 'Aktif');
             })
             ->select('alat_kode_barang', 'alat_nama_barang', 'alat_nomor_polisi')
             ->get();
 
-        $pegawais = Pegawai::where('lokasi', $lokasi)->orderBy('pegawai_nama')->get();
+        $pegawais = Pegawai::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('pegawai_nama')->get();
 
         return view("pages.{$lokasi}.bmd.edit", compact('bmd', 'lokasi', 'peralatans', 'pegawais'));
     }
@@ -187,7 +193,9 @@ class BmdController extends Controller
     public function update(Request $request, $lokasi, $id)
     {
         $bmd = Bmd::findOrFail($id);
-        if ($bmd->lokasi !== $lokasi) abort(404);
+        
+        // Pencegahan Error 404
+        if (stripos($bmd->lokasi, $lokasi) === false) abort(404);
 
         $request->validate([
             'peralatan_kode'    => 'required|exists:peralatans,alat_kode_barang',
@@ -253,7 +261,9 @@ class BmdController extends Controller
     public function destroy($lokasi, $id)
     {
         $bmd = Bmd::findOrFail($id);
-        if ($bmd->lokasi !== $lokasi) abort(404);
+        
+        // Pencegahan Error 404
+        if (stripos($bmd->lokasi, $lokasi) === false) abort(404);
         
         $bmdDataForNotif = clone $bmd;
         
@@ -305,5 +315,21 @@ class BmdController extends Controller
             : "Aset {$namaBarang} dialokasikan kepada {$namaPemakai}";
             
         Notification::send($recipients, new DataModificationNotification(Auth::user(), $action, 'Penggunaan BMD', $pesan));
+    }
+
+    // 🌟 REVISI: Fungsi Auto-Send Email Peringatan Pajak ditambahkan di sini
+    public function kirimWarningEmail(Request $request, $lokasi)
+    {
+        try {
+            // Mengirim pesan secara otomatis (Plain Text)
+            Mail::raw($request->pesan, function ($message) use ($request) {
+                $message->to($request->email)
+                        ->subject($request->subject);
+            });
+
+            return redirect()->back()->with('success', 'Email peringatan berhasil terkirim otomatis ke ' . $request->email);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengirim email: Cek koneksi internet atau pengaturan .env');
+        }
     }
 }
