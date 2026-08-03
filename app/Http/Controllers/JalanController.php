@@ -46,12 +46,18 @@ class JalanController extends Controller
 
     public function create($lokasi)
     {
-        return view("pages.{$lokasi}.jalan.create", compact('lokasi'));
+        // Generasi Kode Barang & Nomor Register Otomatis untuk Form
+        $nextKodeBarang = $this->generateNextKodeBarang($lokasi);
+        $nextRegister   = $this->generateNextNomorRegister($lokasi);
+
+        return view("pages.{$lokasi}.jalan.create", compact('lokasi', 'nextKodeBarang', 'nextRegister'));
     }
 
     public function store(Request $request, $lokasi)
     {
         $inputs = $request->all();
+
+        // 1. Bersihkan Format Angka/Mata Uang
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
         foreach ($currencyFields as $field) {
             if (isset($inputs[$field])) {
@@ -59,8 +65,18 @@ class JalanController extends Controller
                 $inputs[$field] = str_replace(',', '.', $cleanValue);
             }
         }
+
+        // 2. Otomatisasi Backend (Jaga-jaga jika input di HTML kosong/disabled)
+        if (empty($inputs['kode_barang'])) {
+            $inputs['kode_barang'] = $this->generateNextKodeBarang($lokasi);
+        }
+        if (empty($inputs['nomor_register'])) {
+            $inputs['nomor_register'] = $this->generateNextNomorRegister($lokasi);
+        }
+
         $request->replace($inputs);
 
+        // 3. Validasi Data
         $validator = Validator::make($request->all(), [
             'kode_barang'                       => 'required|string|max:30|unique:jalans,jalan_kode_barang',
             'nama_barang'                       => 'required|string|max:100',
@@ -86,6 +102,7 @@ class JalanController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
+        // 4. Simpan Data
         $jalan = Jalan::create([
             'jalan_kode_barang'                       => $request->kode_barang,
             'jalan_nama_barang'                       => $request->nama_barang,
@@ -205,5 +222,44 @@ class JalanController extends Controller
     {
         $dataJalan = Jalan::where('lokasi', $lokasi)->latest('updated_at')->get();
         return view("pages.{$lokasi}.jalan.print", compact('dataJalan', 'lokasi'));
+    }
+
+    /**
+     * Helper privat untuk meng-generate Kode Barang KIB D secara otomatis.
+     */
+    private function generateNextKodeBarang($lokasi)
+    {
+        $defaultPrefix = '04.01.01.01'; // Prefix standar KIB D (Jalan, Irigasi & Jaringan)
+
+        $lastJalan = Jalan::where('lokasi', $lokasi)
+            ->whereNotNull('jalan_kode_barang')
+            ->latest('created_at')
+            ->first();
+
+        if ($lastJalan && $lastJalan->jalan_kode_barang) {
+            $parts = explode('.', $lastJalan->jalan_kode_barang);
+            $lastNum = (int) end($parts);
+            $nextNum = str_pad($lastNum + 1, 2, '0', STR_PAD_LEFT);
+            array_pop($parts);
+            $parts[] = $nextNum;
+
+            return implode('.', $parts);
+        }
+
+        return $defaultPrefix . '.01';
+    }
+
+    /**
+     * Helper privat untuk meng-generate Nomor Register secara otomatis.
+     */
+    private function generateNextNomorRegister($lokasi)
+    {
+        $lastRegister = Jalan::where('lokasi', $lokasi)->max('jalan_nomor_register');
+
+        if ($lastRegister) {
+            return str_pad((int)$lastRegister + 1, 4, '0', STR_PAD_LEFT);
+        }
+
+        return '0001';
     }
 }

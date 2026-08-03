@@ -28,11 +28,17 @@
 
                 <h5 class="font-weight-bold border-bottom pb-2 mb-3 text-primary"><i class="fas fa-barcode mr-2"></i>Informasi Utama Barang</h5>
                 <div class="row">
+                    <!-- TAMPILAN KODE BARANG OTOMATIS -->
                     <div class="form-group col-md-4">
-                        <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" name="tanah_kode_barang" class="form-control @error('tanah_kode_barang') is-invalid @enderror" value="{{ old('tanah_kode_barang') }}" maxlength="30" placeholder="Contoh: 01.01.11.01.001" required>
-                        @error('tanah_kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="font-weight-bold">Kode Barang</label>
+                        <div class="alert alert-info d-flex align-items-center m-0 py-2" role="alert">
+                            <i class="fas fa-info-circle mr-2 fs-5"></i>
+                            <div>
+                                Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.
+                            </div>
+                        </div>
                     </div>
+
                     <div class="form-group col-md-4">
                         <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
                         <input type="text" name="tanah_nama_barang" class="form-control @error('tanah_nama_barang') is-invalid @enderror" value="{{ old('tanah_nama_barang') }}" maxlength="100" placeholder="Contoh: Tanah Bangunan Kantor" required>

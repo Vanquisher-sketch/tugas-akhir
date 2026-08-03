@@ -2,158 +2,184 @@
 
 @section('content')
 <div class="card shadow mb-4">
-    <div class="card-header py-3 bg-white">
+    <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">
-            <i class="fas fa-plus-circle mr-2"></i> Tambah Data Peralatan & Mesin (KIB B) - {{ ucfirst($lokasi) }}
+            <i class="fas fa-plus-circle mr-2"></i> Tambah Data KIB B (Peralatan & Mesin) - {{ ucfirst($lokasi) }}
         </h6>
+        <a href="{{ route('lokasi.peralatan.index', ['lokasi' => $lokasi]) }}" class="btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Kembali
+        </a>
     </div>
     <div class="card-body">
         <form action="{{ route('lokasi.peralatan.store', ['lokasi' => $lokasi]) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            {{-- 1. IDENTITAS UTAMA BARANG --}}
-            <h6 class="font-weight-bold text-secondary mb-3 border-bottom pb-2">1. Identitas Utama Barang</h6>
+            {{-- 1. INFORMASI UTAMA BARANG --}}
+            <h6 class="font-weight-bold text-primary mb-3 border-bottom pb-2">
+                <i class="fas fa-barcode mr-1"></i> Informasi Utama Barang
+            </h6>
+            
             <div class="row">
-                <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                    {{-- 🌟 Tambahkan id="kode_barang" di sini --}}
-                    <input type="text" id="kode_barang" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" placeholder="Contoh: HM-1234" required>
-                    @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <!-- Tampilan Kode Barang (Alert Box Persis KIB A) -->
+                <div class="col-md-3 form-group">
+                    <label class="font-weight-bold">Kode Barang</label>
+                    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-0 p-2" style="background-color: #e0f2fe; color: #0369a1; border-radius: 8px; min-height: 48px;">
+                        <small><i class="fas fa-info-circle mr-1"></i> Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.</small>
+                    </div>
                 </div>
-                <div class="col-md-4 form-group">
+
+                <div class="col-md-3 form-group">
                     <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                    {{-- 🌟 Tambahkan id="nama_barang" di sini --}}
-                    <input type="text" id="nama_barang" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" required>
+                    <input type="text" id="nama_barang" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" placeholder="Contoh: Laptop / Mesin Tik" required>
+                    @error('nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Lokasi Fisik <span class="text-danger">*</span></label>
-                    <input type="text" name="Lok" class="form-control" value="{{ old('Lok') }}" placeholder="Gedung / Lantai" required>
+
+                <div class="col-md-3 form-group">
+                    <label class="font-weight-bold">No. Register</label>
+                    <input type="text" name="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" placeholder="0001">
+                    @error('nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label class="font-weight-bold">NIBAR</label>
-                    <input type="text" name="nibr" class="form-control" value="{{ old('nibr') }}">
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="font-weight-bold">Nomor Register</label>
-                    <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register') }}">
+
+                <div class="col-md-3 form-group">
+                    <label class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
+                    <input type="text" name="nibr" class="form-control @error('nibr') is-invalid @enderror" value="{{ old('nibr') }}" placeholder="Nibar">
+                    @error('nibr') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
 
-            {{-- 2. SPESIFIKASI & LEGALITAS KENDARAAN --}}
-            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">2. Spesifikasi & Kendaraan (Opsional)</h6>
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold">Spesifikasi Barang (Deskripsi)</label>
+                    <textarea name="spesifikasi_barang" class="form-control @error('spesifikasi_barang') is-invalid @enderror" rows="2" placeholder="Misal: Laptop Core i5 RAM 8GB">{{ old('spesifikasi_barang') }}</textarea>
+                    @error('spesifikasi_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold">Spesifikasi Lainnya</label>
+                    <textarea name="spesifikasi_lainnya" class="form-control @error('spesifikasi_lainnya') is-invalid @enderror" rows="2" placeholder="Informasi tambahan spesifikasi">{{ old('spesifikasi_lainnya') }}</textarea>
+                    @error('spesifikasi_lainnya') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+            </div>
+
+            {{-- 2. SPESIFIKASI KENDARAAN (OPSIONAL) --}}
+            <h6 class="font-weight-bold text-secondary mt-3 mb-3 border-bottom pb-2">2. Legalitas & Kendaraan (Opsional)</h6>
             <div class="row">
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Merk / Tipe</label>
-                    <input type="text" name="merk_tipe" class="form-control" value="{{ old('merk_tipe') }}">
+                    <input type="text" name="merk_tipe" class="form-control @error('merk_tipe') is-invalid @enderror" value="{{ old('merk_tipe') }}" placeholder="Contoh: Honda / Civic">
+                    @error('merk_tipe') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Nomor Rangka</label>
-                    <input type="text" name="nomor_rangka" class="form-control" value="{{ old('nomor_rangka') }}">
+                    <input type="text" name="nomor_rangka" class="form-control @error('nomor_rangka') is-invalid @enderror" value="{{ old('nomor_rangka') }}">
+                    @error('nomor_rangka') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor Polisi</label>
-                    <input type="text" name="nomor_polisi" class="form-control text-uppercase" value="{{ old('nomor_polisi') }}" placeholder="Contoh: Z 1234 XY">
+                    <input type="text" name="nomor_polisi" class="form-control text-uppercase @error('nomor_polisi') is-invalid @enderror" value="{{ old('nomor_polisi') }}" placeholder="B 1234 ABC">
+                    @error('nomor_polisi') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Nomor BPKB</label>
-                    <input type="text" name="nomor_bpkb" class="form-control" value="{{ old('nomor_bpkb') }}">
+                    <input type="text" name="nomor_bpkb" class="form-control @error('nomor_bpkb') is-invalid @enderror" value="{{ old('nomor_bpkb') }}">
+                    @error('nomor_bpkb') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Tanggal STNK (5 Tahunan)</label>
-                    <input type="date" name="tanggal_stnk" class="form-control" value="{{ old('tanggal_stnk') }}">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label class="font-weight-bold">Spesifikasi Barang</label>
-                    <textarea name="spesifikasi_barang" class="form-control" rows="2">{{ old('spesifikasi_barang') }}</textarea>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="font-weight-bold">Spesifikasi Lainnya</label>
-                    <textarea name="spesifikasi_lainnya" class="form-control" rows="2">{{ old('spesifikasi_lainnya') }}</textarea>
+                    <input type="date" name="tanggal_stnk" class="form-control @error('tanggal_stnk') is-invalid @enderror" value="{{ old('tanggal_stnk') }}">
+                    @error('tanggal_stnk') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
 
-            {{-- 3. PEROLEHAN & FINANSIAL --}}
-            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">3. Perolehan & Finansial</h6>
+            {{-- 3. PEROLEHAN, LOKASI & FINANSIAL --}}
+            <h6 class="font-weight-bold text-secondary mt-3 mb-3 border-bottom pb-2">3. Perolehan & Lokasi Fisik</h6>
             <div class="row">
                 <div class="col-md-4 form-group">
+                    <label class="font-weight-bold">Lokasi Fisik Barang <span class="text-danger">*</span></label>
+                    <input type="text" name="Lok" class="form-control @error('Lok') is-invalid @enderror" value="{{ old('Lok') }}" placeholder="Ruang Rapat / Gudang Lt.2" required>
+                    @error('Lok') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Cara Perolehan <span class="text-danger">*</span></label>
-                    <select name="cara_perolehan" class="form-control" required>
+                    <select name="cara_perolehan" class="form-control @error('cara_perolehan') is-invalid @enderror" required>
                         <option value="Pembelian" {{ old('cara_perolehan') == 'Pembelian' ? 'selected' : '' }}>Pembelian</option>
                         <option value="Hibah" {{ old('cara_perolehan') == 'Hibah' ? 'selected' : '' }}>Hibah</option>
                         <option value="Sumbangan" {{ old('cara_perolehan') == 'Sumbangan' ? 'selected' : '' }}>Sumbangan</option>
                         <option value="Lainnya" {{ old('cara_perolehan') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                     </select>
+                    @error('cara_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold">Tanggal Perolehan <span class="text-danger">*</span></label>
-                    <input type="date" name="tanggal_perolehan" class="form-control" value="{{ old('tanggal_perolehan') }}" required>
-                </div>
-                <div class="col-md-4 form-group">
-                    <label class="font-weight-bold">Tenggat Pajak Tahunan</label>
-                    <input type="date" name="tanggal_pajak" class="form-control" value="{{ old('tanggal_pajak') }}">
+                    <input type="date" name="tanggal_perolehan" class="form-control @error('tanggal_perolehan') is-invalid @enderror" value="{{ old('tanggal_perolehan', date('Y-m-d')) }}" required>
+                    @error('tanggal_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Jumlah <span class="text-danger">*</span></label>
-                    <input type="number" id="jumlah" name="jumlah" class="form-control" value="{{ old('jumlah', 1) }}" min="1" required oninput="hitungNilaiPerolehan()">
+                    <label class="font-weight-bold">Jumlah (Kuantitas) <span class="text-danger">*</span></label>
+                    <input type="number" id="jumlah" name="jumlah" class="form-control @error('jumlah') is-invalid @enderror" value="{{ old('jumlah', 1) }}" min="1" required>
+                    @error('jumlah') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 form-group">
                     <label class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
-                    <input type="text" name="satuan" class="form-control" value="{{ old('satuan', 'Unit') }}" required>
+                    <input type="text" name="satuan" class="form-control @error('satuan') is-invalid @enderror" value="{{ old('satuan', 'Unit') }}" required>
+                    @error('satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 form-group">
                     <label class="font-weight-bold">Harga Satuan <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
-                        <input type="text" id="harga_satuan" name="harga_satuan" class="form-control format-rupiah" value="{{ old('harga_satuan') }}" required oninput="hitungNilaiPerolehan()">
+                        <input type="text" id="harga_satuan" name="harga_satuan" class="form-control @error('harga_satuan') is-invalid @enderror" value="{{ old('harga_satuan') }}" placeholder="0" required>
                     </div>
+                    @error('harga_satuan') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 form-group">
                     <label class="font-weight-bold">Nilai Perolehan Total <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
-                        <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control bg-light font-weight-bold" value="{{ old('nilai_perolehan') }}" readonly required>
+                        <input type="text" id="nilai_perolehan" name="nilai_perolehan" class="form-control bg-light font-weight-bold @error('nilai_perolehan') is-invalid @enderror" value="{{ old('nilai_perolehan') }}" readonly required>
                     </div>
+                    @error('nilai_perolehan') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
             </div>
 
-            {{-- 4. STATUS, KONDISI & FOTO --}}
-            <h6 class="font-weight-bold text-secondary mt-4 mb-3 border-bottom pb-2">4. Status, Kondisi & Foto</h6>
+            {{-- 4. STATUS & KONDISI --}}
+            <h6 class="font-weight-bold text-secondary mt-3 mb-3 border-bottom pb-2">4. Status, Kondisi & File</h6>
             <div class="row">
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
-                    <select name="status_penggunaan" class="form-control" required>
-                        <option value="Aktif" {{ old('status_penggunaan') == 'Aktif' ? 'selected' : '' }}>Aktif (Digunakan)</option>
+                    <select name="status_penggunaan" class="form-control @error('status_penggunaan') is-invalid @enderror" required>
+                        <option value="Digunakan Sendiri" {{ old('status_penggunaan') == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
+                        <option value="Aktif" {{ old('status_penggunaan') == 'Aktif' ? 'selected' : '' }}>Aktif (Operasional)</option>
                         <option value="Tersedia" {{ old('status_penggunaan') == 'Tersedia' ? 'selected' : '' }}>Tersedia (Gudang/Idle)</option>
                     </select>
+                    @error('status_penggunaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Kondisi Fisik <span class="text-danger">*</span></label>
-                    <select name="kondisi" class="form-control" required>
-                        <option value="Baik" {{ old('kondisi') == 'Baik' ? 'selected' : '' }}>Baik</option>
+                    <select name="kondisi" class="form-control @error('kondisi') is-invalid @enderror" required>
+                        <option value="Baik" {{ old('kondisi', 'Baik') == 'Baik' ? 'selected' : '' }}>Baik</option>
                         <option value="Rusak Ringan" {{ old('kondisi') == 'Rusak Ringan' ? 'selected' : '' }}>Rusak Ringan</option>
                         <option value="Rusak Berat" {{ old('kondisi') == 'Rusak Berat' ? 'selected' : '' }}>Rusak Berat</option>
                     </select>
+                    @error('kondisi') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
             
             <div class="form-group">
                 <label class="font-weight-bold">Foto Barang (Opsional)</label>
                 <input type="file" name="foto" class="form-control-file @error('foto') is-invalid @enderror" accept="image/*">
-                <small class="text-muted">Format yang diizinkan: JPG, JPEG, PNG. Ukuran maksimal: 2MB.</small>
+                <small class="text-muted">Format: JPG, JPEG, PNG. Maksimal: 2MB.</small>
                 @error('foto') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">
-                <label class="font-weight-bold">Keterangan / Catatan Lainnya</label>
-                <textarea name="keterangan" class="form-control" rows="2">{{ old('keterangan') }}</textarea>
+                <label class="font-weight-bold">Keterangan / Catatan</label>
+                <textarea name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" rows="2">{{ old('keterangan') }}</textarea>
+                @error('keterangan') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
             <hr>
@@ -166,49 +192,29 @@
 </div>
 
 <script>
-    // 🌟 SCRIPT AUTO-GENERATE KODE BARANG
     document.addEventListener('DOMContentLoaded', function() {
-        const inputNamaBarang = document.getElementById('nama_barang');
-        const inputKodeBarang = document.getElementById('kode_barang');
+        const inputJumlah      = document.getElementById('jumlah');
+        const inputHargaSatuan = document.getElementById('harga_satuan');
 
-        inputNamaBarang.addEventListener('input', function() {
-            let nama = this.value.trim();
-            
-            if (nama) {
-                // 1. Ambil inisial huruf depan dari setiap kata (Contoh: "Honda Mobilio" -> "HM")
-                let inisial = nama.split(/\s+/)
-                                  .map(word => word.charAt(0))
-                                  .join('')
-                                  .toUpperCase()
-                                  .substring(0, 3); // Maksimal 3 huruf agar rapi
-                
-                // 2. Buat angka acak 4 digit agar pasti unik di database
-                let randomNum = Math.floor(1000 + Math.random() * 9000);
-                
-                // 3. Gabungkan dan masukkan. (Hanya jika kode barang kosong atau memang hasil generate sebelumnya)
-                if (!inputKodeBarang.value || inputKodeBarang.dataset.auto === "true") {
-                    inputKodeBarang.value = inisial + '-' + randomNum;
-                    inputKodeBarang.dataset.auto = "true"; // Penanda ini adalah hasil generate otomatis
-                }
-            } else {
-                // Bersihkan field kode jika nama barang dihapus sampai habis
-                if (inputKodeBarang.dataset.auto === "true") {
-                    inputKodeBarang.value = '';
-                }
-            }
-        });
-    });
-
-    // Script format rupiah & perhitungan total tetap aman di bawah ini
-    const formatRupiahElements = document.querySelectorAll('.format-rupiah');
-    formatRupiahElements.forEach(function(element) {
-        element.addEventListener('keyup', function(e) {
+        // Event Listener Format Rupiah
+        inputHargaSatuan.addEventListener('input', function() {
             this.value = formatRupiah(this.value);
+            hitungNilaiPerolehan();
         });
+
+        inputJumlah.addEventListener('input', function() {
+            hitungNilaiPerolehan();
+        });
+
+        if (inputHargaSatuan.value) {
+            inputHargaSatuan.value = formatRupiah(inputHargaSatuan.value);
+        }
+        hitungNilaiPerolehan();
     });
 
     function formatRupiah(angka) {
-        let number_string = angka.replace(/[^,\d]/g, '').toString(),
+        if (!angka) return '';
+        let number_string = angka.toString().replace(/[^,\d]/g, ''),
             split         = number_string.split(','),
             sisa          = split[0].length % 3,
             rupiah        = split[0].substr(0, sisa),
@@ -218,7 +224,7 @@
             let separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
         }
-        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
     }
 
     function hitungNilaiPerolehan() {

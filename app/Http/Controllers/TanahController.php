@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class TanahController extends Controller
 {
@@ -63,13 +64,14 @@ class TanahController extends Controller
     }
 
     /**
-     * Simpan Data Tanah
+     * Simpan Data Tanah dengan Kode Barang Otomatis (Berbasis Partikel)
      */
     public function store(Request $request, $lokasi)
     {
         $this->cleanCurrencyInputs($request);
 
-        $validator = Validator::make($request->all(), $this->validationRules());
+        // Validasi tanpa mewajibkan tanah_kode_barang (parameter kedua true = isStore)
+        $validator = Validator::make($request->all(), $this->validationRules(null, true));
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -78,23 +80,53 @@ class TanahController extends Controller
         try {
             DB::beginTransaction();
 
-            // Gunakan validated() agar hanya data yang lolos validasi yang masuk ke DB
             $validatedData = $validator->validated();
             $validatedData['lokasi'] = $lokasi;
             
+            // =========================================================================
+            // LOGIKA KODE BARANG OTOMATIS PARTIKEL (KIB A)
+            // (Partikel: Lokasi Fisik + Nama Barang + Nomor Urut Sekuensial)
+            // =========================================================================
+            
+            // Partikel 1: Inisial Lokasi Fisik / Ruangan
+            $kodeLokasi = $this->generateCodeParticle($request->tanah_lokasi_fisik);
+
+            // Partikel 2: Inisial Nama Barang
+            $kodeNamaBarang = $this->generateCodeParticle($request->tanah_nama_barang);
+
+            // Prefix Gabungan (Contoh: KI-TL)
+            $prefix = "{$kodeLokasi}-{$kodeNamaBarang}";
+
+            // Partikel 3: Nomor Urut Sekuensial (4 digit)
+            $lastRecord = Tanah::where('lokasi', $lokasi)
+                ->where('tanah_kode_barang', 'LIKE', "{$prefix}-%")
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($lastRecord) {
+                // Ambil 4 angka terakhir dari tanah_kode_barang
+                $lastNum = (int) substr($lastRecord->tanah_kode_barang, -4);
+                $nextNum = str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $nextNum = '0001';
+            }
+
+            // Hasil Kode Barang Otomatis (Contoh: KI-TL-0001)
+            $validatedData['tanah_kode_barang'] = "{$prefix}-{$nextNum}";
+            // =========================================================================
+
             $tanah = Tanah::create($validatedData);
 
             $this->sendNotification('ditambahkan', $tanah->tanah_nama_barang);
 
             DB::commit();
             return redirect()->route('lokasi.tanah.index', ['lokasi' => $lokasi])
-                             ->with('success', 'Data Tanah berhasil ditambahkan.');
+                             ->with('success', 'Data Tanah berhasil ditambahkan dengan Kode Barang: ' . $validatedData['tanah_kode_barang']);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error Store Tanah: " . $e->getMessage());
             
-            // Mengembalikan error ke halaman sebelumnya, bukan halaman 500
             return redirect()->back()->withInput()
                              ->with('error', 'Gagal menyimpan data. Cek kembali isian Anda. (Error: ' . $e->getMessage() . ')');
         }
@@ -169,8 +201,35 @@ class TanahController extends Controller
     }
 
     // ==========================================
-    // HELPER METHODS (Untuk mencegah kode berulang)
+    // HELPER METHODS
     // ==========================================
+
+    /**
+     * Helper Function: Membuat Singkatan/Partikel Kode dari Teks Input
+     * Contoh: "Kawasan Industri Selatan" -> "KIS"
+     * Contoh: "Tanah" -> "TAN"
+     */
+    private function generateCodeParticle($text)
+    {
+        $cleanText = trim(preg_replace('/[^A-Za-z0-9\s]/', '', $text));
+        $words = explode(' ', $cleanText);
+
+        $code = '';
+
+        if (count($words) > 1) {
+            // Jika lebih dari 1 kata, ambil huruf pertama setiap kata
+            foreach ($words as $w) {
+                if (!empty($w)) {
+                    $code .= strtoupper(substr($w, 0, 1));
+                }
+            }
+        } else {
+            // Jika hanya 1 kata, ambil 3 huruf pertama
+            $code = strtoupper(substr($cleanText, 0, 3));
+        }
+
+        return $code ?: 'TNH';
+    }
 
     /**
      * Membersihkan format Rupiah & Ribuan
@@ -193,38 +252,39 @@ class TanahController extends Controller
     /**
      * Aturan validasi (dinamis untuk store & update)
      */
-    private function validationRules($ignoreKodeBarang = null)
+    private function validationRules($ignoreKodeBarang = null, $isStore = false)
     {
-        // Disinkronkan dengan ->string('tanah_kode_barang', 30) pada migration
-        $kodeBarangRule = $ignoreKodeBarang 
-            ? "required|string|max:30|unique:tanahs,tanah_kode_barang,{$ignoreKodeBarang},tanah_kode_barang"
-            : 'required|string|max:30|unique:tanahs,tanah_kode_barang';
-
-        return [
-            'tanah_kode_barang'              => $kodeBarangRule,
-            'tanah_nama_barang'              => 'required|string|max:100', // Sesuai migration string max 100
-            'tanah_nibar'                    => 'nullable|string|max:30',  // Sesuai migration string max 30
-            'tanah_nomor_register'           => 'nullable|string|max:20',  // Sesuai migration string max 20
-            'tanah_spesifikasi_barang'       => 'nullable|string|max:255', // Sesuai migration string max 255
-            'tanah_spesifikasi_lainnya'      => 'nullable|string|max:255', // Sesuai migration string max 255
+        $rules = [
+            'tanah_nama_barang'              => 'required|string|max:100',
+            'tanah_nibar'                    => 'nullable|string|max:30',
+            'tanah_nomor_register'           => 'nullable|string|max:20',
+            'tanah_spesifikasi_barang'       => 'nullable|string|max:255',
+            'tanah_spesifikasi_lainnya'      => 'nullable|string|max:255',
             'tanah_jumlah'                   => 'required|numeric', 
-            'tanah_satuan'                   => 'required|string|max:20',  // Sesuai migration string max 20
-            'tanah_lokasi_fisik'             => 'required|string|max:255', // Sesuai migration string max 255
-            'tanah_titik_koordinat'          => 'nullable|string|max:50',  // Sesuai migration string max 50
-            'tanah_bukti_nama'               => 'nullable|string|max:50',  // Sesuai migration string max 50
-            'tanah_bukti_nomor'              => 'nullable|string|max:50',  // Sesuai migration string max 50
+            'tanah_satuan'                   => 'required|string|max:20',
+            'tanah_lokasi_fisik'             => 'required|string|max:255',
+            'tanah_titik_koordinat'          => 'nullable|string|max:50',
+            'tanah_bukti_nama'               => 'nullable|string|max:50',
+            'tanah_bukti_nomor'              => 'nullable|string|max:50',
             'tanah_bukti_tanggal'            => 'nullable|date',
-            'tanah_nama_kepemilikan_dokumen' => 'nullable|string|max:100', // Sesuai migration string max 100
+            'tanah_nama_kepemilikan_dokumen' => 'nullable|string|max:100',
             'tanah_nilai_perolehan'          => 'required|numeric|min:0',
             'tanah_harga_satuan'             => 'nullable|numeric|min:0',
-            'tanah_cara_perolehan'           => 'required|string|max:50',  // Sesuai migration string max 50
+            'tanah_cara_perolehan'           => 'required|string|max:50',
             'tanah_tanggal_perolehan'        => 'required|date',
-            
-            // Wajib menggunakan opsi enum yang ada di database agar tidak memicu error data truncated
             'tanah_status_penggunaan'        => 'required|in:Digunakan Sendiri,Dipinjamkan,Disewakan,Tidak Digunakan',
-            
             'tanah_keterangan'               => 'nullable|string',
         ];
+
+        // Jika bukan saat store (misal update), maka kode barang tetap divalidasi
+        if (!$isStore) {
+            $kodeBarangRule = $ignoreKodeBarang 
+                ? "required|string|max:30|unique:tanahs,tanah_kode_barang,{$ignoreKodeBarang},tanah_kode_barang"
+                : 'required|string|max:30|unique:tanahs,tanah_kode_barang';
+            $rules['tanah_kode_barang'] = $kodeBarangRule;
+        }
+
+        return $rules;
     }
 
     /**

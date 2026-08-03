@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Tambah Data Gedung & Bangunan</h1>
+        <h1 class="h3 mb-0 text-gray-800">Tambah Data KIB C (Gedung & Bangunan) - {{ ucfirst($lokasi) }}</h1>
         <a href="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
             <i class="fas fa-arrow-left fa-sm text-white-50"></i> Kembali
         </a>
@@ -11,7 +11,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Form Input KIB C - {{ ucfirst($lokasi) }}</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Form Input Data Gedung & Bangunan</h6>
         </div>
         <div class="card-body">
             <form action="{{ route('lokasi.gedung.store', ['lokasi' => $lokasi]) }}" method="POST">
@@ -19,19 +19,22 @@
 
                 <div class="row">
                     <div class="col-md-6 border-right">
-                        <h5 class="font-weight-bold text-dark mb-3">Informasi Utama</h5>
+                        <h5 class="font-weight-bold text-dark mb-3">Informasi Utama Barang</h5>
                         
+                        <!-- Box Notifikasi Kode Barang Otomatis -->
                         <div class="form-group">
-                            <label for="kode_barang" class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                            <input type="text" name="kode_barang" id="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" value="{{ old('kode_barang') }}" maxlength="30" required>
-                            @error('kode_barang')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="font-weight-bold">Kode Barang</label>
+                            <div class="p-3 rounded d-flex align-items-center" style="background-color: #e0f2f1; color: #004d40; border: 1px solid #b2dfdb; border-radius: 8px;">
+                                <i class="fas fa-info-circle text-info mr-2 fa-lg"></i>
+                                <span style="font-size: 0.9rem;">
+                                    Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.
+                                </span>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="nama_barang" class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                            <input type="text" name="nama_barang" id="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" maxlength="100" required>
+                            <input type="text" name="nama_barang" id="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" maxlength="100" placeholder="Contoh: Gedung Kantor Utama" required>
                             @error('nama_barang')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -40,8 +43,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="nbar" class="font-weight-bold">NBAR</label>
-                                    <input type="text" name="nbar" id="nbar" class="form-control @error('nbar') is-invalid @enderror" value="{{ old('nbar') }}" maxlength="30">
+                                    <label for="nbar" class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
+                                    <input type="text" name="nbar" id="nbar" class="form-control @error('nbar') is-invalid @enderror" value="{{ old('nbar') }}" placeholder="Nibar" maxlength="30">
                                     @error('nbar')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -49,8 +52,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="nomor_register" class="font-weight-bold">Nomor Register <span class="text-danger">*</span></label>
-                                    <input type="text" name="nomor_register" id="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" maxlength="20" required>
+                                    <label for="nomor_register" class="font-weight-bold">No. Register <span class="text-danger">*</span></label>
+                                    <input type="text" name="nomor_register" id="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" placeholder="0001" maxlength="20" required>
                                     @error('nomor_register')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -59,8 +62,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="spesifikasi_barang" class="font-weight-bold">Spesifikasi Barang</label>
-                            <input type="text" name="spesifikasi_barang" id="spesifikasi_barang" class="form-control @error('spesifikasi_barang') is-invalid @enderror" value="{{ old('spesifikasi_barang') }}" maxlength="255">
+                            <label for="spesifikasi_barang" class="font-weight-bold">Spesifikasi Barang (Luas/Deskripsi)</label>
+                            <input type="text" name="spesifikasi_barang" id="spesifikasi_barang" class="form-control @error('spesifikasi_barang') is-invalid @enderror" value="{{ old('spesifikasi_barang') }}" placeholder="Misal: Bertingkat Dua, Konstruksi Beton" maxlength="255">
                             @error('spesifikasi_barang')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -68,7 +71,7 @@
 
                         <div class="form-group">
                             <label for="spesifikasi_lainnya" class="font-weight-bold">Spesifikasi Lainnya</label>
-                            <input type="text" name="spesifikasi_lainnya" id="spesifikasi_lainnya" class="form-control @error('spesifikasi_lainnya') is-invalid @enderror" value="{{ old('spesifikasi_lainnya') }}" maxlength="255">
+                            <input type="text" name="spesifikasi_lainnya" id="spesifikasi_lainnya" class="form-control @error('spesifikasi_lainnya') is-invalid @enderror" value="{{ old('spesifikasi_lainnya') }}" placeholder="Informasi tambahan spesifikasi" maxlength="255">
                             @error('spesifikasi_lainnya')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -86,7 +89,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="status_penggunaan" class="font-weight-bold">Status Penggunaan</label>
+                                    <label for="status_penggunaan" class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
                                     <select name="status_penggunaan" id="status_penggunaan" class="form-control @error('status_penggunaan') is-invalid @enderror">
                                         <option value="Digunakan Sendiri" {{ old('status_penggunaan') == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
                                         <option value="Dipinjamkan" {{ old('status_penggunaan') == 'Dipinjamkan' ? 'selected' : '' }}>Dipinjamkan</option>
@@ -218,11 +221,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Masking angka rupiah/ribuan (Titik otomatis)
         const currencyInputs = document.querySelectorAll('.currency-format');
         
         currencyInputs.forEach(input => {
-            // Jalankan format saat pertama kali dimuat jika ada old value
             if(input.value) {
                 input.value = formatRupiah(input.value);
             }
