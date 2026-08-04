@@ -27,7 +27,7 @@ class RuanganController extends Controller
                 });
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         // Digunakan untuk dropdown filter atau opsi cetak
         $allRooms = Ruangan::where('lokasi', $lokasi)

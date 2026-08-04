@@ -4,18 +4,57 @@
     <meta charset="UTF-8">
     <title>KIB D - {{ strtoupper($lokasi) }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        @page { size: landscape; margin: 10mm; }
         body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
-        .table-bordered th, .table-bordered td { border: 1px solid #000 !important; vertical-align: middle; padding: 4px; }
+        
+        .table-bordered th, .table-bordered td { 
+            border: 1px solid #000 !important; 
+            vertical-align: middle; 
+            padding: 4px; 
+        }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .header-info td { border: none !important; padding: 0; font-weight: bold; font-size: 9pt; }
+        
+        /* PENGATURAN KHUSUS UNTUK PDF / PRINT */
+        @page { size: A4 landscape; margin: 10mm; }
+        table { page-break-inside: auto; width: 100%; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; background-color: #f2f2f2 !important; }
+        tfoot { display: table-footer-group; }
+        
+        .signature-table { margin-top: 30px; width: 100%; page-break-inside: avoid; border-collapse: collapse; border: none; }
+        .signature-table td { border: none !important; padding: 0; font-size: 9pt; }
+        
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body onload="window.print()">
     <div class="container-fluid">
-        <h6 class="text-center font-weight-bold mb-4">JALAN, IRIGASI DAN JARINGAN (KIB D) - {{ strtoupper($lokasi) }}</h6>
+        {{-- HEADER KIB D --}}
+        <h6 class="text-center font-weight-bold mb-0">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
+        <h6 class="text-center font-weight-bold mb-4">JALAN, IRIGASI DAN JARINGAN (KIB D)</h6>
         
+        <table class="header-info mb-3" style="width: 40%;">
+            <tr>
+                <td width="150">LOKASI</td>
+                <td>: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
+            </tr>
+            <tr>
+                <td>KABUPATEN/KOTA</td>
+                <td>: TASIKMALAYA</td>
+            </tr>
+            <tr>
+                <td>TAHUN ANGGARAN</td>
+                <td>: {{ date('Y') }}</td>
+            </tr>
+        </table>
+        
+        {{-- TABEL DATA KIB D --}}
         <table class="table table-bordered">
             <thead class="text-center bg-light">
                 <tr>
@@ -35,32 +74,82 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($dataJalan as $index => $item)
-                <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $item->kode_barang }}</td>
-                    <td>{{ $item->nama_barang }}</td>
-                    <td>{{ $item->nomor_register }}</td>
-                    <td>{{ $item->nomor_ruas_jalan_jembatan_irigasi }}</td>
-                    <td class="text-center">{{ number_format($item->jumlah, 0, ',', '.') }}</td>
-                    <td>{{ $item->satuan }}</td>
-                    <td>{{ $item->Lok }}</td>
-                    <td>{{ $item->status_kepemilikan_tanah }}</td>
-                    <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
-                    <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                    <td class="text-right font-weight-bold">{{ number_format($item->nilai_perolehan, 0, ',', '.') }}</td>
-                    <td>{{ $item->keterangan }}</td>
-                </tr>
-                @endforeach
+                @php $totalHarga = 0; @endphp
+                @forelse ($dataJalan as $index => $item)
+                    @php
+                        // Kalkulasi manual aman dari error DB
+                        $hargaSatuan = $item->harga_satuan ?? $item->jalan_harga_satuan ?? 0;
+                        $hargaTotal = $item->nilai_perolehan ?? $item->bmd_nilai_perolehan ?? $item->jalan_harga ?? 0;
+                        $totalHarga += $hargaTotal;
+                        
+                        // Parse tanggal aman
+                        $tglPerolehan = $item->tanggal_perolehan ?? $item->bmd_tanggal_perolehan ?? $item->bmd_tahun ?? null;
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td class="text-center">{{ $item->kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
+                        <td>{{ $item->nama_barang ?? $item->jalan_nama_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
+                        
+                        <td class="text-center">{{ $item->nomor_ruas_jalan_jembatan_irigasi ?? $item->jalan_no_ruas ?? '-' }}</td>
+                        <td class="text-center font-weight-bold">{{ number_format($item->jumlah ?? $item->jalan_panjang ?? $item->bmd_jumlah ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ $item->satuan ?? $item->bmd_satuan ?? '-' }}</td>
+                        <td>{{ $item->Lok ?? $item->lokasi ?? $item->jalan_alamat ?? '-' }}</td>
+                        
+                        <td class="text-center">{{ $item->status_kepemilikan_tanah ?? $item->jalan_status_tanah ?? '-' }}</td>
+                        <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
+                        
+                        <td class="text-right">{{ number_format($hargaSatuan, 0, ',', '.') }}</td>
+                        <td class="text-right font-weight-bold">{{ number_format($hargaTotal, 0, ',', '.') }}</td>
+                        <td>{{ $item->keterangan ?? $item->bmd_keterangan ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="13" class="text-center py-4 font-italic text-muted">
+                            Belum ada data inventaris KIB D (Jalan, Irigasi & Jaringan) pada lokasi ini.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
-            <tfoot class="font-weight-bold">
+            <tfoot class="font-weight-bold bg-light">
                 <tr>
-                    <td colspan="11" class="text-right">TOTAL NILAI ASET</td>
-                    <td class="text-right">{{ number_format($dataJalan->sum('nilai_perolehan'), 0, ',', '.') }}</td>
+                    <td colspan="11" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB D)</td>
+                    <td class="text-right text-primary">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
+
+        {{-- AREA TANDA TANGAN --}}
+        <table class="signature-table">
+            <tr>
+                <td style="width: 35%; text-align: center; vertical-align: top;">
+                    <p class="mb-0">Mengetahui,</p>
+                    <p>Kepala {{ $lokasi == 'tawang' ? 'Kecamatan Tawang' : 'Kelurahan ' . ucfirst($lokasi) }}</p>
+                    <br><br><br><br>
+                    <p class="font-weight-bold mb-0"><u>............................................</u></p>
+                    <p>NIP. ............................................</p>
+                </td>
+                <td style="width: 30%;"></td>
+                <td style="width: 35%; text-align: center; vertical-align: top;">
+                    <p class="mb-0">Tasikmalaya, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</p>
+                    <p>Kuasa Pengguna Barang,</p>
+                    <br><br><br><br>
+                    <p class="font-weight-bold mb-0"><u>............................................</u></p>
+                    <p>NIP. ............................................</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- TOMBOL AKSI CETAK --}}
+    <div class="text-center mt-4 mb-4 no-print">
+        <button onclick="window.print()" class="btn btn-primary font-weight-bold shadow-sm mr-2">
+            <i class="fas fa-print mr-1"></i> Cetak Dokumen KIB D
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary shadow-sm">
+            Tutup
+        </button>
     </div>
 </body>
 </html>

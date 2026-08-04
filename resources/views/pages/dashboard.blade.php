@@ -6,7 +6,7 @@
     <div class="row align-items-center mb-4">
         <div class="col-md-6 mb-2 mb-md-0">
             <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-                <i class="fas fa-fw fa-tachometer-alt mr-2 text-primary"></i>Panel Kontrol Utama PANDAWA
+                <i class="fas fa-fw fa-tachometer-alt mr-2 text-primary"></i>Dashboard Utama PANDAWA
             </h1>
             <p class="text-muted small mb-0 mt-1">Sistem Pengelolaan dan Monitoring Barang Milik Daerah Terintegrasi</p>
         </div>
@@ -21,7 +21,7 @@
                         </span>
                     </div>
                     <select name="lokasi" class="form-control font-weight-bold text-dark border-primary" onchange="this.form.submit()">
-                        <option value="">-- Semua Wilayah / Kecamatan --</option>
+                        <option value="">-- Semua Wilayah --</option>
                         @foreach($allLokasi as $lok)
                             <option value="{{ $lok }}" {{ $selectedLokasi == $lok ? 'selected' : '' }}>
                                 {{ ucfirst($lok) }}

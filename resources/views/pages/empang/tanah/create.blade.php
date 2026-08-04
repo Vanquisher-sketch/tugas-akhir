@@ -1,141 +1,195 @@
 @extends('layouts.app')
 
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tambah Data KIB A (Tanah) - {{ ucfirst($lokasi) }}</h1>
+        <a href="{{ route('lokasi.tanah.index', ['lokasi' => $lokasi]) }}" class="btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Kembali
+        </a>
     </div>
-@endif
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Tambah Data Inventaris Tanah (KIB A) - {{ ucfirst($lokasi) }}</h6>
-    </div>
-    <div class="card-body">
-        <form action="{{ route('lokasi.tanah.store', ['lokasi' => $lokasi]) }}" method="POST">
-            @csrf
-            <div class="row">
-                {{-- Kolom Kiri --}}
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="nama_barang">Nama Barang <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('nama_barang') is-invalid @enderror" id="nama_barang" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Contoh: Tanah Kantor Kecamatan">
-                        @error('nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Form Input Data Tanah</h6>
+        </div>
+        <div class="card-body" style="color: #000;">
+            <form action="{{ route('lokasi.tanah.store', ['lokasi' => $lokasi]) }}" method="POST">
+                @csrf
+
+                <h5 class="font-weight-bold border-bottom pb-2 mb-3 text-primary"><i class="fas fa-barcode mr-2"></i>Informasi Utama Barang</h5>
+                <div class="row">
+                    <!-- TAMPILAN KODE BARANG OTOMATIS -->
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Kode Barang</label>
+                        <div class="alert alert-info d-flex align-items-center m-0 py-2" role="alert">
+                            <i class="fas fa-info-circle mr-2 fs-5"></i>
+                            <div>
+                                Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="kode_barang">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang" name="kode_barang" value="{{ old('kode_barang') }}" required placeholder="Ketik manual atau otomatis dari nama">
-                        @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_nama_barang" class="form-control @error('tanah_nama_barang') is-invalid @enderror" value="{{ old('tanah_nama_barang') }}" maxlength="100" placeholder="Contoh: Tanah Bangunan Kantor" required>
+                        @error('tanah_nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="form-group">
-                        <label for="nibar">NIBAR</label>
-                        <input type="text" class="form-control" id="nibar" name="nibar" value="{{ old('nibar') }}">
+                    <div class="form-group col-md-2">
+                        <label class="font-weight-bold">No. Register</label>
+                        <input type="text" name="tanah_nomor_register" class="form-control @error('tanah_nomor_register') is-invalid @enderror" value="{{ old('tanah_nomor_register') }}" maxlength="20" placeholder="0001">
+                        @error('tanah_nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="form-group">
-                        <label for="nomor_register">Nomor Register</label>
-                        <input type="text" class="form-control" id="nomor_register" name="nomor_register" value="{{ old('nomor_register') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="spesifikasi_barang">Luas (M2) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control money @error('jumlah') is-invalid @enderror" id="jumlah" name="jumlah" value="{{ old('jumlah') }}" required>
-                        @error('jumlah') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="form-group">
-                        <label for="satuan">Satuan</label>
-                        <input type="text" class="form-control" id="satuan" name="satuan" value="{{ old('satuan', 'M2') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="Lok">Lokasi / Alamat <span class="text-danger">*</span></label>
-                        <textarea class="form-control @error('Lok') is-invalid @enderror" id="Lok" name="Lok" rows="3" required>{{ old('Lok') }}</textarea>
+                    <div class="form-group col-md-2">
+                        <label class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
+                        <input type="text" name="tanah_nibar" class="form-control @error('tanah_nibar') is-invalid @enderror" value="{{ old('tanah_nibar') }}" maxlength="30" placeholder="Nibar">
+                        @error('tanah_nibar') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
-                {{-- Kolom Kanan --}}
-                <div class="col-md-6">
-                    <div class="form-group">
-    <label>Cara Perolehan <span class="text-danger">*</span></label>
-    <select name="cara_perolehan" class="form-control @error('cara_perolehan') is-invalid @enderror" required>
-        <option value="">-- Pilih Cara Perolehan --</option>
-        <option value="Pembelian" {{ old('cara_perolehan') == 'Pembelian' ? 'selected' : '' }}>Pembelian</option>
-        <option value="Hibah" {{ old('cara_perolehan') == 'Hibah' ? 'selected' : '' }}>Hibah</option>
-        <option value="Tukar Menukar" {{ old('cara_perolehan') == 'Tukar Menukar' ? 'selected' : '' }}>Tukar Menukar</option>
-        <option value="Lainnya" {{ old('cara_perolehan') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
-    </select>
-    @error('cara_perolehan')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
-                    <div class="form-group">
-                        <label for="nilai_perolehan">Nilai Perolehan (Rp) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control money @error('nilai_perolehan') is-invalid @enderror" id="nilai_perolehan" name="nilai_perolehan" value="{{ old('nilai_perolehan') }}" required>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">Spesifikasi Barang (Luas/Deskripsi)</label>
+                        <input type="text" name="tanah_spesifikasi_barang" class="form-control @error('tanah_spesifikasi_barang') is-invalid @enderror" value="{{ old('tanah_spesifikasi_barang') }}" maxlength="255" placeholder="Misal: Tanah Datar Siap Bangun">
+                        @error('tanah_spesifikasi_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="form-group">
-                        <label for="harga_satuan">Harga Satuan (Rp)</label>
-                        <input type="text" class="form-control money" id="harga_satuan" name="harga_satuan" value="{{ old('harga_satuan') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="bukti_nama">Jenis Bukti (Sertifikat/Girik)</label>
-                        <input type="text" class="form-control" name="bukti_nama" value="{{ old('bukti_nama') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="bukti_nomor">Nomor Bukti</label>
-                        <input type="text" class="form-control" name="bukti_nomor" value="{{ old('bukti_nomor') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="tanggal_perolehan">Tanggal Perolehan <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="tanggal_perolehan" value="{{ old('tanggal_perolehan') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="status_penggunaan">Status Penggunaan</label>
-                        <input type="text" class="form-control" name="status_penggunaan" value="{{ old('status_penggunaan', 'Aktif') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="keterangan">Keterangan</label>
-                        <textarea class="form-control" name="keterangan" rows="3">{{ old('keterangan') }}</textarea>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">Spesifikasi Lainnya</label>
+                        <input type="text" name="tanah_spesifikasi_lainnya" class="form-control @error('tanah_spesifikasi_lainnya') is-invalid @enderror" value="{{ old('tanah_spesifikasi_lainnya') }}" maxlength="255" placeholder="Informasi tambahan spesifikasi">
+                        @error('tanah_spesifikasi_lainnya') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
-            </div>
 
-            <hr>
-            <div class="text-right">
-                <a href="{{ route('lokasi.tanah.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
-            </div>
-        </form>
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Luas (Volume / Kuantitas) <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_jumlah" class="form-control mask-currency @error('tanah_jumlah') is-invalid @enderror" value="{{ old('tanah_jumlah') }}" placeholder="0" required>
+                        @error('tanah_jumlah') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_satuan" class="form-control @error('tanah_satuan') is-invalid @enderror" value="{{ old('tanah_satuan', 'M2') }}" maxlength="20" placeholder="Contoh: M2" required>
+                        @error('tanah_satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
+                        <select name="tanah_status_penggunaan" class="form-control @error('tanah_status_penggunaan') is-invalid @enderror" required>
+                            <option value="Digunakan Sendiri" {{ old('tanah_status_penggunaan') == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
+                            <option value="Dipinjamkan" {{ old('tanah_status_penggunaan') == 'Dipinjamkan' ? 'selected' : '' }}>Dipinjamkan</option>
+                            <option value="Disewakan" {{ old('tanah_status_penggunaan') == 'Disewakan' ? 'selected' : '' }}>Disewakan</option>
+                            <option value="Tidak Digunakan" {{ old('tanah_status_penggunaan') == 'Tidak Digunakan' ? 'selected' : '' }}>Tidak Digunakan</option>
+                        </select>
+                        @error('tanah_status_penggunaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <h5 class="font-weight-bold border-bottom pb-2 mb-3 mt-4 text-primary"><i class="fas fa-map-marked-alt mr-2"></i>Lokasi & Fisik</h5>
+                <div class="row">
+                    <div class="form-group col-md-8">
+                        <label class="font-weight-bold">Alamat Fisik / Lokasi Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_lokasi_fisik" class="form-control @error('tanah_lokasi_fisik') is-invalid @enderror" value="{{ old('tanah_lokasi_fisik') }}" maxlength="255" placeholder="Nama Jalan, RT/RW, Kecamatan, Kota" required>
+                        @error('tanah_lokasi_fisik') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Titik Koordinat</label>
+                        <input type="text" name="tanah_titik_koordinat" class="form-control @error('tanah_titik_koordinat') is-invalid @enderror" value="{{ old('tanah_titik_koordinat') }}" maxlength="50" placeholder="Contoh: -6.2088, 106.8456">
+                        @error('tanah_titik_koordinat') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <h5 class="font-weight-bold border-bottom pb-2 mb-3 mt-4 text-primary"><i class="fas fa-file-invoice mr-2"></i>Legalitas & Bukti Kepemilikan</h5>
+                <div class="row">
+                    <div class="form-group col-md-3">
+                        <label class="font-weight-bold">Jenis Dokumen Bukti</label>
+                        <input type="text" name="tanah_bukti_nama" class="form-control @error('tanah_bukti_nama') is-invalid @enderror" value="{{ old('tanah_bukti_nama') }}" maxlength="50" placeholder="Contoh: Sertifikat Hak Milik">
+                        @error('tanah_bukti_nama') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label class="font-weight-bold">Nomor Dokumen Bukti</label>
+                        <input type="text" name="tanah_bukti_nomor" class="form-control @error('tanah_bukti_nomor') is-invalid @enderror" value="{{ old('tanah_bukti_nomor') }}" maxlength="50" placeholder="Nomor Sertifikat/MOU/PKS">
+                        @error('tanah_bukti_nomor') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label class="font-weight-bold">Tanggal Dokumen</label>
+                        <input type="date" name="tanah_bukti_tanggal" class="form-control @error('tanah_bukti_tanggal') is-invalid @enderror" value="{{ old('tanah_bukti_tanggal') }}">
+                        @error('tanah_bukti_tanggal') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label class="font-weight-bold">Nama di Dokumen Kepemilikan</label>
+                        <input type="text" name="tanah_nama_kepemilikan_dokumen" class="form-control @error('tanah_nama_kepemilikan_dokumen') is-invalid @enderror" value="{{ old('tanah_nama_kepemilikan_dokumen') }}" maxlength="100" placeholder="Nama Pemilik Atas Hak">
+                        @error('tanah_nama_kepemilikan_dokumen') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <h5 class="font-weight-bold border-bottom pb-2 mb-3 mt-4 text-primary"><i class="fas fa-coins mr-2"></i>Nilai Aset & Perolehan</h5>
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Harga Satuan (Rp)</label>
+                        <input type="text" name="tanah_harga_satuan" class="form-control mask-currency @error('tanah_harga_satuan') is-invalid @enderror" value="{{ old('tanah_harga_satuan') }}" placeholder="0">
+                        @error('tanah_harga_satuan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Nilai Perolehan Total (Rp) <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_nilai_perolehan" class="form-control mask-currency @error('tanah_nilai_perolehan') is-invalid @enderror" value="{{ old('tanah_nilai_perolehan') }}" placeholder="0" required>
+                        @error('tanah_nilai_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Cara Perolehan <span class="text-danger">*</span></label>
+                        <input type="text" name="tanah_cara_perolehan" class="form-control @error('tanah_cara_perolehan') is-invalid @enderror" value="{{ old('tanah_cara_perolehan', 'Pembelian') }}" maxlength="50" placeholder="Contoh: Pembelian, Hibah, dll" required>
+                        @error('tanah_cara_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">Tanggal Perolehan Aset <span class="text-danger">*</span></label>
+                        <input type="date" name="tanah_tanggal_perolehan" class="form-control @error('tanah_tanggal_perolehan') is-invalid @enderror" value="{{ old('tanah_tanggal_perolehan') }}" required>
+                        @error('tanah_tanggal_perolehan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label class="font-weight-bold">Keterangan</label>
+                        <textarea name="tanah_keterangan" class="form-control @error('tanah_keterangan') is-invalid @enderror" rows="2" placeholder="Catatan tambahan mengenai kondisi tanah...">{{ old('tanah_keterangan') }}</textarea>
+                        @error('tanah_keterangan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <button type="reset" class="btn btn-secondary mr-2">Reset</button>
+                    <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-{{-- SCRIPT AUTO GENERATE & MASKING --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const namaInput = document.getElementById('nama_barang');
-        const kodeInput = document.getElementById('kode_barang');
-
-        // 1. Auto Generate Kode
-        namaInput.addEventListener('keyup', function() {
-            if (kodeInput.dataset.manual !== 'true') {
-                let val = this.value.trim();
-                if (val.length > 0) {
-                    let initials = val.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3);
-                    let random = Math.floor(100 + Math.random() * 900);
-                    kodeInput.value = `TNH-${initials}-${random}`;
-                }
-            }
-        });
-
-        kodeInput.addEventListener('input', function() {
-            this.dataset.manual = 'true';
-        });
-
-        // 2. Simple Money Formatter
-        document.querySelectorAll('.money').forEach(input => {
+        // Auto formatting titik ribuan saat diketik
+        document.querySelectorAll('.mask-currency').forEach(function(input) {
             input.addEventListener('input', function(e) {
-                let value = this.value.replace(/[^0-9]/g, '');
-                this.value = value ? parseInt(value).toLocaleString('id-ID') : '';
+                let value = e.target.value.replace(/\D/g, '');
+                if(value !== "") {
+                    e.target.value = new Intl.NumberFormat('id-ID').format(value);
+                } else {
+                    e.target.value = '';
+                }
             });
+            
+            // Format awal jika ada input dari old()
+            if(input.value) {
+                let cleanVal = input.value.replace(/\D/g, '');
+                if(cleanVal) input.value = new Intl.NumberFormat('id-ID').format(cleanVal);
+            }
         });
     });
 </script>

@@ -32,7 +32,7 @@ class InventarisController extends Controller
             });
         }
 
-        $dataInventaris = $query->orderBy('inv_kode_barang', 'desc')->paginate(10);
+        $dataInventaris = $query->orderBy('inv_kode_barang', 'desc')->paginate(5);
         $allRooms = Ruangan::where('lokasi', $lokasi)->orderBy('ruangan_nama')->get();
         $daftarSatuan = ['Unit', 'Buah', 'Set', 'Meter', 'Lembar', 'Paket', 'Dus', 'Pcs'];
 

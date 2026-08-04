@@ -3,20 +3,12 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Monitoring Pajak & Dokumen - {{ ucfirst($lokasi ?? 'Semua Lokasi') }}</h1>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Monitoring Pajak & Dokumen - Kecamatan {{ ucfirst($lokasi ?? 'Semua Lokasi') }}</h1>
     </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-column flex-md-row align-items-center justify-content-between border-bottom-primary">
-            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-2"></i>Sistem Patroli & Monitoring Pajak Otomatis (Poin 7)</h6>
-            
-            <div class="mt-2 mt-md-0">
-                @if(isset($lokasi))
-                <a href="{{ route('lokasi.pajak.print', $lokasi) }}" class="btn btn-danger btn-sm shadow-sm" target="_blank">
-                    <i class="fas fa-file-pdf fa-sm text-white-50 mr-1"></i> Cetak PDF Laporan
-                </a>
-                @endif
-            </div>
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-2"></i>Sistem Monitoring Pajak Otomatis</h6>
         </div>
 
         <div class="card-body">

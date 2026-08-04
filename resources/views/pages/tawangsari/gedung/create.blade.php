@@ -1,140 +1,253 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Tambah Data Gedung & Bangunan (KIB C) - {{ ucfirst($lokasi) }}</h6>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tambah Data KIB C (Gedung & Bangunan) - {{ ucfirst($lokasi) }}</h1>
+        <a href="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Kembali
+        </a>
     </div>
-    <div class="card-body">
-        <form action="{{ route('lokasi.gedung.store', ['lokasi' => $lokasi]) }}" method="POST">
-            @csrf
-            <div class="row">
-                {{-- Kolom Kiri --}}
-                <div class="col-md-6 border-right">
-                    <div class="form-group">
-                        <label for="nama_barang">Nama Gedung / Bangunan <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('nama_barang') is-invalid @enderror" id="nama_barang" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Contoh: Gedung Aula Kelurahan">
-                        @error('nama_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
 
-                    <div class="form-group">
-                        <label for="kode_barang">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang" name="kode_barang" value="{{ old('kode_barang') }}" required>
-                        @error('kode_barang') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Form Input Data Gedung & Bangunan</h6>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('lokasi.gedung.store', ['lokasi' => $lokasi]) }}" method="POST">
+                @csrf
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="nbar">NIBAR</label>
-                                <input type="text" class="form-control" name="nbar" value="{{ old('nbar') }}">
+                <div class="row">
+                    <div class="col-md-6 border-right">
+                        <h5 class="font-weight-bold text-dark mb-3">Informasi Utama Barang</h5>
+                        
+                        <!-- Box Notifikasi Kode Barang Otomatis -->
+                        <div class="form-group">
+                            <label class="font-weight-bold">Kode Barang</label>
+                            <div class="p-3 rounded d-flex align-items-center" style="background-color: #e0f2f1; color: #004d40; border: 1px solid #b2dfdb; border-radius: 8px;">
+                                <i class="fas fa-info-circle text-info mr-2 fa-lg"></i>
+                                <span style="font-size: 0.9rem;">
+                                    Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.
+                                </span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="nomor_register">Nomor Register</label>
-                                <input type="text" class="form-control" name="nomor_register" value="{{ old('nomor_register') }}">
+
+                        <div class="form-group">
+                            <label for="nama_barang" class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_barang" id="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" value="{{ old('nama_barang') }}" maxlength="100" placeholder="Contoh: Gedung Kantor Utama" required>
+                            @error('nama_barang')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nbar" class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
+                                    <input type="text" name="nbar" id="nbar" class="form-control @error('nbar') is-invalid @enderror" value="{{ old('nbar') }}" placeholder="Nibar" maxlength="30">
+                                    @error('nbar')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nomor_register" class="font-weight-bold">No. Register <span class="text-danger">*</span></label>
+                                    <input type="text" name="nomor_register" id="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" placeholder="0001" maxlength="20" required>
+                                    @error('nomor_register')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spesifikasi_barang" class="font-weight-bold">Spesifikasi Barang (Luas/Deskripsi)</label>
+                            <input type="text" name="spesifikasi_barang" id="spesifikasi_barang" class="form-control @error('spesifikasi_barang') is-invalid @enderror" value="{{ old('spesifikasi_barang') }}" placeholder="Misal: Bertingkat Dua, Konstruksi Beton" maxlength="255">
+                            @error('spesifikasi_barang')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spesifikasi_lainnya" class="font-weight-bold">Spesifikasi Lainnya</label>
+                            <input type="text" name="spesifikasi_lainnya" id="spesifikasi_lainnya" class="form-control @error('spesifikasi_lainnya') is-invalid @enderror" value="{{ old('spesifikasi_lainnya') }}" placeholder="Informasi tambahan spesifikasi" maxlength="255">
+                            @error('spesifikasi_lainnya')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="jumlah_lantai" class="font-weight-bold">Jumlah Lantai</label>
+                                    <input type="number" name="jumlah_lantai" id="jumlah_lantai" class="form-control @error('jumlah_lantai') is-invalid @enderror" value="{{ old('jumlah_lantai') }}" min="0">
+                                    @error('jumlah_lantai')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="status_penggunaan" class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
+                                    <select name="status_penggunaan" id="status_penggunaan" class="form-control @error('status_penggunaan') is-invalid @enderror">
+                                        <option value="Digunakan Sendiri" {{ old('status_penggunaan') == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
+                                        <option value="Dipinjamkan" {{ old('status_penggunaan') == 'Dipinjamkan' ? 'selected' : '' }}>Dipinjamkan</option>
+                                        <option value="Disewakan" {{ old('status_penggunaan') == 'Disewakan' ? 'selected' : '' }}>Disewakan</option>
+                                        <option value="Tidak Digunakan" {{ old('status_penggunaan') == 'Tidak Digunakan' ? 'selected' : '' }}>Tidak Digunakan</option>
+                                    </select>
+                                    @error('status_penggunaan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="spesifikasi_barang">Spesifikasi Nama Bangunan</label>
-                        <input type="text" class="form-control" name="spesifikasi_barang" value="{{ old('spesifikasi_barang') }}">
-                    </div>
+                    <div class="col-md-6">
+                        <h5 class="font-weight-bold text-dark mb-3">Lokasi & Nilai Ekonomis</h5>
 
-                    <div class="form-group">
-                        <label for="jumlah_lantai">Jumlah Lantai</label>
-                        <input type="number" class="form-control" name="jumlah_lantai" value="{{ old('jumlah_lantai', 1) }}">
-                    </div>
+                        <div class="form-group">
+                            <label for="Lok" class="font-weight-bold">Lokasi Fisik (Alamat Lengkap) <span class="text-danger">*</span></label>
+                            <input type="text" name="Lok" id="Lok" class="form-control @error('Lok') is-invalid @enderror" value="{{ old('Lok') }}" maxlength="255" required>
+                            @error('Lok')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                    <div class="form-group">
-                        <label for="Lok">Lokasi (Alamat) <span class="text-danger">*</span></label>
-                        <textarea class="form-control @error('Lok') is-invalid @enderror" name="Lok" rows="3" required>{{ old('Lok') }}</textarea>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="titik_koordinat" class="font-weight-bold">Titik Koordinat</label>
+                                    <input type="text" name="titik_koordinat" id="titik_koordinat" class="form-control @error('titik_koordinat') is-invalid @enderror" value="{{ old('titik_koordinat') }}" placeholder="Contoh: -7.329, 108.214" maxlength="50">
+                                    @error('titik_koordinat')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="status_kepemilikan_tanah" class="font-weight-bold">Status Kepemilikan Tanah</label>
+                                    <input type="text" name="status_kepemilikan_tanah" id="status_kepemilikan_tanah" class="form-control @error('status_kepemilikan_tanah') is-invalid @enderror" value="{{ old('status_kepemilikan_tanah') }}" maxlength="50">
+                                    @error('status_kepemilikan_tanah')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="jumlah" class="font-weight-bold">Jumlah Barang <span class="text-danger">*</span></label>
+                                    <input type="text" name="jumlah" id="jumlah" class="form-control currency-format @error('jumlah') is-invalid @enderror" value="{{ old('jumlah') }}" required>
+                                    @error('jumlah')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="satuan" class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
+                                    <input type="text" name="satuan" id="satuan" class="form-control @error('satuan') is-invalid @enderror" value="{{ old('satuan', 'Buah') }}" maxlength="20" required>
+                                    @error('satuan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="harga_satuan" class="font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                                    <input type="text" name="harga_satuan" id="harga_satuan" class="form-control currency-format @error('harga_satuan') is-invalid @enderror" value="{{ old('harga_satuan') }}" required>
+                                    @error('harga_satuan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nilai_perolehan" class="font-weight-bold">Nilai Perolehan (Rp) <span class="text-danger">*</span></label>
+                                    <input type="text" name="nilai_perolehan" id="nilai_perolehan" class="form-control currency-format @error('nilai_perolehan') is-invalid @enderror" value="{{ old('nilai_perolehan') }}" required>
+                                    @error('nilai_perolehan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cara_perolehan" class="font-weight-bold">Cara Perolehan <span class="text-danger">*</span></label>
+                                    <input type="text" name="cara_perolehan" id="cara_perolehan" class="form-control @error('cara_perolehan') is-invalid @enderror" value="{{ old('cara_perolehan') }}" maxlength="50" required>
+                                    @error('cara_perolehan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tanggal_perolehan" class="font-weight-bold">Tanggal Perolehan <span class="text-danger">*</span></label>
+                                    <input type="date" name="tanggal_perolehan" id="tanggal_perolehan" class="form-control @error('tanggal_perolehan') is-invalid @enderror" value="{{ old('tanggal_perolehan') }}" required>
+                                    @error('tanggal_perolehan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="keterangan" class="font-weight-bold">Keterangan Tambahan</label>
+                            <textarea name="keterangan" id="keterangan" rows="2" class="form-control @error('keterangan') is-invalid @enderror">{{ old('keterangan') }}</textarea>
+                            @error('keterangan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 
-                {{-- Kolom Kanan --}}
-                <div class="col-md-6">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="jumlah">Luas Bangunan (M2) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control money" name="jumlah" value="{{ old('jumlah') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="satuan">Satuan</label>
-                                <input type="text" class="form-control" name="satuan" value="{{ old('satuan', 'M2') }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="harga_satuan">Harga Satuan (Rp)</label>
-                                <input type="text" class="form-control money" name="harga_satuan" value="{{ old('harga_satuan') }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="nilai_perolehan">Nilai Perolehan (Rp) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control money" name="nilai_perolehan" value="{{ old('nilai_perolehan') }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="status_kepemilikan_tanah">Status Kepemilikan Tanah</label>
-                        <input type="text" class="form-control" name="status_kepemilikan_tanah" value="{{ old('status_kepemilikan_tanah') }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tanggal_perolehan">Tanggal Perolehan <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="tanggal_perolehan" value="{{ old('tanggal_perolehan') }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="keterangan">Keterangan</label>
-                        <textarea class="form-control" name="keterangan" rows="4">{{ old('keterangan') }}</textarea>
-                    </div>
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <button type="reset" class="btn btn-secondary mr-2">Reset</button>
+                    <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
                 </div>
-            </div>
-            <hr>
-            <div class="text-right">
-                <a href="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const namaInput = document.getElementById('nama_barang');
-        const kodeInput = document.getElementById('kode_barang');
-
-        namaInput.addEventListener('keyup', function() {
-            if (kodeInput.dataset.manual !== 'true') {
-                let val = this.value.trim();
-                if (val.length > 0) {
-                    let initials = val.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3);
-                    let random = Math.floor(100 + Math.random() * 900);
-                    kodeInput.value = `GDG-${initials}-${random}`;
-                }
+        const currencyInputs = document.querySelectorAll('.currency-format');
+        
+        currencyInputs.forEach(input => {
+            if(input.value) {
+                input.value = formatRupiah(input.value);
             }
-        });
 
-        kodeInput.addEventListener('input', function() { this.dataset.manual = 'true'; });
-
-        document.querySelectorAll('.money').forEach(input => {
-            input.addEventListener('input', function(e) {
-                let value = this.value.replace(/[^0-9]/g, '');
-                this.value = value ? parseInt(value).toLocaleString('id-ID') : '';
+            input.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
             });
         });
+
+        function formatRupiah(angka) {
+            let number_string = angka.replace(/[^,\d]/g, '').toString(),
+                split = number_string.split(','),
+                sisa  = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
     });
 </script>
 @endsection

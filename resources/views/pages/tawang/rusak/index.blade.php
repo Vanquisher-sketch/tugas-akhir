@@ -5,14 +5,9 @@
     {{-- Header Card --}}
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between border-bottom-danger">
         <h6 class="m-0 font-weight-bold text-danger">
-            <i class="fas fa-exclamation-triangle mr-2"></i>Pemantauan Barang Rusak Berat - {{ ucfirst($lokasi) }}
+            <i class="fas fa-exclamation-triangle mr-2"></i>Pemantauan Barang Rusak Berat - Kecamatan {{ ucfirst($lokasi) }}
         </h6>
         
-        <div>
-            <a class="btn btn-danger btn-sm shadow-sm" href="{{ route('lokasi.rusak.print', ['lokasi' => $lokasi]) }}" target="_blank">
-                <i class="fas fa-print fa-fw mr-1"></i> Cetak PDF Laporan
-            </a>
-        </div>
     </div>
 
     <div class="card-body">

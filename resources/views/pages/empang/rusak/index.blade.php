@@ -5,14 +5,9 @@
     {{-- Header Card --}}
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between border-bottom-danger">
         <h6 class="m-0 font-weight-bold text-danger">
-            <i class="fas fa-exclamation-triangle mr-2"></i>Jurnal Pemantauan Barang Rusak Berat - {{ ucfirst($lokasi) }}
+            <i class="fas fa-exclamation-triangle mr-2"></i>Pemantauan Barang Rusak Berat - Kelurahan {{ ucfirst($lokasi) }}
         </h6>
         
-        <div>
-            <a class="btn btn-danger btn-sm shadow-sm" href="{{ route('lokasi.rusak.print', ['lokasi' => $lokasi]) }}" target="_blank">
-                <i class="fas fa-print fa-fw mr-1"></i> Cetak PDF Laporan
-            </a>
-        </div>
     </div>
 
     <div class="card-body">
@@ -43,8 +38,8 @@
                     <tr>
                         <td class="text-center font-weight-bold">{{ $loop->iteration + $dataRusak->firstItem() - 1 }}</td>
                         
-                        {{-- Kolom kode_barang --}}
-                        <td class="font-weight-bold text-danger text-center">{{ $item->kode_barang }}</td>
+                        {{-- Kolom kode_barang (SUDAH DIREVISI MENJADI rusak_kode_barang) --}}
+                        <td class="font-weight-bold text-danger text-center">{{ $item->rusak_kode_barang }}</td>
                         
                         {{-- Kolom nama_barang (Hasil mapping live dari Controller) --}}
                         <td class="font-weight-bold text-gray-900">{{ $item->nama_barang }}</td>
@@ -70,7 +65,7 @@
                         
                         {{-- Kolom Aksi Tunggal Tindakan Pemulihan --}}
                         <td class="text-center">
-                            <form action="{{ route('lokasi.rusak.destroy', ['lokasi' => $lokasi, 'rusak' => $item->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah barang ini sudah selesai diperbaiki? Jika ya, status kondisi barang di modul asal akan otomatis pulih menjadi Baik.')">
+                            <form action="{{ route('lokasi.rusak.destroy', ['lokasi' => $lokasi, 'id' => $item->rusak_kode_barang]) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-xs btn-outline-success font-weight-bold shadow-sm py-1">
                                     <i class="fas fa-wrench mr-1"></i> Selesai Perbaikan

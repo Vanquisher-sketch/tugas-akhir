@@ -1,196 +1,175 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Tambah Data Inventaris Ruangan</h1>
-        <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" class="btn btn-sm btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Kembali
-        </a>
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-plus-circle mr-2"></i> Tambah Data Inventaris Ruangan - {{ $room->ruangan_nama }}
+        </h6>
     </div>
+    <div class="card-body">
+        <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}" method="POST">
+            @csrf
 
-    {{-- ALERT ERROR FLASH --}}
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow">
-            <i class="fas fa-exclamation-triangle mr-2"></i><strong>Pemberitahuan Sistem:</strong>
-            <p class="mb-0 mt-1">{{ session('error') }}</p>
-            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-        </div>
-    @endif
-
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 bg-primary text-white">
-            <h6 class="m-0 font-weight-bold"><i class="fas fa-plus mr-2"></i>Form Entri Aset Ruangan: {{ $room->name }}</h6>
-        </div>
-        <div class="card-body text-dark">
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form action="{{ route('lokasi.inventaris.store', ['lokasi' => $lokasi, 'room' => $room->kode_ruangan]) }}" method="POST">
-                @csrf
+            <div class="form-group">
+                <label class="font-weight-bold text-danger">Pilih Barang dari Master Peralatan (KIB B) <span class="text-danger">*</span></label>
                 
-                <div class="row">
-                    {{-- DROPDOWN HYBRID --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Pilih Sumber Aset Barang <span class="text-danger">*</span></label>
-                        <select name="sumber_aset" id="sumber_aset" class="form-control select2" style="width: 100%;" required>
-                            <option value="">-- Pilih Kode Barang Master / Input Manual --</option>
-                            <option value="MANUAL" class="font-weight-bold text-primary">✍️ [INPUT MANUAL] Meja, Kursi, Lemari, dll</option>
-                            
-                            <optgroup label="Peralatan & Mesin (KIB B)">
-                                @foreach($masterPeralatan as $peralatan)
-                                    @if($peralatan->sisa_stok > 0)
-                                        <option value="{{ $peralatan->kode_barang }}" 
-                                                data-nama="{{ $peralatan->nama_barang }}"
-                                                data-merk="{{ $peralatan->merk_tipe }}"
-                                                data-tahun="{{ $peralatan->tahun_perolehan }}"
-                                                data-spek="{{ $peralatan->spesifikasi_barang ?? $peralatan->keterangan }}">
-                                            {{ $peralatan->kode_barang }} - {{ $peralatan->nama_barang }} (Sisa Stok: {{ $peralatan->sisa_stok }} {{ $peralatan->satuan ?? 'Unit' }})
-                                        </option>
-                                    @else
-                                        <option value="" disabled class="text-danger bg-light">
-                                            🚫 {{ $peralatan->kode_barang }} - {{ $peralatan->nama_barang }} [STOK HABIS]
-                                        </option>
-                                    @endif
-                                @endforeach
-                            </optgroup>
-                        </select>
-                    </div>
+                {{-- Dropdown Cerdas dengan Fallback Nama Kolom --}}
+                <select id="peralatan_select" class="form-control font-weight-bold" style="border: 2px solid #4e73df; font-size: 14px;" required>
+                    <option value="" disabled selected>-- Klik di sini untuk memilih Aset Master KIB B --</option>
+                    @foreach($allPeralatan as $p)
+                        <option value="{{ $p->alat_kode_barang ?? $p->kode_barang }}" 
+                                data-kode="{{ $p->alat_kode_barang ?? $p->kode_barang }}"
+                                data-nama="{{ $p->alat_nama_barang ?? $p->nama_barang }}"
+                                data-merk="{{ $p->alat_merk_tipe ?? $p->merk_tipe ?? $p->merk ?? '-' }}"
+                                {{-- 🌟 PERBAIKAN: Fallback nama kolom tahun & default ke tahun saat ini jika master kosong --}}
+                                data-tahun="{{ $p->alat_tahun_perolehan ?? $p->tahun_perolehan ?? $p->tahun ?? date('Y') }}"
+                                data-satuan="{{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }}"
+                                data-nibar="{{ $p->alat_nibar ?? $p->nibar ?? '-' }}"
+                                data-register="{{ $p->alat_nomor_register ?? $p->nomor_register ?? '-' }}"
+                                data-kondisi="{{ $p->alat_kondisi ?? $p->kondisi ?? 'Baik' }}"
+                                data-spesifikasi="{{ $p->alat_spesifikasi_barang ?? $p->spesifikasi_barang ?? '-' }}"
+                                data-keterangan="{{ $p->alat_keterangan ?? $p->keterangan ?? '-' }}"
+                                data-sisa="{{ $p->sisa_stok }}">
+                            {{ $p->alat_kode_barang ?? $p->kode_barang }} - {{ $p->alat_nama_barang ?? $p->nama_barang }} (Sisa Stok: {{ $p->sisa_stok }} {{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }})
+                        </option>
+                    @endforeach
+                </select>
+                <small class="form-text text-primary font-weight-bold mt-2">
+                    <i class="fas fa-info-circle"></i> Seluruh kolom di bawah ini akan terisi otomatis mengikuti master KIB B. Anda hanya perlu mengisi kolom JUMLAH.
+                </small>
+            </div>
 
-                    {{-- Kode Barang Tersembunyi / Ketik Manual --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" id="kode_barang" name="kode_barang" class="form-control" value="{{ old('kode_barang') }}" placeholder="Contoh: 1.02.01.01.050" required>
-                    </div>
+            <hr class="my-4">
+
+            {{-- HANYA KOLOM JUMLAH YANG BISA DIEDIT USER --}}
+            <div class="row mb-4 bg-light p-3 rounded" style="border: 1px dashed #f6c23e;">
+                <div class="col-md-12 text-center mb-2">
+                    <label class="font-weight-bold text-warning text-uppercase" style="font-size: 14px;">Masukkan Jumlah Barang Untuk Ruangan Ini</label>
                 </div>
-
-                <div class="row">
-                    {{-- Nama Barang --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
-                        <input type="text" id="nama_barang" name="nama_barang" class="form-control" value="{{ old('nama_barang') }}" placeholder="Contoh: Meja Kerja Kayu / Kursi Lipat" required>
+                <div class="col-md-6 offset-md-3 form-group text-center">
+                    <div class="input-group input-group-lg">
+                        <input type="number" id="jumlah" name="jumlah" class="form-control text-center font-weight-bold text-dark" value="1" min="1" required style="font-size: 20px;">
+                        <div class="input-group-append">
+                            <span class="input-group-text font-weight-bold bg-white text-dark" id="satuan_addon">Satuan</span>
+                        </div>
                     </div>
-
-                    {{-- NIBAR --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">NIBAR (Nomor Induk Barang)</label>
-                        <input type="text" name="nibar" class="form-control" value="{{ old('nibar') }}" placeholder="Isi NIBAR jika ada">
-                    </div>
+                    <small id="sisa_info" class="form-text text-danger font-weight-bold mt-2">Pilih barang master terlebih dahulu.</small>
                 </div>
+            </div>
 
-                <div class="row">
-                    {{-- Nomor Register --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Nomor Register</label>
-                        <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register') }}" placeholder="Contoh: 0001">
-                    </div>
+            {{-- ======================================================= --}}
+            {{-- KOLOM READONLY (TERKUNCI) - OTOMATIS DARI KIB B         --}}
+            {{-- ======================================================= --}}
+            <h6 class="font-weight-bold text-secondary mb-3 border-bottom pb-2">Detail Master Barang (Otomatis & Terkunci)</h6>
 
-                    {{-- Merk / Tipe --}}
-                    <div class="col-md-6 form-group">
-                        <label class="font-weight-bold">Merk / Tipe</label>
-                        <input type="text" id="merk_tipe" name="merk_tipe" class="form-control" value="{{ old('merk_tipe') }}" placeholder="Contoh: Meja Setengah Biro / Chitose">
-                    </div>
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Kode Barang</label>
+                    <input type="text" id="kode_barang" name="kode_barang" class="form-control bg-light text-muted" readonly required>
                 </div>
-
-                <div class="row">
-                    {{-- Tahun Perolehan --}}
-                    <div class="col-md-4 form-group">
-                        <label class="font-weight-bold">Tahun Perolehan <span class="text-danger">*</span></label>
-                        <input type="number" id="tahun_perolehan" name="tahun_perolehan" class="form-control" value="{{ old('tahun_perolehan', date('Y')) }}" placeholder="Contoh: 2026" required>
-                    </div>
-
-                    {{-- Jumlah --}}
-                    <div class="col-md-4 form-group">
-                        <label class="font-weight-bold">Volume Jumlah Penempatan <span class="text-danger">*</span></label>
-                        <input type="number" name="jumlah" class="form-control @error('jumlah') is-invalid @enderror" value="{{ old('jumlah', 1) }}" min="1" required>
-                    </div>
-
-                    {{-- Satuan --}}
-                    <div class="col-md-4 form-group">
-                        <label class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
-                        <select name="satuan" class="form-control text-dark font-weight-bold" required>
-                            @foreach($daftarSatuan as $sat)
-                                <option value="{{ $sat }}" {{ old('satuan') == $sat ? 'selected' : '' }}>{{ $sat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Nama Barang</label>
+                    <input type="text" id="nama_barang" name="nama_barang" class="form-control bg-light text-muted" readonly required>
                 </div>
+            </div>
 
-                <div class="row">
-                    {{-- Kondisi --}}
-                    <div class="col-md-4 form-group">
-                        <label class="font-weight-bold text-primary">Kondisi Fisik Barang <span class="text-danger">*</span></label>
-                        <select name="kondisi" class="form-control font-weight-bold text-dark" required>
-                            <option value="Baik" {{ old('kondisi') == 'Baik' ? 'selected' : '' }}>🟢 Baik</option>
-                            <option value="Rusak Ringan" {{ old('kondisi') == 'Rusak Ringan' ? 'selected' : '' }}>🟡 Rusak Ringan</option>
-                            <option value="Rusak Berat" {{ old('kondisi') == 'Rusak Berat' ? 'selected' : '' }}>🔴 Rusak Berat (Auto Jurnal Rusak)</option>
-                        </select>
-                    </div>
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Merk / Tipe</label>
+                    <input type="text" id="merk_tipe" name="merk_tipe" class="form-control bg-light text-muted" readonly>
                 </div>
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Tahun Perolehan</label>
+                    {{-- 🌟 Ditambahkan atribut required agar form memvalidasi input ini --}}
+                    <input type="number" id="tahun_perolehan" name="tahun_perolehan" class="form-control bg-light text-muted" readonly required>
+                </div>
+            </div>
 
-                {{-- Spesifikasi Barang --}}
-                <div class="form-group">
-                    <label class="font-weight-bold">Spesifikasi Barang</label>
-                    <textarea id="spesifikasi_barang" name="spesifikasi_barang" class="form-control" rows="2" placeholder="Detail deskripsi fisik spesifikasi meja/kursi/laptop...">{{ old('spesifikasi_barang') }}</textarea>
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">NIBAR</label>
+                    <input type="text" id="nibar" name="nibar" class="form-control bg-light text-muted" readonly>
                 </div>
+                <div class="col-md-4 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Nomor Register</label>
+                    <input type="text" id="nomor_register" name="nomor_register" class="form-control bg-light text-muted" readonly>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Kondisi Barang</label>
+                    <input type="text" id="kondisi" name="kondisi" class="form-control bg-light text-muted font-weight-bold" readonly required>
+                </div>
+            </div>
 
-                {{-- Keterangan --}}
-                <div class="form-group">
-                    <label class="font-weight-bold">Keterangan / Catatan Tambahan Ruangan</label>
-                    <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan posisi penempatan di ruangan...">{{ old('keterangan') }}</textarea>
-                </div>
+            {{-- Hidden input untuk satuan agar tetap tersubmit meskipun di UI jadi addon --}}
+            <input type="hidden" id="satuan_hidden" name="satuan">
 
-                <hr>
-                <div class="d-flex justify-content-end">
-                    <button type="reset" class="btn btn-secondary mr-2">Reset Form</button>
-                    <button type="submit" class="btn btn-primary font-weight-bold"><i class="fas fa-save mr-1"></i> Simpan Data Aset</button>
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Spesifikasi Barang</label>
+                    <textarea id="spesifikasi_barang" name="spesifikasi_barang" class="form-control bg-light text-muted" rows="2" readonly></textarea>
                 </div>
-            </form>
-        </div>
+                <div class="col-md-6 form-group">
+                    <label class="font-weight-bold text-muted" style="font-size: 12px;">Keterangan</label>
+                    <textarea id="keterangan" name="keterangan" class="form-control bg-light text-muted" rows="2" readonly></textarea>
+                </div>
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-end">
+                <a href="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}" class="btn btn-secondary mr-2">Batal</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan ke Inventaris</button>
+            </div>
+        </form>
     </div>
 </div>
+@endsection
 
-{{-- JAVASCRIPT LOGIKA HYBRID INPUT --}}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@push('scripts')
 <script>
-    $(document).ready(function() {
-        $('#sumber_aset').on('change select2:select', function () {
-            var selectedOption = $(this).find(':selected');
-            var val = selectedOption.val();
-            
-            if (val === "MANUAL") {
-                // Bersihkan form agar admin bebas ketik Meja/Kursi dari awal
-                $('#kode_barang').val('').prop('readonly', false).focus();
-                $('#nama_barang').val('').prop('readonly', false);
-                $('#merk_tipe').val('').prop('readonly', false);
-                $('#tahun_perolehan').val('{{ date("Y") }}').prop('readonly', false);
-                $('#spesifikasi_barang').val('').prop('readonly', false);
-            } else if (val !== "") {
-                // Tarik otomatis data master bermesin dari KIB B
-                var kode = val;
-                var nama = selectedOption.attr('data-nama') || '';
-                var merk = selectedOption.attr('data-merk') || '';
-                var tahun = selectedOption.attr('data-tahun') || '';
-                var spek = selectedOption.attr('data-spek') || '';
+    document.getElementById('peralatan_select').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        
+        // Isi Form Readonly
+        document.getElementById('kode_barang').value = opt.getAttribute('data-kode') || '';
+        document.getElementById('nama_barang').value = opt.getAttribute('data-nama') || '';
+        document.getElementById('merk_tipe').value = opt.getAttribute('data-merk') || '-';
+        
+        // 🌟 PERBAIKAN JS: Jika data-tahun dari database kosong/null, gunakan Tahun Berjalan secara otomatis
+        const dataTahun = opt.getAttribute('data-tahun');
+        const currentYear = new Date().getFullYear();
+        document.getElementById('tahun_perolehan').value = (dataTahun && dataTahun !== '' && dataTahun !== 'null') ? dataTahun : currentYear;
+        
+        document.getElementById('nibar').value = opt.getAttribute('data-nibar') || '-';
+        document.getElementById('nomor_register').value = opt.getAttribute('data-register') || '-';
+        document.getElementById('kondisi').value = opt.getAttribute('data-kondisi') || 'Baik';
+        
+        document.getElementById('spesifikasi_barang').value = opt.getAttribute('data-spesifikasi') || '-';
+        document.getElementById('keterangan').value = opt.getAttribute('data-keterangan') || '-';
 
-                $('#kode_barang').val(kode).prop('readonly', true);
-                $('#nama_barang').val(nama).prop('readonly', true);
-                $('#merk_tipe').val(merk).prop('readonly', true);
-                $('#tahun_perolehan').val(tahun).prop('readonly', true);
-                $('#spesifikasi_barang').val(spek).prop('readonly', true);
-            }
-        });
+        // Update Satuan
+        const satuanText = opt.getAttribute('data-satuan') || 'Buah';
+        document.getElementById('satuan_addon').innerText = satuanText;
+        document.getElementById('satuan_hidden').value = satuanText;
 
-        if ($('#sumber_aset').val() !== "") {
-            $('#sumber_aset').trigger('change');
+        // Kontrol Limit Jumlah Input
+        const sisa = parseInt(opt.getAttribute('data-sisa')) || 0;
+        const jumlahInput = document.getElementById('jumlah');
+        const sisaInfo = document.getElementById('sisa_info');
+
+        jumlahInput.max = sisa; // Set batas maksimal HTML
+        
+        if(sisa <= 0) {
+            sisaInfo.innerText = "Stok HABIS! Barang ini sudah didistribusikan semua ke ruangan.";
+            sisaInfo.className = "form-text text-danger font-weight-bold mt-2";
+            jumlahInput.value = 0;
+            jumlahInput.readOnly = true;
+        } else {
+            sisaInfo.innerText = "Stok maksimal yang bisa diinput: " + sisa + " " + satuanText;
+            sisaInfo.className = "form-text text-success font-weight-bold mt-2";
+            jumlahInput.value = 1;
+            jumlahInput.readOnly = false;
         }
     });
 </script>
-@endsection
+@endpush

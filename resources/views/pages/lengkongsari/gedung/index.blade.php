@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">Data Gedung & Bangunan (KIB C) - {{ ucfirst($lokasi) }}</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Data Gedung & Bangunan (KIB C) - Kelurahan {{ ucfirst($lokasi) }}</h6>
         
         <div class="d-flex">
             <form action="{{ route('lokasi.gedung.index', ['lokasi' => $lokasi]) }}" method="GET" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
@@ -34,7 +34,7 @@
     </div>
 
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive" style="position: relative;">
             <table class="table table-bordered table-hover table-sm" width="100%" cellspacing="0" style="font-size: 0.75rem; color: #000; white-space: nowrap;">
                 <thead class="thead-light text-center align-middle">
                     <tr>
@@ -58,55 +58,54 @@
                         <th>Tgl Perolehan</th>
                         <th>Status Penggunaan</th>
                         <th>Keterangan</th>
-                        <th class="sticky-top right-0 bg-light">Aksi</th>
+                        <th style="position: sticky; right: 0; background-color: #eaecf4; z-index: 2; border-left: 2px solid #e3e6f0;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($dataGedung as $item)
                     <tr>
                         <td class="text-center align-middle">{{ $loop->iteration + $dataGedung->firstItem() - 1 }}</td>
-                        <td class="font-weight-bold text-primary align-middle">{{ $item->kode_barang }}</td>
+                        <td class="font-weight-bold text-primary align-middle">{{ $item->gedung_kode_barang }}</td>
                         <td class="align-middle">{{ $item->lokasi }}</td>
-                        <td class="align-middle">{{ $item->nama_barang }}</td>
-                        <td class="text-center align-middle">{{ $item->nbar ?? '-' }}</td>
-                        <td class="text-center align-middle">{{ $item->nomor_register }}</td>
-                        <td class="align-middle">{{ $item->spesifikasi_barang ?? '-' }}</td>
-                        <td class="align-middle">{{ $item->spesifikasi_lainnya ?? '-' }}</td>
-                        <td class="text-center align-middle">{{ $item->jumlah_lantai ?? '-' }}</td>
-                        <td class="align-middle">{{ $item->Lok }}</td>
-                        <td class="align-middle">{{ $item->titik_koordinat ?? '-' }}</td>
-                        <td class="align-middle">{{ $item->status_kepemilikan_tanah ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_nama_barang }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_nibar ?? '-' }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_nomor_register }}</td>
+                        <td class="align-middle">{{ $item->gedung_spesifikasi_barang ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_spesifikasi_lainnya ?? '-' }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_jumlah_lantai ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_lokasi_fisik ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_titik_koordinat ?? '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_status_kepemilikan_tanah ?? '-' }}</td>
                         
-                        <td class="text-center align-middle">{{ $item->jumlah }}</td>
-                        <td class="text-center align-middle">{{ $item->satuan }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_jumlah }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_satuan }}</td>
                         
-                        <td class="text-right align-middle">{{ number_format($item->harga_satuan, 2, ',', '.') }}</td>
-                        <td class="text-right font-weight-bold align-middle">{{ number_format($item->nilai_perolehan, 2, ',', '.') }}</td>
+                        <td class="text-right align-middle">{{ number_format($item->gedung_harga_satuan, 2, ',', '.') }}</td>
+                        <td class="text-right font-weight-bold align-middle">{{ number_format($item->gedung_nilai_perolehan, 2, ',', '.') }}</td>
                         
-                        <td class="align-middle">{{ $item->cara_perolehan }}</td>
-                        <td class="text-center align-middle">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
+                        <td class="align-middle">{{ $item->gedung_cara_perolehan }}</td>
+                        <td class="text-center align-middle">{{ $item->gedung_tanggal_perolehan ? \Carbon\Carbon::parse($item->gedung_tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
                         
                         <td class="text-center align-middle">
-                            @if($item->status_penggunaan)
-                                <span class="badge badge-info">{{ $item->status_penggunaan }}</span>
+                            @if($item->gedung_status_penggunaan)
+                                <span class="badge badge-info">{{ $item->gedung_status_penggunaan }}</span>
                             @else
                                 -
                             @endif
                         </td>
                         
-                        <td class="align-middle">{{ Str::limit($item->keterangan, 30) ?? '-' }}</td>
+                        <td class="align-middle">{{ Str::limit($item->gedung_keterangan, 30) ?? '-' }}</td>
                         
-                        <td class="text-center align-middle bg-white">
-                            <a href="{{ route('lokasi.gedung.edit', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" class="btn btn-sm btn-warning mb-1" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="{{ route('lokasi.gedung.destroy', ['lokasi' => $lokasi, 'gedung' => $item->kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data dengan Kode {{ $item->kode_barang }} ini?')">
-                                @csrf 
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger mb-1" title="Hapus">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                        <td class="text-center align-middle" style="position: sticky; right: 0; background-color: #fff; z-index: 1; border-left: 2px solid #e3e6f0;">
+                            <a href="{{ route('lokasi.gedung.edit', ['lokasi' => $lokasi, 'kode_barang' => $item->gedung_kode_barang]) }}" class="btn btn-sm btn-warning mb-1" title="Edit">
+    <i class="fas fa-edit"></i>
+</a>
+
+<form action="{{ route('lokasi.gedung.destroy', ['lokasi' => $lokasi, 'kode_barang' => $item->gedung_kode_barang]) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin?')">
+    @csrf 
+    @method('DELETE')
+    <button type="submit" class="btn btn-sm btn-danger mb-1"><i class="fas fa-trash"></i></button>
+</form>
                         </td>
                     </tr>
                     @empty

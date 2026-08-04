@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Penggunaan BMD & BAST - {{ ucfirst($lokasi) }}</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Daftar Penggunaan BMD & BAST - Kecamatan {{ ucfirst($lokasi) }}</h6>
         
         <div class="d-flex">
             <form action="{{ route('lokasi.bmd.index', ['lokasi' => $lokasi]) }}" method="GET" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
@@ -21,10 +21,6 @@
 
             <div class="btn-group ml-3">
                 <a href="{{ route('lokasi.bmd.create', ['lokasi' => $lokasi]) }}" class="btn btn-primary"><i class="fas fa-plus fa-sm"></i> Tambah Data</a>
-                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
-                    <a class="dropdown-item" href="{{ route('lokasi.bmd.print', ['lokasi' => $lokasi]) }}" target="_blank"><i class="fas fa-print fa-fw mr-2"></i>Cetak Laporan</a>
-                </div>
             </div>
         </div>
     </div>

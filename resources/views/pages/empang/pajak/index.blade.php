@@ -3,20 +3,12 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Monitoring Pajak & Dokumen - {{ ucfirst($lokasi ?? 'Semua Lokasi') }}</h1>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Monitoring Pajak & Dokumen - Kelurahan {{ ucfirst($lokasi ?? 'Semua Lokasi') }}</h1>
     </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-column flex-md-row align-items-center justify-content-between border-bottom-primary">
-            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-2"></i>Sistem Patroli & Monitoring Pajak Otomatis (Poin 7)</h6>
-            
-            <div class="mt-2 mt-md-0">
-                @if(isset($lokasi))
-                <a href="{{ route('lokasi.pajak.print', $lokasi) }}" class="btn btn-danger btn-sm shadow-sm" target="_blank">
-                    <i class="fas fa-file-pdf fa-sm text-white-50 mr-1"></i> Cetak PDF Laporan
-                </a>
-                @endif
-            </div>
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-2"></i>Sistem Monitoring Pajak Otomatis</h6>
         </div>
 
         <div class="card-body">
@@ -32,7 +24,7 @@
                         </tr>
                         <tr class="font-weight-bold">
                             <th class="bg-light">Nama Pegawai</th>
-                            <th class="bg-light text-center">Hubungi WA</th>
+                            <th class="bg-light text-center">Email Pegawai</th>
                             <th style="background-color: #fff3cd;">Jatuh Tempo Pajak</th>
                             <th style="background-color: #fff3cd;">Masa Berlaku STNK</th>
                             <th style="background-color: #fff3cd;" title="Kirim Pesan Pengingat Pajak">Kirim Warning</th>
@@ -44,29 +36,22 @@
                     <tbody>
                         @forelse($pajaks as $item)
                         @php
-                            $tglPajak = \Carbon\Carbon::parse($item->tanggal_pajak);
-                            $diffDays = \Carbon\Carbon::today()->diffInDays($tglPajak, false);
+                            $tglPajak = $item->alat_tanggal_pajak ? \Carbon\Carbon::parse($item->alat_tanggal_pajak) : null;
+                            $diffDays = $tglPajak ? \Carbon\Carbon::today()->diffInDays($tglPajak, false) : 0;
                             
                             $rowStyle = '';
-                            if ($diffDays < 0) {
+                            if ($tglPajak && $diffDays < 0) {
                                 $rowStyle = 'background-color: #f8d7da;'; 
-                            } elseif ($diffDays <= 30) {
+                            } elseif ($tglPajak && $diffDays <= 30) {
                                 $rowStyle = 'background-color: #fff3cd;'; 
                             }
 
-                            // Ambil data jembatan penggunaan bmd
-                            $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('peralatan_kode', $item->kode_barang)->first();
+                            $bmdAktif = $item->bmd ?? \App\Models\Bmd::where('bmd_alat_kode', $item->alat_kode_barang)->first();
                             
-                            // Ambil data nomor HP secara hirarki (Cek tabel pegawai dulu, baru fallback ke tabel bmd)
-                            $nomorWaHp = '-';
-                            if ($bmdAktif) {
-                                if ($bmdAktif->pegawai && $bmdAktif->pegawai->no_hp) {
-                                    $nomorWaHp = $bmdAktif->pegawai->no_hp;
-                                } elseif ($bmdAktif->pegawai && $bmdAktif->pegawai->telepon) {
-                                    $nomorWaHp = $bmdAktif->pegawai->telepon;
-                                } elseif ($bmdAktif->nomor_pemakai) {
-                                    $nomorWaHp = $bmdAktif->nomor_pemakai;
-                                }
+                            $emailPemegang = '-';
+                            // ✅ REVISI: Ubah pemanggilan email menjadi pegawai_email sesuai dengan database
+                            if ($bmdAktif && $bmdAktif->pegawai && $bmdAktif->pegawai->pegawai_email) {
+                                $emailPemegang = $bmdAktif->pegawai->pegawai_email;
                             }
                         @endphp
                         <tr style="{{ $rowStyle }}">
@@ -74,41 +59,42 @@
                             
                             {{-- Identitas Kendaraan --}}
                             <td class="align-middle">
-                                <div class="font-weight-bold text-primary">{{ $item->nama_barang }}</div>
+                                <div class="font-weight-bold text-primary">{{ $item->alat_nama_barang }}</div>
                                 <div class="small font-weight-bold mt-1">
-                                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-car-side mr-1"></i> {{ $item->nomor_polisi ?? '-' }}</span>
+                                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-car-side mr-1"></i> {{ $item->alat_nomor_polisi ?? '-' }}</span>
                                 </div>
-                                <div class="small text-muted mt-1">Merk/Type: {{ $item->merk_tipe ?? '-' }}</div>
+                                <div class="small text-muted mt-1">Merk/Type: {{ $item->alat_merk_tipe ?? '-' }}</div>
                             </td>
                             
                             {{-- Data Pemakai --}}
                             <td class="align-middle">
                                 @if($bmdAktif && $bmdAktif->pegawai)
-                                    <b class="text-gray-900">{{ $bmdAktif->pegawai->nama }}</b><br>
+                                    {{-- ✅ REVISI: Ubah pemanggilan nama menjadi pegawai_nama sesuai dengan database --}}
+                                    <b class="text-gray-900">{{ $bmdAktif->pegawai->pegawai_nama }}</b><br>
                                     <span class="badge badge-primary small mt-1">{{ $bmdAktif->pemakai_status ?? 'ASN' }}</span>
                                 @else
                                     <span class="badge badge-secondary p-1 font-weight-bold"><i class="fas fa-warehouse mr-1"></i> Stand-by di Kantor</span>
                                 @endif
                             </td>
 
-                            {{-- Kontak No HP Pemakai (Otomatis Terisi) --}}
-                            <td class="align-middle text-center font-weight-bold text-success">
-                                {{ $nomorWaHp }}
+                            {{-- Tampilkan Teks Email Pemakai --}}
+                            <td class="align-middle text-center font-weight-bold text-info">
+                                {{ $emailPemegang }}
                             </td>
 
                             {{-- Jatuh Tempo Pajak --}}
                             <td class="text-center align-middle font-weight-bold">
-                                @if($item->tanggal_pajak)
+                                @if($item->alat_tanggal_pajak)
                                     @if($diffDays < 0)
                                         <span class="badge badge-danger p-1 text-uppercase shadow-sm">
                                             <i class="fas fa-times-circle"></i> {{ $tglPajak->format('d/m/Y') }}
                                         </span>
-                                        <div style="font-size: 10px;" class="text-danger font-weight-bold mt-1 uppercase">TERLEWAT {{ abs($diffDays) }} HARI</div>
+                                        <div style="font-size: 10px;" class="text-danger font-weight-bold mt-1 text-uppercase">TERLEWAT {{ abs($diffDays) }} HARI</div>
                                     @elseif($diffDays <= 30)
                                         <span class="badge badge-warning text-dark p-1 shadow-sm">
                                             <i class="fas fa-exclamation-triangle"></i> {{ $tglPajak->format('d/m/Y') }}
                                         </span>
-                                        <div style="font-size: 10px;" class="text-dark font-weight-bold mt-1 uppercase">{{ $diffDays }} HARI LAGI</div>
+                                        <div style="font-size: 10px;" class="text-dark font-weight-bold mt-1 text-uppercase">{{ $diffDays }} HARI LAGI</div>
                                     @else
                                         <span class="badge badge-success p-1 shadow-sm">
                                             <i class="fas fa-check-circle"></i> {{ $tglPajak->format('d/m/Y') }}
@@ -119,27 +105,34 @@
 
                             {{-- STNK 5 Tahunan --}}
                             <td class="text-center align-middle font-weight-bold">
-                                {{ $item->tanggal_stnk ? \Carbon\Carbon::parse($item->tanggal_stnk)->format('d/m/Y') : '-' }}
+                                {{ $item->alat_tanggal_stnk ? \Carbon\Carbon::parse($item->alat_tanggal_stnk)->format('d/m/Y') : '-' }}
                             </td>
 
-                            {{-- WhatsApp Warning Trigger (Aktif Otomatis jika nomor HP ada) --}}
+                            {{-- Email Warning Trigger (Tombol Mailto diubah ke Form Auto-Send) --}}
                             <td class="text-center align-middle">
-                                @if($nomorWaHp !== '-')
+                                @if($emailPemegang !== '-')
                                     @php
-                                        $cleanNumber = preg_replace('/[^0-9]/', '', $nomorWaHp);
-                                        $cleanNumber = preg_replace('/^0/', '62', $cleanNumber);
-                                        
-                                        $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->nama : 'Bapak/Ibu';
+                                        // ✅ REVISI: Ubah pemanggilan nama menjadi pegawai_nama untuk subjek/body email
+                                        $namaPemakai = ($bmdAktif && $bmdAktif->pegawai) ? $bmdAktif->pegawai->pegawai_nama : 'Bapak/Ibu';
                                         $txtStatus = $diffDays < 0 ? "TELAH LEWAT JATUH TEMPO" : "AKAN SEGERA JATUH TEMPO";
                                         
-                                        $msgUser = "Halo Pak/Bu {$namaPemakai}, menginfokan bahwa pajak kendaraan dinas {$item->nama_barang} ({$item->nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . $tglPajak->format('d/m/Y') . ". Mohon berkas pendukung segera disiapkan untuk proses perpanjangan. Terima kasih.";
+                                        $subjectEmail = "Pemberitahuan Pajak Kendaraan Dinas - " . $item->alat_nomor_polisi;
+                                        $msgUser = "Halo Pak/Bu {$namaPemakai},\r\n\r\nMenginfokan bahwa pajak kendaraan dinas {$item->alat_nama_barang} ({$item->alat_nomor_polisi}) yang Anda pegang {$txtStatus} pada tanggal " . ($tglPajak ? $tglPajak->format('d/m/Y') : '') . ".\r\n\r\nMohon berkas pendukung segera disiapkan untuk proses perpanjangan pajak.\r\n\r\nTerima kasih.";
                                     @endphp
-                                    <a href="https://wa.me/{{ $cleanNumber }}?text={{ urlencode($msgUser) }}" target="_blank" class="btn btn-success btn-sm shadow-sm font-weight-bold" title="Kirim Pesan Warning Ke Pemegang">
-                                        <i class="fab fa-whatsapp mr-1"></i> WA Pemegang
-                                    </a>
+                                    
+                                    {{-- 🌟 INI BAGIAN YANG BERUBAH: Menggunakan Form untuk Auto-Send SMTP --}}
+                                    <form action="{{ route('lokasi.pajak.kirim_email', $lokasi) }}" method="POST" style="display: inline-block;">
+                                        @csrf
+                                        <input type="hidden" name="email" value="{{ $emailPemegang }}">
+                                        <input type="hidden" name="subject" value="{{ $subjectEmail }}">
+                                        <input type="hidden" name="pesan" value="{{ $msgUser }}">
+                                        <button type="submit" class="btn btn-info btn-sm shadow-sm font-weight-bold" title="Kirim Email Otomatis" onclick="return confirm('Kirim email peringatan otomatis ke {{ $namaPemakai }} ({{ $emailPemegang }})?')">
+                                            <i class="fas fa-paper-plane mr-1"></i> Auto-Send
+                                        </button>
+                                    </form>
                                 @else
-                                    <button class="btn btn-sm btn-light border text-muted" style="font-size: 11px;" disabled>
-                                        <i class="fas fa-phone-slash mr-1"></i> No Kontak
+                                    <button class="btn btn-sm btn-light border text-muted" style="font-size: 11px;" disabled title="Data email tidak ditemukan di database">
+                                        <i class="fas fa-envelope-open mr-1"></i> No Email
                                     </button>
                                 @endif
                             </td>
