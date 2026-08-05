@@ -4,33 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // 🌟 Tambahkan SoftDeletes
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DetailPeralatan extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // 1. Sesuaikan nama tabel
+    // 1. Nama tabel
     protected $table = 'detail_peralatans';
 
-    // 2. Sesuaikan Primary Key kustom
+    // 2. Primary Key kustom
     protected $primaryKey = 'dt_alat_id';
 
-    // 3. Daftarkan kolom sesuai dengan migration terbaru
+    // 3. Kolom fillable
     protected $fillable = [
         'dt_alat_kode_barang',
         'dt_alat_kode_barcode',
         'dt_alat_kondisi',
-        'lokasi', // Tetap murni tanpa awalan untuk filter
+        'lokasi',
         'dt_alat_status_pinjam',
         'dt_alat_tanggal_cek',
-        'dt_alat_foto',       // 🌟 KOLOM FOTO DITAMBAHKAN
-        'dt_alat_keterangan'  // 🌟 KOLOM KETERANGAN DITAMBAHKAN
+        'dt_alat_foto',
+        'dt_alat_keterangan',
     ];
 
     /**
-     * 4. 🌟 RELASI KE KIB B (Peralatan)
-     * Mengubah relasi dari Inventaris menjadi Peralatan
+     * Relasi ke Peralatan (KIB B)
      */
     public function peralatan()
     {

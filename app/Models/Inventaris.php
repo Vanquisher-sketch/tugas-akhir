@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Ruangan;
+use App\Models\Peralatan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,20 +14,20 @@ class Inventaris extends Model
 
     protected $table = 'inventaris';
 
-    // 1. Tentukan Primary Key kustom sesuai prefix
-    protected $primaryKey = 'inv_kode_barang';
-    
-    // 2. Matikan auto-increment karena PK berupa string
+    /**
+     * Composite Primary Key menggunakan 3 kolom:
+     * (inv_kode_barang + inv_ruangan_kode + inv_kondisi)
+     * Agar barang yang sama di ruangan yang sama dapat dipisah berdasarkan kondisinya (Baik/Rusak).
+     */
+    protected $primaryKey = ['inv_kode_barang', 'inv_ruangan_kode', 'inv_kondisi'];
     public $incrementing = false;
     protected $keyType = 'string';
 
-    
-
-    // 4. Daftarkan atribut dengan prefix 'inv_' (kecuali lokasi untuk filter)
+    // Daftarkan atribut dengan prefix 'inv_' dan 'lokasi'
     protected $fillable = [
         'inv_kode_barang',
         'lokasi',
-        'inv_ruangan_kode', // Menggantikan 'room_kode' agar rapi
+        'inv_ruangan_kode',
         'inv_nibar',
         'inv_nomor_register',
         'inv_nama_barang',
@@ -40,9 +41,28 @@ class Inventaris extends Model
     ];
 
     /**
+     * Override getKey() agar Eloquent dapat mengenali identifier unik dari 3 kombinasi kolom.
+     */
+    public function getKey()
+    {
+        return $this->getAttribute('inv_kode_barang') . '-' . 
+               $this->getAttribute('inv_ruangan_kode') . '-' . 
+               $this->getAttribute('inv_kondisi');
+    }
+
+    /**
+     * Override setKeysForSaveQuery() agar eksekusi UPDATE, DELETE, dan SoftDeletes
+     * menargetkan baris data spesifik berdasarkan kode barang, ruangan, dan kondisinya.
+     */
+    protected function setKeysForSaveQuery($query)
+    {
+        return $query->where('inv_kode_barang', $this->getAttribute('inv_kode_barang'))
+                     ->where('inv_ruangan_kode', $this->getAttribute('inv_ruangan_kode'))
+                     ->where('inv_kondisi', $this->getAttribute('inv_kondisi'));
+    }
+
+    /**
      * 🌟 RELASI KE MASTER PERALATAN (KIB B)
-     * Menghubungkan inv_kode_barang di tabel inventaris 
-     * ke alat_kode_barang di tabel peralatans.
      */
     public function peralatan()
     {
@@ -51,7 +71,6 @@ class Inventaris extends Model
 
     /**
      * 🌟 RELASI KE RUANGAN
-     * Menghubungkan inventaris ini dengan ruangan tempat barang tersebut berada
      */
     public function ruangan()
     {

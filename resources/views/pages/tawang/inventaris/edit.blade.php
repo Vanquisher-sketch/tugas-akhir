@@ -22,9 +22,12 @@
             </div>
         @endif
 
-        <form action="{{ route('lokasi.inventaris.update', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $inventari->inv_kode_barang]) }}" method="POST">
+        <form action="{{ route('lokasi.inventaris.update', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $inventari->inv_kode_barang, 'kond' => $inventari->inv_kondisi]) }}" method="POST">
             @csrf
             @method('PUT')
+
+            {{-- Hidden input untuk mengunci kondisi asal saat pencarian DB --}}
+            <input type="hidden" name="inv_kondisi_lama" value="{{ $inventari->inv_kondisi }}">
 
             {{-- Informasi Baris Aset Saat Ini --}}
             <div class="alert alert-info shadow-sm border-left-info">
@@ -41,11 +44,10 @@
                 </div>
             </div>
 
-            {{-- Form Cerdar Pecah Kuantitas Kondisi --}}
+            {{-- Form Cerdas Pecah Kuantitas Kondisi --}}
             <div class="row bg-light p-3 rounded border my-4">
                 <div class="col-md-6 form-group mb-md-0">
                     <label class="font-weight-bold text-danger">Jumlah Unit Yang Berubah Kondisi: <span class="text-danger">*</span></label>
-                    {{-- Input dibatasi maksimal senilai jumlah barang yang ada di ruangan --}}
                     <input type="number" 
                            name="qty_ubah" 
                            class="form-control font-weight-bold text-dark" 
