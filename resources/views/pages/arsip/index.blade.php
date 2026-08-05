@@ -65,7 +65,7 @@
                                         } elseif($kat['key'] == 'inventaris') {
                                             $pk = $item->kode_barang; // Inventaris pakai kode_barang sesuai revisi model
                                         } else {
-                                            $pk = $item->kode_barang; // KIB A,B,C,D pakai kode_barang
+                                            $pk = $item->alat_kode_barang; // KIB A,B,C,D pakai kode_barang
                                         }
                                     @endphp
                                     <tr>

@@ -43,13 +43,13 @@ class ArsipController extends Controller
     /**
      * Mengembalikan data (Restore) ke daftar aktif
      */
-    public function restore($lokasi, $kategori, $kode)
+    public function restore($lokasi, $kategori, $alat_kode_barang)
     {
         $model = $this->getModel($kategori);
         $primaryKey = $this->getPrimaryKey($kategori);
 
         // Cari data menggunakan primary key yang sudah disesuaikan
-        $item = $model::where($primaryKey, $kode)->onlyTrashed()->firstOrFail();
+        $item = $model::where($primaryKey, $alat_kode_barang)->onlyTrashed()->firstOrFail();
         
         if ($item->lokasi !== $lokasi) abort(403, 'Akses ditolak.');
 

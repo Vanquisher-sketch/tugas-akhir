@@ -89,7 +89,7 @@ class TanahController extends Controller
             // =========================================================================
             
             // Partikel 1: Inisial Lokasi Fisik / Ruangan
-            $kodeLokasi = $this->generateCodeParticle($request->tanah_lokasi_fisik);
+            $kodeLokasi = $this->generateCodeParticle($request->lokasi);
 
             // Partikel 2: Inisial Nama Barang
             $kodeNamaBarang = $this->generateCodeParticle($request->tanah_nama_barang);
@@ -100,7 +100,7 @@ class TanahController extends Controller
             // Partikel 3: Nomor Urut Sekuensial (4 digit)
             $lastRecord = Tanah::where('lokasi', $lokasi)
                 ->where('tanah_kode_barang', 'LIKE', "{$prefix}-%")
-                ->orderBy('id', 'desc')
+                ->orderBy('tanah_kode_barang', 'desc')
                 ->first();
 
             if ($lastRecord) {
