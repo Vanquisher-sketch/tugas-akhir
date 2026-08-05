@@ -87,25 +87,18 @@ class GedungController extends Controller
         }
 
         // GENERATE KODE BARANG OTOMATIS SAAT SIMPAN (KIB C = 1.3.3.)
-        $prefix = '1.3.3.';
-        $lastGedung = Gedung::where('lokasi', $lokasi)
-            ->where('gedung_kode_barang', 'LIKE', $prefix . '%')
-            ->orderBy('gedung_kode_barang', 'desc')
-            ->first();
+        // 1. Ambil inisial dari Nama Gedung/Bangunan
+        $kodeNamaGedung = $this->generateCodeParticle($request->nama_barang);
 
-        if ($lastGedung) {
-            $lastNumber = (int) str_replace($prefix, '', $lastGedung->gedung_kode_barang);
-            $nextNumber = sprintf('%04d', $lastNumber + 1);
-        } else {
-            $nextNumber = '0001';
-        }
+        // 2. Ambil Nomor Register dari inputan form (dibikin format 3 digit)
+        $noRegGedung = str_pad($request->no_register, 3, '0', STR_PAD_LEFT); 
 
-        $kodeBarangOtomatis = $prefix . $nextNumber;
+        // 3. Gabungkan menjadi Kode Barang Otomatis
+        $kodeBarangOtomatis = "{$kodeNamaGedung}-{$noRegGedung}";
 
         $gedung = Gedung::create([
             'gedung_kode_barang'               => $kodeBarangOtomatis,
             'gedung_nama_barang'               => $request->nama_barang,
-            'gedung_nibar'                     => $request->nbar,
             'gedung_nomor_register'            => $request->nomor_register,
             'gedung_spesifikasi_barang'        => $request->spesifikasi_barang,
             'gedung_spesifikasi_lainnya'       => $request->spesifikasi_lainnya,
@@ -159,7 +152,6 @@ class GedungController extends Controller
 
         $validator = Validator::make($request->all(), [
             'nama_barang'               => 'required|string|max:100',
-            'nbar'                      => 'nullable|string|max:30',
             'nomor_register'           => 'required|string|max:20',
             'spesifikasi_barang'       => 'nullable|string|max:255',
             'spesifikasi_lainnya'      => 'nullable|string|max:255',
@@ -183,7 +175,6 @@ class GedungController extends Controller
         
         $gedung->update([
             'gedung_nama_barang'               => $request->nama_barang,
-            'gedung_nibar'                     => $request->nbar,
             'gedung_nomor_register'            => $request->nomor_register,
             'gedung_spesifikasi_barang'        => $request->spesifikasi_barang,
             'gedung_spesifikasi_lainnya'       => $request->spesifikasi_lainnya,
@@ -235,5 +226,19 @@ class GedungController extends Controller
     {
         $dataGedung = Gedung::where('lokasi', $lokasi)->latest('updated_at')->get();
         return view("pages.{$lokasi}.gedung.print", compact('dataGedung', 'lokasi'));
+    }
+
+    private function generateCodeParticle($string)
+    {
+        if (!$string) return 'XX';
+        
+        $words = explode(' ', trim($string));
+        $initials = '';
+        
+        foreach ($words as $word) {
+            $initials .= strtoupper(substr($word, 0, 1));
+        }
+        
+        return $initials;
     }
 }

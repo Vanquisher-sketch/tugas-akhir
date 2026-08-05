@@ -61,7 +61,6 @@
                     <th rowspan="2">No</th>
                     <th rowspan="2">Kode Barang</th>
                     <th rowspan="2">Nama Barang</th>
-                    <th rowspan="2">NIBAR</th>
                     <th rowspan="2">Register</th>
                     <th colspan="2">Spesifikasi</th>
                     <th colspan="3">Nomor Kendaraan</th>
@@ -96,7 +95,6 @@
                         {{-- Identitas Barang --}}
                         <td class="text-center">{{ $item->kode_barang ?? $item->alat_kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
                         <td>{{ $item->nama_barang ?? $item->alat_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->nibr ?? $item->bmd_nibar ?? '-' }}</td>
                         <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
                         
                         {{-- Spesifikasi Umum --}}

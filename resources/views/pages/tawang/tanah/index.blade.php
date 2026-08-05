@@ -43,7 +43,6 @@
                         <th>Sistem Lokasi</th>
                         <th>No. Register</th>
                         <th>Nama Barang</th>
-                        <th>Nibar</th>
                         <th>Spesifikasi Barang (Luas)</th>
                         <th>Spesifikasi Lainnya</th>
                         <th>Luas (Volume)</th>
@@ -71,7 +70,6 @@
                         <td class="text-center align-middle">{{ $item->lokasi ?? '-' }}</td>
                         <td class="text-center align-middle">{{ $item->tanah_nomor_register ?? '-' }}</td>
                         <td class="align-middle">{{ $item->tanah_nama_barang }}</td>
-                        <td class="align-middle">{{ $item->tanah_nibar ?? '-' }}</td>
                         <td class="align-middle">{{ $item->tanah_spesifikasi_barang ?? '-' }}</td>
                         <td class="align-middle">{{ $item->tanah_spesifikasi_lainnya ?? '-' }}</td>
                         <td class="text-center align-middle">{{ number_format($item->tanah_jumlah, 2, ',', '.') }}</td>

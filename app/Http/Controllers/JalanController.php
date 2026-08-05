@@ -46,11 +46,10 @@ class JalanController extends Controller
 
     public function create($lokasi)
     {
-        // Generasi Kode Barang & Nomor Register Otomatis untuk Form
-        $nextKodeBarang = $this->generateNextKodeBarang($lokasi);
-        $nextRegister   = $this->generateNextNomorRegister($lokasi);
+        // Hanya generate Nomor Register otomatis untuk ditampilkan di form
+        $nextRegister = $this->generateNextNomorRegister($lokasi);
 
-        return view("pages.{$lokasi}.jalan.create", compact('lokasi', 'nextKodeBarang', 'nextRegister'));
+        return view("pages.{$lokasi}.jalan.create", compact('lokasi', 'nextRegister'));
     }
 
     public function store(Request $request, $lokasi)
@@ -66,21 +65,19 @@ class JalanController extends Controller
             }
         }
 
-        // 2. Otomatisasi Backend (Jaga-jaga jika input di HTML kosong/disabled)
-        if (empty($inputs['kode_barang'])) {
-            $inputs['kode_barang'] = $this->generateNextKodeBarang($lokasi);
-        }
-        if (empty($inputs['nomor_register'])) {
-            $inputs['nomor_register'] = $this->generateNextNomorRegister($lokasi);
-        }
+        // 2. GENERATE KODE BARANG OTOMATIS (Inisial Nama + No Register)
+        $kodeNamaJalan = $this->generateCodeParticle($request->nama_barang);
+        $noRegJalan = str_pad($request->nomor_register, 3, '0', STR_PAD_LEFT); 
+        
+        $inputs['kode_barang'] = "{$kodeNamaJalan}-{$noRegJalan}";
+        $inputs['nomor_register'] = $noRegJalan; // Pastikan format nomor register juga tersimpan rapi
 
         $request->replace($inputs);
 
-        // 3. Validasi Data
+        // 3. Validasi Data (nibar sudah dihapus)
         $validator = Validator::make($request->all(), [
             'kode_barang'                       => 'required|string|max:30|unique:jalans,jalan_kode_barang',
             'nama_barang'                       => 'required|string|max:100',
-            'nibar'                             => 'nullable|string|max:30',
             'nomor_register'                    => 'required|string|max:20',
             'spesifikasi_barang'                => 'nullable|string|max:255',
             'spesifikasi_lainnya'               => 'nullable|string|max:255',
@@ -106,7 +103,6 @@ class JalanController extends Controller
         $jalan = Jalan::create([
             'jalan_kode_barang'                       => $request->kode_barang,
             'jalan_nama_barang'                       => $request->nama_barang,
-            'jalan_nibar'                             => $request->nibar,
             'jalan_nomor_register'                    => $request->nomor_register,
             'jalan_spesifikasi_barang'                => $request->spesifikasi_barang,
             'jalan_spesifikasi_lainnya'               => $request->spesifikasi_lainnya,
@@ -144,6 +140,8 @@ class JalanController extends Controller
         if ($jalan->lokasi !== $lokasi) abort(404);
 
         $inputs = $request->all();
+        
+        // 1. Bersihkan Format Angka
         $currencyFields = ['harga_satuan', 'nilai_perolehan', 'jumlah'];
         foreach ($currencyFields as $field) {
             if (isset($inputs[$field])) {
@@ -151,12 +149,20 @@ class JalanController extends Controller
                 $inputs[$field] = str_replace(',', '.', $cleanValue);
             }
         }
+
+        // 2. GENERATE ULANG KODE BARANG (Berjaga-jaga jika Nama/No. Reg diubah saat edit)
+        $kodeNamaJalan = $this->generateCodeParticle($request->nama_barang);
+        $noRegJalan = str_pad($request->nomor_register, 3, '0', STR_PAD_LEFT); 
+        
+        $inputs['kode_barang'] = "{$kodeNamaJalan}-{$noRegJalan}";
+        $inputs['nomor_register'] = $noRegJalan;
+
         $request->replace($inputs);
 
+        // 3. Validasi
         $validator = Validator::make($request->all(), [
             'kode_barang'                       => "required|string|max:30|unique:jalans,jalan_kode_barang,{$jalan->jalan_kode_barang},jalan_kode_barang",
             'nama_barang'                       => 'required|string|max:100',
-            'nibar'                             => 'nullable|string|max:30',
             'nomor_register'                    => 'required|string|max:20',
             'spesifikasi_barang'                => 'nullable|string|max:255',
             'spesifikasi_lainnya'               => 'nullable|string|max:255',
@@ -181,7 +187,6 @@ class JalanController extends Controller
         $jalan->update([
             'jalan_kode_barang'                       => $request->kode_barang,
             'jalan_nama_barang'                       => $request->nama_barang,
-            'jalan_nibar'                             => $request->nibar,
             'jalan_nomor_register'                    => $request->nomor_register,
             'jalan_spesifikasi_barang'                => $request->spesifikasi_barang,
             'jalan_spesifikasi_lainnya'               => $request->spesifikasi_lainnya,
@@ -225,31 +230,6 @@ class JalanController extends Controller
     }
 
     /**
-     * Helper privat untuk meng-generate Kode Barang KIB D secara otomatis.
-     */
-    private function generateNextKodeBarang($lokasi)
-    {
-        $defaultPrefix = '04.01.01.01'; // Prefix standar KIB D (Jalan, Irigasi & Jaringan)
-
-        $lastJalan = Jalan::where('lokasi', $lokasi)
-            ->whereNotNull('jalan_kode_barang')
-            ->latest('created_at')
-            ->first();
-
-        if ($lastJalan && $lastJalan->jalan_kode_barang) {
-            $parts = explode('.', $lastJalan->jalan_kode_barang);
-            $lastNum = (int) end($parts);
-            $nextNum = str_pad($lastNum + 1, 2, '0', STR_PAD_LEFT);
-            array_pop($parts);
-            $parts[] = $nextNum;
-
-            return implode('.', $parts);
-        }
-
-        return $defaultPrefix . '.01';
-    }
-
-    /**
      * Helper privat untuk meng-generate Nomor Register secara otomatis.
      */
     private function generateNextNomorRegister($lokasi)
@@ -257,9 +237,27 @@ class JalanController extends Controller
         $lastRegister = Jalan::where('lokasi', $lokasi)->max('jalan_nomor_register');
 
         if ($lastRegister) {
-            return str_pad((int)$lastRegister + 1, 4, '0', STR_PAD_LEFT);
+            return str_pad((int)$lastRegister + 1, 3, '0', STR_PAD_LEFT);
         }
 
-        return '0001';
+        return '001';
+    }
+
+    /**
+     * Fungsi untuk mengambil huruf depan setiap kata (Inisial)
+     * Contoh: "Jalan Setapak" -> "JS"
+     */
+    private function generateCodeParticle($string)
+    {
+        if (!$string) return 'XX';
+        
+        $words = explode(' ', trim($string));
+        $initials = '';
+        
+        foreach ($words as $word) {
+            $initials .= strtoupper(substr($word, 0, 1));
+        }
+        
+        return $initials;
     }
 }

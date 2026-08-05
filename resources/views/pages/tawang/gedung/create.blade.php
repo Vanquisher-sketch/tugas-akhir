@@ -43,15 +43,6 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="nbar" class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
-                                    <input type="text" name="nbar" id="nbar" class="form-control @error('nbar') is-invalid @enderror" value="{{ old('nbar') }}" placeholder="Nibar" maxlength="30">
-                                    @error('nbar')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
                                     <label for="nomor_register" class="font-weight-bold">No. Register <span class="text-danger">*</span></label>
                                     <input type="text" name="nomor_register" id="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" placeholder="0001" maxlength="20" required>
                                     @error('nomor_register')

@@ -27,7 +27,6 @@ class Tanah extends Model
         'tanah_kode_barang',
         'lokasi', // Kolom murni tanpa awalan khusus jangkar filter
         'tanah_nama_barang',
-        'tanah_nibar',
         'tanah_nomor_register',
         'tanah_spesifikasi_barang',
         'tanah_spesifikasi_lainnya',

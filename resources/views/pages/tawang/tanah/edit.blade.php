@@ -45,11 +45,7 @@
                         <input type="text" name="tanah_nomor_register" class="form-control @error('tanah_nomor_register') is-invalid @enderror" value="{{ old('tanah_nomor_register', $tanah->tanah_nomor_register) }}" maxlength="20">
                         @error('tanah_nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="form-group col-md-2">
-                        <label class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
-                        <input type="text" name="tanah_nibar" class="form-control @error('tanah_nibar') is-invalid @enderror" value="{{ old('tanah_nibar', $tanah->tanah_nibar) }}" maxlength="30">
-                        @error('tanah_nibar') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                    
                 </div>
 
                 <div class="row">

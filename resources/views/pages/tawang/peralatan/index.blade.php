@@ -54,7 +54,6 @@
                         <th rowspan="2" class="align-middle">Foto</th>
                         <th rowspan="2" class="align-middle">Kode Barang</th>
                         <th rowspan="2" class="align-middle">Nama Barang</th>
-                        <th rowspan="2" class="align-middle">NIBAR</th>
                         <th rowspan="2" class="align-middle">No. Reg</th>
                         <th rowspan="2" class="align-middle">Merk / Tipe</th>
                         <th rowspan="2" class="align-middle">Lokasi Fisik</th>
@@ -97,7 +96,6 @@
 
                         <td class="font-weight-bold text-primary align-middle text-center">{{ $item->alat_kode_barang }}</td>
                         <td class="align-middle font-weight-bold text-gray-900">{{ $item->alat_nama_barang }}</td>
-                        <td class="align-middle text-center">{{ $item->alat_nibar ?? '-' }}</td>
                         <td class="align-middle text-center font-weight-bold text-secondary">{{ $item->alat_nomor_register ?? '-' }}</td>
                         <td class="align-middle">{{ $item->alat_merk_tipe ?? '-' }}</td>
                         <td class="align-middle text-center font-weight-bold text-dark"><span class="badge badge-light border px-2 py-1">{{ $item->alat_lokasi_fisik ?? '-' }}</span></td>
@@ -112,17 +110,45 @@
                         <td class="align-middle text-center"><small class="font-weight-bold text-secondary">{{ $item->alat_nomor_bpkb ?? '-' }}</small></td>
                         
                         {{-- Patroli Pajak & STNK --}}
+                        {{-- Patroli Pajak & STNK --}}
                         <td class="text-center align-middle">
                             @if($item->alat_tanggal_pajak)
-                                <span class="{{ \Carbon\Carbon::parse($item->alat_tanggal_pajak)->isPast() ? 'text-danger font-weight-bold animate__animated animate__flash animate__infinite animate__slower' : 'font-weight-bold' }}">
-                                    {{ \Carbon\Carbon::parse($item->alat_tanggal_pajak)->format('d/m/Y') }}
+                                @php
+                                    $tglPajak = \Carbon\Carbon::parse($item->alat_tanggal_pajak)->startOfDay();
+                                    $hariIni = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+                                    $selisihHariPajak = $hariIni->diffInDays($tglPajak, false);
+                                    
+                                    $pajakClass = 'font-weight-bold';
+                                    
+                                    if ($selisihHariPajak <= 3) {
+                                        $pajakClass = 'text-danger font-weight-bold animate__animated animate__flash animate__infinite animate__slower';
+                                    } elseif ($selisihHariPajak <= 7) {
+                                        $pajakClass = 'text-danger font-weight-bold';
+                                    }
+                                @endphp
+                                <span class="{{ $pajakClass }}">
+                                    {{ $tglPajak->format('d/m/Y') }}
                                 </span>
                             @else - @endif
                         </td>
+
                         <td class="text-center align-middle">
                             @if($item->alat_tanggal_stnk)
-                                <span class="{{ \Carbon\Carbon::parse($item->alat_tanggal_stnk)->isPast() ? 'text-danger font-weight-bold' : 'font-weight-bold' }}">
-                                    {{ \Carbon\Carbon::parse($item->alat_tanggal_stnk)->format('d/m/Y') }}
+                                @php
+                                    $tglStnk = \Carbon\Carbon::parse($item->alat_tanggal_stnk)->startOfDay();
+                                    $hariIni = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+                                    $selisihHariStnk = $hariIni->diffInDays($tglStnk, false);
+                                    
+                                    $stnkClass = 'font-weight-bold';
+                                    
+                                    if ($selisihHariStnk <= 3) {
+                                        $stnkClass = 'text-danger font-weight-bold animate__animated animate__flash animate__infinite animate__slower';
+                                    } elseif ($selisihHariStnk <= 7) {
+                                        $stnkClass = 'text-danger font-weight-bold';
+                                    }
+                                @endphp
+                                <span class="{{ $stnkClass }}">
+                                    {{ $tglStnk->format('d/m/Y') }}
                                 </span>
                             @else - @endif
                         </td>

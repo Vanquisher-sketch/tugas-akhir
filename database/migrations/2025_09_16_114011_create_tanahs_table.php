@@ -14,7 +14,6 @@ return new class extends Migration
             $table->string('lokasi', 30)->nullable(); 
 
             $table->string('tanah_nama_barang', 100); 
-            $table->string('tanah_nibar', 30)->nullable(); 
             $table->string('tanah_nomor_register', 20)->nullable(); 
             
             $table->string('tanah_spesifikasi_barang', 255)->nullable(); 

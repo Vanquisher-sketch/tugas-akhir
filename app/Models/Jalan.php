@@ -28,7 +28,6 @@ class Jalan extends Model
         'jalan_kode_barang',
         'lokasi', // Kolom murni tanpa awalan khusus jangkar filter
         'jalan_nama_barang',
-        'jalan_nibar',
         'jalan_nomor_register',
         'jalan_spesifikasi_barang',
         'jalan_spesifikasi_lainnya',

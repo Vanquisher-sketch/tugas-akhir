@@ -29,7 +29,6 @@ return new class extends Migration
                   ->onUpdate('cascade');
 
             // Nomor seri / register dipangkas agar database lebih ringan
-            $table->string('inv_nibar', 30)->nullable(); 
             $table->string('inv_nomor_register', 20)->nullable(); 
             
             // Nama barang dipertahankan 100 untuk antisipasi nama yang panjang

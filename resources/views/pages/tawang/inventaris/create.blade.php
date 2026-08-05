@@ -25,7 +25,6 @@
                                 {{-- 🌟 PERBAIKAN: Fallback nama kolom tahun & default ke tahun saat ini jika master kosong --}}
                                 data-tahun="{{ $p->alat_tahun_perolehan ?? $p->tahun_perolehan ?? $p->tahun ?? date('Y') }}"
                                 data-satuan="{{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }}"
-                                data-nibar="{{ $p->alat_nibar ?? $p->nibar ?? '-' }}"
                                 data-register="{{ $p->alat_nomor_register ?? $p->nomor_register ?? '-' }}"
                                 data-kondisi="{{ $p->alat_kondisi ?? $p->kondisi ?? 'Baik' }}"
                                 data-spesifikasi="{{ $p->alat_spesifikasi_barang ?? $p->spesifikasi_barang ?? '-' }}"
@@ -87,10 +86,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 form-group">
-                    <label class="font-weight-bold text-muted" style="font-size: 12px;">NIBAR</label>
-                    <input type="text" id="nibar" name="nibar" class="form-control bg-light text-muted" readonly>
-                </div>
+                
                 <div class="col-md-4 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Nomor Register</label>
                     <input type="text" id="nomor_register" name="nomor_register" class="form-control bg-light text-muted" readonly>
@@ -140,7 +136,6 @@
         const currentYear = new Date().getFullYear();
         document.getElementById('tahun_perolehan').value = (dataTahun && dataTahun !== '' && dataTahun !== 'null') ? dataTahun : currentYear;
         
-        document.getElementById('nibar').value = opt.getAttribute('data-nibar') || '-';
         document.getElementById('nomor_register').value = opt.getAttribute('data-register') || '-';
         document.getElementById('kondisi').value = opt.getAttribute('data-kondisi') || 'Baik';
         

@@ -28,7 +28,6 @@ class Gedung extends Model
         'gedung_kode_barang',
         'lokasi', // Kolom murni tanpa awalan khusus jangkar filter
         'gedung_nama_barang',
-        'gedung_nibar',
         'gedung_nomor_register',
         'gedung_spesifikasi_barang',
         'gedung_spesifikasi_lainnya',

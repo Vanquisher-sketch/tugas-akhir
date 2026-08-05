@@ -39,12 +39,6 @@
                     <input type="text" name="nomor_register" class="form-control @error('nomor_register') is-invalid @enderror" value="{{ old('nomor_register') }}" placeholder="0001">
                     @error('nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-
-                <div class="col-md-3 form-group">
-                    <label class="font-weight-bold">Nibar (Nomor Induk Barang)</label>
-                    <input type="text" name="nibr" class="form-control @error('nibr') is-invalid @enderror" value="{{ old('nibr') }}" placeholder="Nibar">
-                    @error('nibr') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
             </div>
 
             <div class="row">

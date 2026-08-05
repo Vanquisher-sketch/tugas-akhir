@@ -20,7 +20,7 @@ class ArsipController extends Controller
      */
     public function index($lokasi)
     {
-        $arsipTanah      = Tanah::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
+        $arsipTanah       = Tanah::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
         $arsipPeralatan   = Peralatan::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
         $arsipGedung      = Gedung::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
         $arsipJalan       = Jalan::where('lokasi', $lokasi)->onlyTrashed()->latest('deleted_at')->get();
@@ -43,13 +43,13 @@ class ArsipController extends Controller
     /**
      * Mengembalikan data (Restore) ke daftar aktif
      */
-    public function restore($lokasi, $kategori, $alat_kode_barang)
+    public function restore($lokasi, $kategori, $kode) // <-- FIX: Menggunakan variabel generik $kode
     {
         $model = $this->getModel($kategori);
         $primaryKey = $this->getPrimaryKey($kategori);
 
         // Cari data menggunakan primary key yang sudah disesuaikan
-        $item = $model::where($primaryKey, $alat_kode_barang)->onlyTrashed()->firstOrFail();
+        $item = $model::where($primaryKey, $kode)->onlyTrashed()->firstOrFail();
         
         if ($item->lokasi !== $lokasi) abort(403, 'Akses ditolak.');
 
@@ -101,18 +101,17 @@ class ArsipController extends Controller
      * Helper: Menentukan Primary Key (Kunci Utama) unik tiap kategori
      */
     private function getPrimaryKey($kategori) {
-        // 1. Rusak pakai no_id_pemda
-        if ($kategori == 'rusak') {
-            return 'no_id_pemda';
-        }
-        
-        // 2. BMD pakai id (auto increment)
-        if ($kategori == 'bmd') {
-            return 'id';
-        }
+        // FIX: Mapping spesifik untuk menyesuaikan struktur database PANDAWA
+        $keyMap = [
+            'tanah'      => 'tanah_kode_barang',
+            'peralatan'  => 'alat_kode_barang',
+            'gedung'     => 'gedung_kode_barang',
+            'jalan'      => 'jalan_kode_barang',
+            'inventaris' => 'inv_kode_barang',
+            'rusak'      => 'rusak_kode_barang', 
+            'bmd'        => 'id',
+        ];
 
-        // 3. Inventaris dan KIB A, B, C, D pakainya kode_barang (String)
-        // Revisi: Inventaris dilepas dari 'id' karena kita pakai kode_barang sebagai PK
-        return 'kode_barang';
+        return $keyMap[$kategori] ?? abort(404, 'Kategori tidak dikenali.');
     }
 }

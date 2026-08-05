@@ -74,10 +74,6 @@
             {{-- Kolom Atribut Tambahan (Readonly / Kunci agar tidak merusak relasi BMD) --}}
             <div class="row mt-2">
                 <div class="col-md-6 form-group">
-                    <label class="font-weight-bold text-muted">NIBAR (Terkunci)</label>
-                    <input type="text" class="form-control bg-light text-muted" value="{{ $inventari->inv_nibar ?? '-' }}" readonly>
-                </div>
-                <div class="col-md-6 form-group">
                     <label class="font-weight-bold text-muted">Nomor Register (Terkunci)</label>
                     <input type="text" class="form-control bg-light text-muted" value="{{ $inventari->inv_nomor_register ?? '-' }}" readonly>
                 </div>

@@ -42,7 +42,6 @@
                         <th>Kode Barang</th>
                         <th>No. Register</th>
                         <th>Nama Barang</th>
-                        <th>Nibar</th>
                         <th>Spesifikasi Barang</th>
                         <th>Spesifikasi Lainnya</th>
                         <th>No. Ruas</th>
@@ -67,7 +66,6 @@
                         <td class="font-weight-bold text-primary align-middle">{{ $item->jalan_kode_barang }}</td>
                         <td class="text-center align-middle">{{ $item->jalan_nomor_register }}</td>
                         <td class="align-middle">{{ $item->jalan_nama_barang }}</td>
-                        <td class="text-center align-middle">{{ $item->jalan_nibar ?? '-' }}</td>
                         <td class="align-middle">{{ $item->jalan_spesifikasi_barang ?? '-' }}</td>
                         <td class="align-middle">{{ $item->jalan_spesifikasi_lainnya ?? '-' }}</td>
                         <td class="text-center align-middle">{{ $item->jalan_nomor_ruas_jalan_jembatan_irigasi ?? '-' }}</td>

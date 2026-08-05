@@ -83,36 +83,14 @@ class TanahController extends Controller
             $validatedData = $validator->validated();
             $validatedData['lokasi'] = $lokasi;
             
-            // =========================================================================
-            // LOGIKA KODE BARANG OTOMATIS PARTIKEL (KIB A)
-            // (Partikel: Lokasi Fisik + Nama Barang + Nomor Urut Sekuensial)
-            // =========================================================================
-            
-            // Partikel 1: Inisial Lokasi Fisik / Ruangan
-            $kodeLokasi = $this->generateCodeParticle($request->lokasi);
+            // 1. Ambil inisial dari Nama Tanah/Barang
+            $kodeNamaTanah = $this->generateCodeParticle($request->nama_barang);
 
-            // Partikel 2: Inisial Nama Barang
-            $kodeNamaBarang = $this->generateCodeParticle($request->tanah_nama_barang);
+            // 2. Ambil Nomor Register dari inputan form (dibikin format 3 digit)
+            $noRegTanah = str_pad($request->no_register, 3, '0', STR_PAD_LEFT); 
 
-            // Prefix Gabungan (Contoh: KI-TL)
-            $prefix = "{$kodeLokasi}-{$kodeNamaBarang}";
-
-            // Partikel 3: Nomor Urut Sekuensial (4 digit)
-            $lastRecord = Tanah::where('lokasi', $lokasi)
-                ->where('tanah_kode_barang', 'LIKE', "{$prefix}-%")
-                ->orderBy('tanah_kode_barang', 'desc')
-                ->first();
-
-            if ($lastRecord) {
-                // Ambil 4 angka terakhir dari tanah_kode_barang
-                $lastNum = (int) substr($lastRecord->tanah_kode_barang, -4);
-                $nextNum = str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-            } else {
-                $nextNum = '0001';
-            }
-
-            // Hasil Kode Barang Otomatis (Contoh: KI-TL-0001)
-            $validatedData['tanah_kode_barang'] = "{$prefix}-{$nextNum}";
+            // 3. Gabungkan menjadi Kode Barang Otomatis
+            $kodeBarangOtomatis = "{$kodeNamaTanah}-{$noRegTanah}";
             // =========================================================================
 
             $tanah = Tanah::create($validatedData);
@@ -256,7 +234,6 @@ class TanahController extends Controller
     {
         $rules = [
             'tanah_nama_barang'              => 'required|string|max:100',
-            'tanah_nibar'                    => 'nullable|string|max:30',
             'tanah_nomor_register'           => 'nullable|string|max:20',
             'tanah_spesifikasi_barang'       => 'nullable|string|max:255',
             'tanah_spesifikasi_lainnya'      => 'nullable|string|max:255',

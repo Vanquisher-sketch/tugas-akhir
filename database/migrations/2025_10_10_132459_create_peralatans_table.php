@@ -17,7 +17,6 @@ return new class extends Migration
             
             // Awalan 'alat_' agar unik dan value ditekan agar efisien
             $table->string('alat_nama_barang', 100); 
-            $table->string('alat_nibar', 30)->nullable(); 
             $table->string('alat_nomor_register', 20); 
             $table->string('alat_spesifikasi_barang', 255)->nullable(); 
             $table->string('alat_merk_tipe', 50)->nullable(); 

@@ -156,11 +156,10 @@ class InventarisController extends Controller
 
         $namaBarang = $request->nama_barang ?? $masterPeralatan->alat_nama_barang ?? '-';
         $merkTipe = $request->merk_tipe ?? $masterPeralatan->alat_merk_tipe ?? '-';
-        $nibar = $request->nibar ?? $masterPeralatan->alat_nibar ?? null;
         $nomorRegister = $request->nomor_register ?? $masterPeralatan->alat_nomor_register ?? null;
         $spesifikasi = $request->spesifikasi_barang ?? $masterPeralatan->alat_spesifikasi_barang ?? null;
 
-        DB::transaction(function () use ($request, $room, $lokasi, $tahunPerolehan, $namaBarang, $merkTipe, $nibar, $nomorRegister, $spesifikasi) {
+        DB::transaction(function () use ($request, $room, $lokasi, $tahunPerolehan, $namaBarang, $merkTipe, $nomorRegister, $spesifikasi) {
             
             $item = Inventaris::withTrashed()
                 ->where('inv_kode_barang', $request->kode_barang)
@@ -182,7 +181,6 @@ class InventarisController extends Controller
                 Inventaris::create([
                     'inv_kode_barang'        => $request->kode_barang,
                     'inv_ruangan_kode'       => $room->kode_ruangan,
-                    'inv_nibar'              => $nibar,
                     'inv_nomor_register'     => $nomorRegister,
                     'inv_nama_barang'        => $namaBarang,
                     'inv_spesifikasi_barang' => $spesifikasi,
@@ -325,7 +323,6 @@ class InventarisController extends Controller
                     Inventaris::create([
                         'inv_kode_barang'        => $inventari->inv_kode_barang,
                         'inv_ruangan_kode'       => $kode_ruangan,
-                        'inv_nibar'              => $inventari->inv_nibar,
                         'inv_nomor_register'     => $inventari->inv_nomor_register,
                         'inv_nama_barang'        => $inventari->inv_nama_barang,
                         'inv_spesifikasi_barang' => $inventari->inv_spesifikasi_barang,
@@ -420,7 +417,6 @@ class InventarisController extends Controller
                     Inventaris::create([
                         'inv_kode_barang'        => $inventari->inv_kode_barang,
                         'inv_ruangan_kode'       => $newRoom->kode_ruangan,
-                        'inv_nibar'              => $inventari->inv_nibar,
                         'inv_nomor_register'     => $inventari->inv_nomor_register,
                         'inv_nama_barang'        => $inventari->inv_nama_barang,
                         'inv_spesifikasi_barang' => $inventari->inv_spesifikasi_barang,

@@ -24,8 +24,7 @@ class Peralatan extends Model
     protected $fillable = [
         'alat_kode_barang', 
         'lokasi', 
-        'alat_nama_barang', 
-        'alat_nibar', 
+        'alat_nama_barang',  
         'alat_nomor_register',
         'alat_spesifikasi_barang', 
         'alat_merk_tipe', 

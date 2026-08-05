@@ -41,10 +41,7 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label class="font-weight-bold">NIBAR</label>
-                            <input type="text" name="nibar" class="form-control" value="{{ old('nibar', $jalan->jalan_nibar) }}">
-                        </div>
+                        
                         <div class="form-group col-md-6">
                             <label class="font-weight-bold">Nomor Register <span class="text-danger">*</span></label>
                             <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register', $jalan->jalan_nomor_register) }}" required>

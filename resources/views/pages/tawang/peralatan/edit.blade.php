@@ -30,10 +30,6 @@
             </div>
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <label class="font-weight-bold">NIBAR</label>
-                    <input type="text" name="nibr" class="form-control" value="{{ old('nibr', $peralatan->alat_nibar) }}">
-                </div>
-                <div class="col-md-6 form-group">
                     <label class="font-weight-bold">Nomor Register</label>
                     <input type="text" name="nomor_register" class="form-control" value="{{ old('nomor_register', $peralatan->alat_nomor_register) }}">
                 </div>

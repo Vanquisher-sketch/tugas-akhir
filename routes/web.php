@@ -119,7 +119,8 @@ Route::middleware('auth')->group(function () {
             // 7. Aset Rusak
             Route::get('rusak/autocomplete', [RusakController::class, 'autocomplete'])->name('rusak.autocomplete');
             Route::get('rusak/print', [RusakController::class, 'print'])->name('rusak.print');
-            Route::resource('rusak', RusakController::class)->parameters(['rusak' => 'id']);
+            // 🌟 PERBAIKAN DI SINI: Menambahkan ->only(['index', 'destroy']) agar Laravel tidak otomatis mencari fungsi show()
+            Route::resource('rusak', RusakController::class)->only(['index', 'destroy'])->parameters(['rusak' => 'id']);
 
             // 8. PENGGUNAAN BMD
             Route::get('bmd/print', [BmdController::class, 'print'])->name('bmd.print');
@@ -148,6 +149,7 @@ Route::middleware('auth')->group(function () {
 // --- RUTE PUBLIK (BISA DIAKSES HASIL SCAN DARI HP TANPA LOGIN) ---
 Route::get('/{lokasi}/peralatan/scan/{barcode}', [\App\Http\Controllers\PeralatanController::class, 'scan'])->name('lokasi.peralatan.scan');
 Route::post('/{lokasi}/pajak/kirim-email-warning', [\App\Http\Controllers\BmdController::class, 'kirimWarningEmail'])->name('lokasi.pajak.kirim_email');
+
 // --- KHUSUS UNTUK VERCEL CRON ---
 Route::get('/run-scheduler', function () {
     Artisan::call('schedule:run');

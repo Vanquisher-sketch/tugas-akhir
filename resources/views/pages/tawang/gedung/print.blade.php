@@ -61,7 +61,6 @@
                     <th>No</th>
                     <th>Kode Barang</th>
                     <th>Nama Gedung</th>
-                    <th>NIBAR</th>
                     <th>Reg</th>
                     <th>Lantai</th>
                     <th>Luas (M2)</th>
@@ -87,7 +86,6 @@
                         <td class="text-center">{{ $index + 1 }}</td>
                         <td class="text-center">{{ $item->kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
                         <td>{{ $item->nama_barang ?? $item->gedung_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->nbar ?? $item->nibar ?? $item->bmd_nibar ?? '-' }}</td>
                         <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
                         
                         <td class="text-center">{{ $item->jumlah_lantai ?? $item->gedung_lantai ?? '-' }}</td>

@@ -68,7 +68,6 @@
                         <td class="font-weight-bold text-primary align-middle">{{ $item->gedung_kode_barang }}</td>
                         <td class="align-middle">{{ $item->lokasi }}</td>
                         <td class="align-middle">{{ $item->gedung_nama_barang }}</td>
-                        <td class="text-center align-middle">{{ $item->gedung_nibar ?? '-' }}</td>
                         <td class="text-center align-middle">{{ $item->gedung_nomor_register }}</td>
                         <td class="align-middle">{{ $item->gedung_spesifikasi_barang ?? '-' }}</td>
                         <td class="align-middle">{{ $item->gedung_spesifikasi_lainnya ?? '-' }}</td>

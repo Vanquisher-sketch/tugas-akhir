@@ -67,7 +67,6 @@
             <thead class="text-center">
                 <tr class="font-weight-bold">
                     <th rowspan="2" class="align-middle">No</th>
-                    <th rowspan="2" class="align-middle">NIBAR</th>
                     <th rowspan="2" class="align-middle">No. Reg</th>
                     <th rowspan="2" class="align-middle">Kode Barang</th>
                     <th rowspan="2" class="align-middle">Nama Barang</th>
@@ -93,7 +92,6 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     
                     {{-- IMPLEMENTASI SABUK PENGAMAN ATRIBUT (??) --}}
-                    <td>{{ $item->nibar ?? $item->bmd_nibar ?? '-' }}</td>
                     <td>{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
                     
                     <td class="text-center font-weight-bold">

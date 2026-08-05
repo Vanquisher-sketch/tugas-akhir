@@ -16,8 +16,7 @@ return new class extends Migration
             $table->string('lokasi', 30);
             
             // Data Utama
-            $table->string('jalan_nama_barang', 100); 
-            $table->string('jalan_nibar', 30)->nullable(); 
+            $table->string('jalan_nama_barang', 100);
             $table->string('jalan_nomor_register', 20); 
             
             // Spesifikasi diubah menjadi string(255) agar lebih optimal dari text

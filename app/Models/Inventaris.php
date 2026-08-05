@@ -28,7 +28,6 @@ class Inventaris extends Model
         'inv_kode_barang',
         'lokasi',
         'inv_ruangan_kode',
-        'inv_nibar',
         'inv_nomor_register',
         'inv_nama_barang',
         'inv_spesifikasi_barang',

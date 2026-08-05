@@ -57,30 +57,41 @@
                             <tbody>
                                 @forelse($kat['data'] as $item)
                                     @php 
-                                        // LOGIKA FIX: Penentuan PK agar tidak Error Missing Parameter
-                                        if($kat['key'] == 'rusak') {
-                                            $pk = $item->no_id_pemda;
+                                        // LOGIKA FIX: Penentuan PK dan Nama Barang sesuai prefix masing-masing tabel
+                                        if($kat['key'] == 'tanah') {
+                                            $pk = $item->tanah_kode_barang;
+                                            $namaBarang = $item->tanah_nama_barang;
+                                        } elseif($kat['key'] == 'peralatan') {
+                                            $pk = $item->alat_kode_barang;
+                                            $namaBarang = $item->alat_nama_barang;
+                                        } elseif($kat['key'] == 'gedung') {
+                                            $pk = $item->gedung_kode_barang;
+                                            $namaBarang = $item->gedung_nama_barang;
+                                        } elseif($kat['key'] == 'jalan') {
+                                            $pk = $item->jalan_kode_barang;
+                                            $namaBarang = $item->jalan_nama_barang;
+                                        } elseif($kat['key'] == 'inventaris') {
+                                            $pk = $item->inv_kode_barang;
+                                            $namaBarang = $item->inv_nama_barang;
+                                        } elseif($kat['key'] == 'rusak') {
+                                            // Fallback jaga-jaga jika di tabel rusak strukturnya belum di-prefix
+                                            $pk = $item->rusak_kode_barang ?? $item->no_id_pemda;
+                                            $namaBarang = $item->rusak_nama_barang ?? $item->nama_barang;
                                         } elseif($kat['key'] == 'bmd') {
                                             $pk = $item->id;
-                                        } elseif($kat['key'] == 'inventaris') {
-                                            $pk = $item->kode_barang; // Inventaris pakai kode_barang sesuai revisi model
+                                            $namaBarang = 'Pemakaian: ' . $item->pemakai_nama;
                                         } else {
-                                            $pk = $item->alat_kode_barang; // KIB A,B,C,D pakai kode_barang
+                                            $pk = '-';
+                                            $namaBarang = '-';
                                         }
                                     @endphp
                                     <tr>
-                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td class="font-weight-bold text-primary text-center">{{ $pk }}</td>
-                                        <td>
-                                            @if($kat['key'] == 'bmd')
-                                                Pemakaian: {{ $item->pemakai_nama }}
-                                            @else
-                                                {{ $item->nama_barang }}
-                                            @endif
-                                        </td>
-                                        <td class="text-center text-muted">{{ $item->deleted_at->format('d/m/Y H:i:s') }}</td>
-                                        <td class="text-center">
-                                            @if($pk)
+                                        <td class="text-center align-middle">{{ $loop->iteration }}</td>
+                                        <td class="font-weight-bold text-primary text-center align-middle">{{ $pk }}</td>
+                                        <td class="align-middle">{{ $namaBarang }}</td>
+                                        <td class="text-center text-muted align-middle">{{ $item->deleted_at->format('d/m/Y H:i:s') }}</td>
+                                        <td class="text-center align-middle">
+                                            @if($pk && $pk !== '-')
                                                 {{-- Tombol Pulihkan --}}
                                                 <form action="{{ route('lokasi.arsip.restore', [$lokasi, $kat['key'], $pk]) }}" method="POST" class="d-inline">
                                                     @csrf
@@ -127,7 +138,7 @@
             Swal.fire({
                 title: 'Hapus Permanen?',
                 text: "Data ini akan hilang selamanya dari database!",
-                icon: 'error', // Ikon Error (X merah) untuk hapus permanen
+                icon: 'error', 
                 showCancelButton: true,
                 confirmButtonColor: '#e74a3b',
                 cancelButtonColor: '#858796',

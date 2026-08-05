@@ -26,7 +26,6 @@ class PeralatanController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('alat_nama_barang', 'LIKE', "%{$search}%")
                   ->orWhere('alat_kode_barang', 'LIKE', "%{$search}%")
-                  ->orWhere('alat_nibar', 'LIKE', "%{$search}%")
                   ->orWhere('alat_merk_tipe', 'LIKE', "%{$search}%")
                   ->orWhere('alat_nomor_polisi', 'LIKE', "%{$search}%");
             });
@@ -87,35 +86,15 @@ class PeralatanController extends Controller
 
         return DB::transaction(function () use ($request, $lokasi) {
 
-            // =========================================================================
-            // 3. GENERATE KODE BARANG OTOMATIS DARI PARTIKEL (RUANGAN + BARANG + URUTAN)
-            // =========================================================================
-
-            // Partikel 1: Nama Ruangan (Inisial kata / Singkatan Uppercase)
-            $kodeRuangan = $this->generateCodeParticle($request->Lok);
-
-            // Partikel 2: Nama Barang (Inisial kata / Singkatan Uppercase)
+            // 1. Ambil inisial dari Nama Barang (Contoh: "Honda Vario" -> "HV")
             $kodeNamaBarang = $this->generateCodeParticle($request->nama_barang);
 
-            // Prefix Gabungan (Contoh: RR-LPT)
-            $prefix = "{$kodeRuangan}-{$kodeNamaBarang}";
+            // 2. Ambil Nomor Register dari inputan form 
+            // (Opsional tapi direkomendasikan): Gunakan str_pad agar misal user cuma ketik "1", otomatis jadi "001"
+            $noReg = str_pad($request->no_register, 4, '0', STR_PAD_LEFT); 
 
-            // Partikel 3: Susunan Inputan / Nomor Urut Sekuensial (4 digit)
-            // FIX: Mengurutkan berdasarkan alat_kode_barang, bukan id
-            $lastPeralatan = Peralatan::where('alat_kode_barang', 'LIKE', "{$prefix}-%")
-                ->orderBy('alat_kode_barang', 'desc')
-                ->first();
-
-            if ($lastPeralatan) {
-                // Ambil 4 angka terakhir dari kode_barang sebelumnya
-                $lastNum = (int) substr($lastPeralatan->alat_kode_barang, -4);
-                $nextNum = str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-            } else {
-                $nextNum = '0001';
-            }
-
-            // Kode Barang Otomatis Akhir (Contoh: RR-LPT-0001)
-            $kodeBarangOtomatis = "{$prefix}-{$nextNum}";
+            // 3  . Gabungkan menjadi Kode Barang Otomatis (Hasil: HV-001)
+            $kodeBarangOtomatis = "{$kodeNamaBarang}-{$noReg}";
 
             // =========================================================================
 
@@ -129,7 +108,6 @@ class PeralatanController extends Controller
             $peralatan = Peralatan::create([
                 'alat_kode_barang'        => $kodeBarangOtomatis,
                 'alat_nama_barang'        => $request->nama_barang,
-                'alat_nibar'              => $request->nibr,
                 'alat_nomor_register'     => $request->nomor_register,
                 'alat_lokasi_fisik'       => $request->Lok,
                 'alat_merk_tipe'          => $request->merk_tipe,
@@ -283,7 +261,6 @@ class PeralatanController extends Controller
 
             $peralatan->update([
                 'alat_nama_barang'        => $request->nama_barang,
-                'alat_nibar'              => $request->nibr,
                 'alat_nomor_register'     => $request->nomor_register,
                 'alat_lokasi_fisik'       => $request->Lok,
                 'alat_merk_tipe'          => $request->merk_tipe,
