@@ -84,13 +84,14 @@ class TanahController extends Controller
             $validatedData['lokasi'] = $lokasi;
             
             // 1. Ambil inisial dari Nama Tanah/Barang
-            $kodeNamaTanah = $this->generateCodeParticle($request->nama_barang);
+            $kodeNamaTanah = $this->generateCodeParticle($request->tanah_nama_barang);
 
             // 2. Ambil Nomor Register dari inputan form (dibikin format 3 digit)
-            $noRegTanah = str_pad($request->no_register, 3, '0', STR_PAD_LEFT); 
+            $noRegTanah = str_pad($request->tanah_nomor_register, 3, '0', STR_PAD_LEFT); 
 
             // 3. Gabungkan menjadi Kode Barang Otomatis
             $kodeBarangOtomatis = "{$kodeNamaTanah}-{$noRegTanah}";
+            $validatedData['tanah_kode_barang'] = $kodeBarangOtomatis;
             // =========================================================================
 
             $tanah = Tanah::create($validatedData);
@@ -249,6 +250,8 @@ class TanahController extends Controller
             'tanah_harga_satuan'             => 'nullable|numeric|min:0',
             'tanah_cara_perolehan'           => 'required|string|max:50',
             'tanah_tanggal_perolehan'        => 'required|date',
+            
+            // KUNCI ERROR INVALID ADA DI SINI: Aturan ini dibiarkan tetap disiplin!
             'tanah_status_penggunaan'        => 'required|in:Digunakan Sendiri,Dipinjamkan,Disewakan,Tidak Digunakan',
             'tanah_keterangan'               => 'nullable|string',
         ];

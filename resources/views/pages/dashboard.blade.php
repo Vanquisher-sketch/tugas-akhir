@@ -41,8 +41,8 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Volume Manifes KIB (Global)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-900">{{ number_format($kpiTotalAset) }} <span style="font-size: 13px;" class="text-muted font-weight-normal">Register Komponen</span></div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Aset </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-900">{{ number_format($kpiTotalAset) }} <span style="font-size: 13px;" class="text-muted font-weight-normal">Aset</span></div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-boxes fa-2x text-gray-300"></i>

@@ -34,7 +34,7 @@
                         <div class="alert alert-info d-flex align-items-center m-0 py-2" role="alert">
                             <i class="fas fa-info-circle mr-2 fs-5"></i>
                             <div>
-                                Kode barang akan <strong>dibuat secara otomatis</strong> oleh sistem saat disimpan.
+                                Kode barang akan <strong>dibuat otomatis</strong> oleh sistem saat disimpan.
                             </div>
                         </div>
                     </div>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label class="font-weight-bold">No. Register</label>
-                        <input type="text" name="tanah_nomor_register" class="form-control @error('tanah_nomor_register') is-invalid @enderror" value="{{ old('tanah_nomor_register') }}" maxlength="20" placeholder="0001">
+                        <input type="text" name="tanah_nomor_register" class="form-control @error('tanah_nomor_register') is-invalid @enderror" value="{{ old('tanah_nomor_register') }}" maxlength="20" placeholder="001">
                         @error('tanah_nomor_register') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     
@@ -79,6 +79,7 @@
                     <div class="form-group col-md-4">
                         <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
                         <select name="tanah_status_penggunaan" class="form-control @error('tanah_status_penggunaan') is-invalid @enderror" required>
+                            <option value="">-- Pilih Status Penggunaan --</option>
                             <option value="Digunakan Sendiri" {{ old('tanah_status_penggunaan') == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
                             <option value="Dipinjamkan" {{ old('tanah_status_penggunaan') == 'Dipinjamkan' ? 'selected' : '' }}>Dipinjamkan</option>
                             <option value="Disewakan" {{ old('tanah_status_penggunaan') == 'Disewakan' ? 'selected' : '' }}>Disewakan</option>
@@ -106,12 +107,12 @@
                 <div class="row">
                     <div class="form-group col-md-3">
                         <label class="font-weight-bold">Jenis Dokumen Bukti</label>
-                        <input type="text" name="tanah_bukti_nama" class="form-control @error('tanah_bukti_nama') is-invalid @enderror" value="{{ old('tanah_bukti_nama') }}" maxlength="50" placeholder="Contoh: Sertifikat Hak Milik">
+                        <input type="text" name="tanah_bukti_nama" class="form-control @error('tanah_bukti_nama') is-invalid @enderror" value="{{ old('tanah_bukti_nama') }}" maxlength="50" placeholder="Contoh: SHM / AJB">
                         @error('tanah_bukti_nama') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group col-md-3">
                         <label class="font-weight-bold">Nomor Dokumen Bukti</label>
-                        <input type="text" name="tanah_bukti_nomor" class="form-control @error('tanah_bukti_nomor') is-invalid @enderror" value="{{ old('tanah_bukti_nomor') }}" maxlength="50" placeholder="Nomor Sertifikat/MOU/PKS">
+                        <input type="text" name="tanah_bukti_nomor" class="form-control @error('tanah_bukti_nomor') is-invalid @enderror" value="{{ old('tanah_bukti_nomor') }}" maxlength="50" placeholder="Nomor Sertifikat">
                         @error('tanah_bukti_nomor') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group col-md-3">

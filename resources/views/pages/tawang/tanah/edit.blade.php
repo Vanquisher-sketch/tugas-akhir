@@ -23,7 +23,6 @@
             <h6 class="m-0 font-weight-bold"><i class="fas fa-edit mr-2"></i>Form Edit Data Tanah (Kode: {{ $tanah->tanah_kode_barang }})</h6>
         </div>
         <div class="card-body" style="color: #000;">
-            {{-- REVISI 1: Mengubah 'tanah' menjadi 'kode_barang' pada parameter route di bawah ini --}}
             <form action="{{ route('lokasi.tanah.update', ['lokasi' => $lokasi, 'kode_barang' => $tanah->tanah_kode_barang]) }}" method="POST">
                 @csrf
                 @method('PUT')
@@ -75,9 +74,11 @@
                     <div class="form-group col-md-4">
                         <label class="font-weight-bold">Status Penggunaan <span class="text-danger">*</span></label>
                         <select name="tanah_status_penggunaan" class="form-control @error('tanah_status_penggunaan') is-invalid @enderror" required>
+                            <option value="">-- Pilih Status Penggunaan --</option>
                             @php $currentStatus = old('tanah_status_penggunaan', $tanah->tanah_status_penggunaan); @endphp
-                            {{-- REVISI 2: Mengubah 'Digunakan Sendiri' menjadi 'Digunakan' --}}
-                            <option value="Digunakan" {{ $currentStatus == 'Digunakan' ? 'selected' : '' }}>Digunakan</option>
+                            
+                            {{-- DI SINI PERBAIKANNYA: 100% Sinkron dengan Controller --}}
+                            <option value="Digunakan Sendiri" {{ $currentStatus == 'Digunakan Sendiri' ? 'selected' : '' }}>Digunakan Sendiri</option>
                             <option value="Dipinjamkan" {{ $currentStatus == 'Dipinjamkan' ? 'selected' : '' }}>Dipinjamkan</option>
                             <option value="Disewakan" {{ $currentStatus == 'Disewakan' ? 'selected' : '' }}>Disewakan</option>
                             <option value="Tidak Digunakan" {{ $currentStatus == 'Tidak Digunakan' ? 'selected' : '' }}>Tidak Digunakan</option>
