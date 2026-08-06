@@ -57,6 +57,7 @@ class InventarisController extends Controller
 
     /**
      * Helper privat untuk melakukan soft delete record inventaris dengan reset jumlah ke 0.
+     * Digunakan khusus saat perpindahan stok/perubahan kondisi yang menyisakan stok 0.
      */
     private function softDeleteInventaris(string $kodeBarang, string $kodeRuangan, string $kondisi): void
     {
@@ -194,8 +195,7 @@ class InventarisController extends Controller
                 ]);
             }
 
-            // PERBAIKAN: Gunakan withTrashed() dan urutkan berdasarkan dt_alat_id (Primary Key)
-            // agar data soft deleted tetap terbaca sehingga nomor urut barcode tidak pernah berulang.
+            // Urutkan berdasarkan dt_alat_id (Primary Key) agar nomor urut barcode tidak pernah berulang
             $lastDetail = DetailPeralatan::withTrashed()
                 ->where('dt_alat_kode_barang', $request->kode_barang)
                 ->orderBy('dt_alat_id', 'desc')
@@ -207,7 +207,7 @@ class InventarisController extends Controller
                 $lastNum = (int) end($parts);
             }
 
-            // Bulk insert ke DetailPeralatan untuk meningkatkan performa
+            // Bulk insert ke DetailPeralatan
             $detailsToInsert = [];
             $now = now();
             $nowDate = $now->toDateString();
@@ -466,17 +466,18 @@ class InventarisController extends Controller
         $item = $query->firstOrFail();
         $namaBarang = $item->inv_nama_barang;
 
-        DB::transaction(function () use ($inv_kode_barang, $kode_ruangan, $item, $room, $lokasi) {
-            // 1. Zero out & Soft Delete record Inventaris
-            $this->softDeleteInventaris($inv_kode_barang, $kode_ruangan, $item->inv_kondisi);
+        DB::transaction(function () use ($inv_kode_barang, $item, $room, $lokasi) {
+            // PERBAIKAN: Lakukan soft delete langsung pada objek $item agar inv_jumlah TIDAK di-reset ke 0.
+            // Hal ini menjaga nilai asli jumlah barang saat dipulihkan kembali dari Pusat Arsip Data.
+            $item->delete();
 
-            // 2. Hapus unit perincian barcode terkait
+            // Soft delete unit perincian barcode terkait
             DetailPeralatan::where('dt_alat_kode_barang', $inv_kode_barang)
                 ->where('lokasi', $room->ruangan_nama)
                 ->where('dt_alat_kondisi', $item->inv_kondisi)
                 ->delete();
 
-            // 3. Sinkronisasi tabel Rusak
+            // Sinkronisasi tabel Rusak
             $this->syncRusakStatus($inv_kode_barang, $lokasi);
         });
 

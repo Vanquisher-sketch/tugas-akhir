@@ -14,16 +14,10 @@ class Inventaris extends Model
 
     protected $table = 'inventaris';
 
-    /**
-     * Composite Primary Key menggunakan 3 kolom:
-     * (inv_kode_barang + inv_ruangan_kode + inv_kondisi)
-     * Agar barang yang sama di ruangan yang sama dapat dipisah berdasarkan kondisinya (Baik/Rusak).
-     */
-    protected $primaryKey = ['inv_kode_barang', 'inv_ruangan_kode', 'inv_kondisi'];
+    protected $primaryKey = 'inv_kode_barang';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // Daftarkan atribut dengan prefix 'inv_' dan 'lokasi'
     protected $fillable = [
         'inv_kode_barang',
         'lokasi',
@@ -40,18 +34,51 @@ class Inventaris extends Model
     ];
 
     /**
-     * Override getKey() agar Eloquent dapat mengenali identifier unik dari 3 kombinasi kolom.
+     * Generate Composite Key unifikasi untuk view/route
      */
     public function getKey()
     {
-        return $this->getAttribute('inv_kode_barang') . '-' . 
-               $this->getAttribute('inv_ruangan_kode') . '-' . 
-               $this->getAttribute('inv_kondisi');
+        return implode('|', [
+            $this->getAttribute('inv_kode_barang'),
+            $this->getAttribute('inv_ruangan_kode'),
+            $this->getAttribute('inv_kondisi')
+        ]);
     }
 
     /**
-     * Override setKeysForSaveQuery() agar eksekusi UPDATE, DELETE, dan SoftDeletes
-     * menargetkan baris data spesifik berdasarkan kode barang, ruangan, dan kondisinya.
+     * Accessor agar $item->id membaca nilai composite key di Blade View
+     */
+    public function getIdAttribute()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Helper static untuk mencari record (termasuk trashed) berdasarkan Composite Key string
+     */
+    public static function findByCompositeKey(string $compositeKey, bool $withTrashed = true)
+    {
+        $parts = explode('|', $compositeKey);
+
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        [$kodeBarang, $kodeRuangan, $kondisi] = $parts;
+
+        $query = static::where('inv_kode_barang', $kodeBarang)
+            ->where('inv_ruangan_kode', $kodeRuangan)
+            ->where('inv_kondisi', $kondisi);
+
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Override query penyimpan/penghapus agar tepat sasaran pada 3 kombinasi kolom
      */
     protected function setKeysForSaveQuery($query)
     {
@@ -60,17 +87,11 @@ class Inventaris extends Model
                      ->where('inv_kondisi', $this->getAttribute('inv_kondisi'));
     }
 
-    /**
-     * 🌟 RELASI KE MASTER PERALATAN (KIB B)
-     */
     public function peralatan()
     {
         return $this->belongsTo(Peralatan::class, 'inv_kode_barang', 'alat_kode_barang');
     }
 
-    /**
-     * 🌟 RELASI KE RUANGAN
-     */
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'inv_ruangan_kode', 'kode_ruangan');
