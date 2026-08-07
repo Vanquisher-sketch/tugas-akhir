@@ -50,7 +50,6 @@
                         <th>Status Peminjaman</th>
                         <th>Keterangan</th> {{-- 🌟 Kolom Keterangan Baru --}}
                         <th>Terakhir Dicek</th>
-                        <th width="10%">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -107,10 +106,6 @@
                         </td>
 
                         <td class="align-middle">{{ $detail->dt_alat_tanggal_cek ? \Carbon\Carbon::parse($detail->dt_alat_tanggal_cek)->format('d M Y') : 'Belum Pernah' }}</td>
-                        <td class="align-middle">
-                            {{-- Hanya Aksi Edit (untuk update kondisi/status pinjam) --}}
-                            <button class="btn btn-sm btn-warning py-0" title="Edit Kondisi"><i class="fas fa-edit"></i></button>
-                        </td>
                     </tr>
                     @empty
                     <tr>
