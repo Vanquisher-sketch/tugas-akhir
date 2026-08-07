@@ -42,7 +42,6 @@
                         <th>Kode Barang</th>
                         <th>Lokasi</th>
                         <th>Nama Barang</th>
-                        <th>NBAR</th>
                         <th>No. Register</th>
                         <th>Spesifikasi Barang</th>
                         <th>Spesifikasi Lainnya</th>
