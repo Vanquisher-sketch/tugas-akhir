@@ -31,6 +31,9 @@
                     <a class="dropdown-item" href="{{ route('lokasi.peralatan.print', ['lokasi' => $lokasi]) }}" target="_blank">
                         <i class="fas fa-print fa-fw mr-2 text-gray-400"></i>Cetak Data
                     </a>
+                    <a class="dropdown-item" href="{{route('lokasi.export.excel', ['lokasi' => $lokasi, 'menu' => 'peralatan'])}}">
+                        <i class="fas fa-file-excel fa-fw mr-2 text-gray-400"></i> Ekspor data
+                    </a>
                 </div>
             </div>
         </div>

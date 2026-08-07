@@ -38,23 +38,7 @@
     </button>
 
     <!-- KIRI & TENGAH: MENGISI RUANG KOSONG (Hanya tampil di layar monitor/tablet) -->
-    <div class="d-none d-lg-flex align-items-center mr-auto ml-md-3 my-2 my-md-0 w-100">
-        
-        <!-- 1. Teks Sapaan Berdasarkan Waktu -->
-        <div class="mr-4 border-right pr-4">
-            <h6 class="mb-0 font-weight-bold text-gray-800">
-                <span id="greetingText">Halo</span>, {{ explode(' ', Auth::user()->name)[0] }}! 👋
-            </h6>
-            <small class="text-muted">PANDAWA ( Pengelolaan Data Aset Tawang )</small>
-        </div>
-
-        <!-- 3. Jam Real-Time -->
-        <div class="badge-capsule bg-light text-gray-700 border shadow-sm d-flex align-items-center">
-            <i class="fas fa-clock text-primary mr-2"></i>
-            <span id="liveClock">Memuat Waktu...</span>
-        </div>
-
-    </div>
+    
 
     <!-- Topbar Navbar (Kanan) -->
     <ul class="navbar-nav ml-auto align-items-center">
@@ -168,28 +152,3 @@
 </nav>
 
 <!-- SCRIPT PENGATUR JAM & SAPAAN -->
-<script>
-    function updateClockAndGreeting() {
-        const now = new Date();
-        const hour = now.getHours();
-        let greeting = "Selamat Malam";
-        
-        // Logika sapaan berdasarkan jam
-        if (hour >= 5 && hour < 11) { greeting = "Selamat Pagi"; } 
-        else if (hour >= 11 && hour < 15) { greeting = "Selamat Siang"; } 
-        else if (hour >= 15 && hour < 18) { greeting = "Selamat Sore"; }
-
-        // Update sapaan
-        document.getElementById('greetingText').innerText = greeting;
-
-        // Update Jam (Format: DD Bulan YYYY • HH:MM:SS)
-        const options = { day: 'numeric', month: 'short', year: 'numeric' };
-        const dateStr = now.toLocaleDateString('id-ID', options);
-        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
-        document.getElementById('liveClock').innerHTML = `${dateStr} <span class="mx-2 text-gray-400">|</span> <span class="text-primary font-weight-bold">${timeStr} WIB</span>`;
-    }
-    
-    setInterval(updateClockAndGreeting, 1000);
-    updateClockAndGreeting(); // Jalankan pertama kali
-</script>
