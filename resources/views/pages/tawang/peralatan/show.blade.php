@@ -44,11 +44,11 @@
                 <thead class="thead-light">
                     <tr>
                         <th width="5%">No</th>
-                        <th width="8%">Foto</th> {{-- 🌟 Kolom Foto Baru --}}
+                        <th width="8%">Foto</th> 
                         <th>Kode Barcode</th>
                         <th>Kondisi Fisik</th>
                         <th>Status Peminjaman</th>
-                        <th>Keterangan</th> {{-- 🌟 Kolom Keterangan Baru --}}
+                        <th>Keterangan</th> 
                         <th>Terakhir Dicek</th>
                     </tr>
                 </thead>
@@ -57,22 +57,18 @@
                     <tr>
                         <td class="align-middle">{{ $loop->iteration }}</td>
                         
-                        {{-- 🌟 BAGIAN TAMPILAN FOTO 🌟 --}}
-                        {{-- 🌟 BAGIAN TAMPILAN FOTO 🌟 --}}
-<td class="align-middle">
-    @if($detail->dt_alat_foto)
-        {{-- 1. Jika item fisik sudah diupload foto spesifiknya via edit --}}
-        <img src="{{ asset('storage/' . $detail->dt_alat_foto) }}" alt="Foto Fisik" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-    @elseif($peralatan->alat_foto)
-        {{-- 2. Jika fisik belum punya foto, ambil dari data Induk (KIB B) --}}
-        <img src="{{ asset('storage/' . $peralatan->alat_foto) }}" alt="Foto Induk" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" title="Foto dari Data Induk">
-    @else
-        {{-- 3. Jika induk dan fisik sama-sama tidak punya foto --}}
-        <span class="text-muted small">
-            <i class="fas fa-image fa-2x mb-1 text-light"></i><br>No Photo
-        </span>
-    @endif
-</td>
+                        {{-- 🌟 BAGIAN TAMPILAN FOTO --}}
+                        <td class="align-middle">
+                            @if($detail->dt_alat_foto)
+                                <img src="{{ asset('storage/' . $detail->dt_alat_foto) }}" alt="Foto Fisik" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                            @elseif($peralatan->alat_foto)
+                                <img src="{{ asset('storage/' . $peralatan->alat_foto) }}" alt="Foto Induk" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" title="Foto dari Data Induk">
+                            @else
+                                <span class="text-muted small">
+                                    <i class="fas fa-image fa-2x mb-1 text-light"></i><br>No Photo
+                                </span>
+                            @endif
+                        </td>
 
                         {{-- 🌟 BAGIAN QR CODE --}}
                         <td class="align-middle text-center py-2">
@@ -100,17 +96,22 @@
                             @endif
                         </td>
                         
-                        {{-- 🌟 BAGIAN KETERANGAN --}}
+                        {{-- 🌟 BAGIAN KETERANGAN (DENGAN FALLBACK) --}}
                         <td class="align-middle">
-                            {{ $detail->dt_alat_keterangan ?? '-' }}
+                            @if(!empty($detail->dt_alat_keterangan))
+                                {{ $detail->dt_alat_keterangan }}
+                            @elseif(!empty($peralatan->alat_keterangan))
+                                <span title="Mewarisi keterangan data Induk">{{ $peralatan->alat_keterangan }}</span>
+                            @else
+                                -
+                            @endif
                         </td>
 
                         <td class="align-middle">{{ $detail->dt_alat_tanggal_cek ? \Carbon\Carbon::parse($detail->dt_alat_tanggal_cek)->format('d M Y') : 'Belum Pernah' }}</td>
                     </tr>
                     @empty
                     <tr>
-                        {{-- 🌟 Colspan diubah menjadi 8 karena ada tambahan 2 kolom baru --}}
-                        <td colspan="8" class="text-center py-4 text-muted">
+                        <td colspan="7" class="text-center py-4 text-muted">
                             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
                             Menyiapkan data fisik...
                         </td>

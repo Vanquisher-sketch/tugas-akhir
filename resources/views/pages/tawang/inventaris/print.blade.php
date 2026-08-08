@@ -80,11 +80,7 @@
                     <th>Merek/Tipe</th>
                     <th>Tahun</th>
                 </tr>
-                <tr style="background-color: #eee;">
-                    @for ($i = 1; $i <= 11; $i++)
-                        <th>{{ $i }}</th>
-                    @endfor
-                </tr>
+                
             </thead>
             <tbody>
                 @forelse ($dataInventaris as $index => $item)

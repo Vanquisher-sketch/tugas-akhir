@@ -70,6 +70,7 @@
                         <th rowspan="2" class="align-middle">Tgl Perolehan</th>
                         <th rowspan="2" class="align-middle" style="width: 7%;">Status Pakai</th>
                         <th rowspan="2" class="align-middle" style="width: 7%;">Kondisi</th>
+                        <th rowspan="2" class="align-middle">Keterangan</th>
                         <th rowspan="2" class="align-middle">Aksi</th>
                     </tr>
                     <tr class="font-weight-bold">
@@ -79,6 +80,7 @@
                         <th>Pajak Tahunan</th>
                         <th>STNK (5 Thn)</th>
                     </tr>
+                    
                 </thead>
                 <tbody>
                     @forelse ($dataPeralatan as $item)
@@ -191,16 +193,17 @@
                                 </span>
                             @elseif($item->alat_kondisi === 'Rusak Ringan')
                                 <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold text-uppercase" style="font-size: 9px;">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i> Rusak Rgn
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Rusak Ringan
                                 </span>
                             @elseif($item->alat_kondisi === 'Rusak Berat')
                                 <span class="badge badge-danger px-2 py-1 font-weight-bold text-uppercase shadow-sm" style="font-size: 9px;">
-                                    <i class="fas fa-times-circle mr-1"></i> Rusak Brt
+                                    <i class="fas fa-times-circle mr-1"></i> Rusak Berat
                                 </span>
                             @else
                                 <span class="badge badge-secondary px-2 py-1 font-weight-bold">-</span>
                             @endif
                         </td>
+                        <td class="text-center align-middle">{{ $item->alat_keterangan }}</td>
                         
                         {{-- Kolom Aksi Transaksional --}}
                         <td class="text-center align-middle">
@@ -222,7 +225,7 @@
                     <tr>
                         <td colspan="22" class="text-center py-5 text-gray-500 font-weight-bold">
                             <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i><br>
-                            Data Peralatan & Mesin (KIB B) belum terisi untuk lokasi wilayah operasional ini.
+                            Data Peralatan & Mesin (KIB B) belum terisi.
                         </td>
                     </tr>
                     @endforelse

@@ -37,8 +37,13 @@ class CheckLokasiAccess
 
         // B. Jika rolenya adalah Kecamatan (user_role_id = 2)
         if ($user->user_role_id == 2) {
+            
+            // User Kecamatan Tawang boleh mengakses lokasinya sendiri secara PENUH (CRUD)
+            if ($lokasiAkses === 'tawang') {
+                return $next($request);
+            }
+
             // Definisikan kelurahan mana saja yang berada di bawah kecamatan ini.
-            // Anda bisa membuatnya lebih dinamis nanti jika ada lebih dari 1 kecamatan.
             $kelurahan_di_bawah_tawang = [
                 'lengkongsari', 
                 'cikalang', 
@@ -47,10 +52,17 @@ class CheckLokasiAccess
                 'tawangsari'
             ];
 
-            // User Kecamatan Tawang boleh mengakses lokasinya sendiri ('tawang')
-            // DAN semua lokasi kelurahan di bawahnya.
-            if ($lokasiAkses === 'tawang' || in_array($lokasiAkses, $kelurahan_di_bawah_tawang)) {
-                return $next($request); // Izinkan akses
+            // Jika sedang mengakses lokasi kelurahan (Masuk mode Pemanatauan / Read-Only)
+            if (in_array($lokasiAkses, $kelurahan_di_bawah_tawang)) {
+                
+                // Izinkan jika metode HTTP adalah GET (sekadar melihat) 
+                // KECUALI jika URL-nya mengandung kata 'create' atau 'edit' (ingin membuka form input)
+                if ($request->isMethod('GET') && !str_contains($request->path(), 'create') && !str_contains($request->path(), 'edit')) {
+                    return $next($request); 
+                }
+
+                // Jika mencoba nge-POST (simpan), PUT (update), DELETE (hapus), atau buka form Create/Edit: Tolak!
+                return redirect('/dashboard')->with('error', 'Akses Read-Only! Anda hanya dapat memantau data di wilayah ' . ucfirst($lokasiAkses) . ', tidak dapat menambah atau mengubahnya.');
             }
         }
 
@@ -58,7 +70,6 @@ class CheckLokasiAccess
         if ($user->user_role_id == 3) {
             // Kita perlu mencocokkan nama user dengan lokasi yang diakses.
             // Contoh: User "Kelurahan Lengkongsari" harus cocok dengan lokasi "lengkongsari".
-            // Kita ubah nama user menjadi format slug (lowercase, tanpa spasi dan "Kelurahan ")
             $userLokasi = strtolower(str_replace('Kelurahan ', '', $user->name));
 
             if ($lokasiAkses === $userLokasi) {

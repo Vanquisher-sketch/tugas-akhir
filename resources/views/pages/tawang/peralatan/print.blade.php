@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>KIB B - {{ ucfirst($lokasi) }}</title>
+    <title>Cetak KIB B - {{ ucfirst($lokasi) }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
@@ -36,7 +36,7 @@
 <body onload="window.print()">
     <div class="container-fluid">
         {{-- HEADER KIB B --}}
-        <h6 class="text-center font-weight-bold mb-0">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
+        <h6 class="text-center font-weight-bold mb-0">DAFTAR INVENTARIS BARANG MILIK DAERAH (BMD)</h6>
         <h6 class="text-center font-weight-bold mb-4">PERALATAN DAN MESIN (KIB B)</h6>
         
         <table class="header-info mb-3" style="width: 40%;">
@@ -82,42 +82,42 @@
                 @php $totalHarga = 0; @endphp
                 @forelse ($dataPeralatan as $index => $item)
                     @php
-                        // ✅ Hitung Manual Harga (Mencegah error saat sum collection)
-                        $harga = $item->nilai_perolehan ?? $item->bmd_nilai_perolehan ?? $item->alat_harga ?? 0;
+                        // ✅ Hitung Manual Harga mengambil langsung dari tabel Peralatan
+                        $harga = $item->alat_nilai_perolehan ?? 0;
                         $totalHarga += $harga;
                         
                         // ✅ Tangkap Tanggal dengan aman
-                        $tglPerolehan = $item->tanggal_perolehan ?? $item->bmd_tanggal_perolehan ?? $item->bmd_tahun ?? null;
+                        $tglPerolehan = $item->alat_tanggal_perolehan ?? null;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
                         
                         {{-- Identitas Barang --}}
-                        <td class="text-center">{{ $item->kode_barang ?? $item->alat_kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
-                        <td>{{ $item->nama_barang ?? $item->alat_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_kode_barang ?? '-' }}</td>
+                        <td>{{ $item->alat_nama_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_nomor_register ?? '-' }}</td>
                         
                         {{-- Spesifikasi Umum --}}
-                        <td>{{ $item->merk_tipe ?? $item->alat_merk_tipe ?? '-' }}</td>
-                        <td>{{ $item->spesifikasi_lainnya ?? $item->bmd_spesifikasi ?? '-' }}</td>
+                        <td>{{ $item->alat_merk_tipe ?? '-' }}</td>
+                        <td>{{ $item->alat_spesifikasi_lainnya ?? '-' }}</td>
                         
                         {{-- Spesifikasi Kendaraan --}}
-                        <td class="text-center font-weight-bold">{{ $item->nomor_polisi ?? $item->alat_nomor_polisi ?? '-' }}</td>
-                        <td><small>{{ $item->nomor_rangka ?? $item->alat_nomor_rangka ?? '-' }}</small></td>
-                        <td>{{ $item->nomor_bpkb ?? $item->alat_nomor_bpkb ?? '-' }}</td>
+                        <td class="text-center font-weight-bold">{{ $item->alat_nomor_polisi ?? '-' }}</td>
+                        <td><small>{{ $item->alat_nomor_rangka ?? '-' }}</small></td>
+                        <td>{{ $item->alat_nomor_bpkb ?? '-' }}</td>
                         
                         {{-- Kuantitas & Harga --}}
-                        <td class="text-center font-weight-bold">{{ $item->jumlah ?? $item->bmd_jumlah ?? '1' }}</td>
-                        <td class="text-center">{{ $item->satuan ?? $item->bmd_satuan ?? '-' }}</td>
+                        <td class="text-center font-weight-bold">{{ $item->alat_jumlah ?? '1' }}</td>
+                        <td class="text-center">{{ $item->alat_satuan ?? '-' }}</td>
                         <td class="text-right font-weight-bold">{{ number_format($harga, 0, ',', '.') }}</td>
                         
                         {{-- Waktu & Keterangan --}}
                         <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
-                        <td>{{ $item->keterangan ?? $item->bmd_keterangan ?? '-' }}</td>
+                        <td>{{ $item->alat_keterangan ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="15" class="text-center py-4 font-italic text-muted">
+                        <td colspan="14" class="text-center py-4 font-italic text-muted">
                             Belum ada data inventaris KIB B (Peralatan dan Mesin) pada lokasi ini.
                         </td>
                     </tr>
@@ -125,9 +125,9 @@
             </tbody>
             <tfoot class="font-weight-bold bg-light">
                 <tr>
-                    <td colspan="12" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB B)</td>
-                    {{-- ✅ Menggunakan variabel akumulasi manual yang 100% akurat --}}
-                    <td class="text-right text-primary">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
+                    {{-- ✅ Colspan diubah menjadi 11 agar total harga sejajar dengan kolom Harga Perolehan --}}
+                    <td colspan="11" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB B)</td>
+                    <td class="text-right text-dark">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
                     <td colspan="2"></td>
                 </tr>
             </tfoot>

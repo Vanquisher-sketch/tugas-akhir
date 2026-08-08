@@ -118,7 +118,7 @@
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <div class="d-none d-lg-flex flex-column text-right mr-2">
                     <span class="text-gray-800 font-weight-bold small mb-0" style="line-height: 1;">{{ Auth::user()->name }}</span>
-                    <span class="text-gray-500 text-xs mt-1">Administrator</span>
+                    
                 </div>
                 <img class="img-profile rounded-circle shadow-sm border"
                      src="https://placehold.co/100x100/4e73df/ffffff?text={{ strtoupper(substr(Auth::user()->name, 0, 1)) }}" style="border-width: 2px !important; border-color: #4e73df !important;">

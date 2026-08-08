@@ -90,10 +90,10 @@ class PeralatanController extends Controller
             $kodeNamaBarang = $this->generateCodeParticle($request->nama_barang);
 
             // 2. Ambil Nomor Register dari inputan form 
-            // (Opsional tapi direkomendasikan): Gunakan str_pad agar misal user cuma ketik "1", otomatis jadi "001"
-            $noReg = str_pad($request->no_register, 4, '0', STR_PAD_LEFT); 
+            // PERBAIKAN DI SINI: Menggunakan $request->nomor_register sesuai dengan nama validasi/form
+            $noReg = str_pad($request->nomor_register, 3, '0', STR_PAD_LEFT); 
 
-            // 3  . Gabungkan menjadi Kode Barang Otomatis (Hasil: HV-001)
+            // 3. Gabungkan menjadi Kode Barang Otomatis (Hasil: HV-001)
             $kodeBarangOtomatis = "{$kodeNamaBarang}-{$noReg}";
 
             // =========================================================================
@@ -141,6 +141,7 @@ class PeralatanController extends Controller
                     'lokasi'                => $lokasi,
                     'dt_alat_status_pinjam' => 'Tersedia',
                     'dt_alat_tanggal_cek'   => now(),
+                    'dt_alat_keterangan'    => $peralatan->alat_keterangan,
                 ]);
             }
 
@@ -364,6 +365,7 @@ class PeralatanController extends Controller
                             'lokasi'                => $lokasi,
                             'dt_alat_status_pinjam' => 'Tersedia',
                             'dt_alat_tanggal_cek'   => now(),
+                            'dt_alat_keterangan'    => $peralatan->alat_keterangan,
                         ]
                     );
                 }
