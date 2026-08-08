@@ -117,20 +117,25 @@
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <div class="d-none d-lg-flex flex-column text-right mr-2">
-                    <span class="text-gray-800 font-weight-bold small mb-0" style="line-height: 1;">{{ Auth::user()->name }}</span>
+                    {{-- 🌟 Perbaikan Pemanggilan Nama User --}}
+                    <span class="text-gray-800 font-weight-bold small mb-0" style="line-height: 1;">{{ Auth::user()->user_nama }}</span>
                     
                 </div>
+                {{-- 🌟 Perbaikan Inisial Avatar --}}
                 <img class="img-profile rounded-circle shadow-sm border"
-                     src="https://placehold.co/100x100/4e73df/ffffff?text={{ strtoupper(substr(Auth::user()->name, 0, 1)) }}" style="border-width: 2px !important; border-color: #4e73df !important;">
+                     src="https://placehold.co/100x100/4e73df/ffffff?text={{ strtoupper(substr(Auth::user()->user_nama, 0, 1)) }}" style="border-width: 2px !important; border-color: #4e73df !important;">
             </a>
             
             <div class="dropdown-menu dropdown-menu-right dropdown-menu-modern animated--grow-in mt-2"
                 aria-labelledby="userDropdown">
                 
                 <div class="dropdown-header-gradient text-center pb-3">
-                    <img class="rounded-circle border mb-2 shadow" src="https://placehold.co/100x100/ffffff/4e73df?text={{ strtoupper(substr(Auth::user()->name, 0, 1)) }}" width="60" height="60" style="border-width: 3px !important; border-color: rgba(255,255,255,0.8) !important;">
-                    <h6 class="mb-0 font-weight-bold text-white">{{ Auth::user()->name }}</h6>
-                    <small class="text-white-50">{{ Auth::user()->email ?? 'admin@pandawa.com' }}</small>
+                    {{-- 🌟 Perbaikan Inisial Avatar Dropdown --}}
+                    <img class="rounded-circle border mb-2 shadow" src="https://placehold.co/100x100/ffffff/4e73df?text={{ strtoupper(substr(Auth::user()->user_nama, 0, 1)) }}" width="60" height="60" style="border-width: 3px !important; border-color: rgba(255,255,255,0.8) !important;">
+                    
+                    {{-- 🌟 Perbaikan Nama & Email --}}
+                    <h6 class="mb-0 font-weight-bold text-white">{{ Auth::user()->user_nama }}</h6>
+                    <small class="text-white-50">{{ Auth::user()->user_email ?? 'admin@pandawa.com' }}</small>
                 </div>
 
                 <div class="p-2">
@@ -150,5 +155,3 @@
     </ul>
 
 </nav>
-
-<!-- SCRIPT PENGATUR JAM & SAPAAN -->

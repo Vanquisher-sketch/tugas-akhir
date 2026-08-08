@@ -26,21 +26,22 @@ class ProfileController extends Controller
         // Auth::id() akan otomatis mengenali user_id berkat override di Model User
         $user = User::find(Auth::id());
 
+        // 🌟 REVISI: Validasi dicocokkan dengan "name" di form blade (user_nama & user_email)
         $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => [
+            'user_nama' => 'required|string|max:100',
+            'user_email' => [
                 'required',
                 'string',
                 'email',
                 'max:100',
-                // 🌟 REVISI: Arahkan cek unik ke user_email dan kecualikan user_id miliknya sendiri
+                // Arahkan cek unik ke user_email dan kecualikan user_id miliknya sendiri
                 Rule::unique('users', 'user_email')->ignore($user->user_id, 'user_id'),
             ],
         ]);
 
-        // 🌟 REVISI MAPPING: Translasi form ke kolom database baru
-        $user->user_nama = $request->name;
-        $user->user_email = $request->email;
+        // 🌟 REVISI MAPPING: Tarik dari request sesuai form
+        $user->user_nama = $request->user_nama;
+        $user->user_email = $request->user_email;
         
         $user->save(); 
 
@@ -61,13 +62,11 @@ class ProfileController extends Controller
         ]);
 
         // 2. Cek apakah password saat ini cocok
-        // 🌟 REVISI: Cek hash dengan kolom user_password
         if (!Hash::check($request->current_password, $user->user_password)) {
             return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
         }
 
         // 3. FORCE UPDATE: Gunakan update() langsung pada model database
-        // 🌟 REVISI: Update ke kolom user_password
         $user->update([
             'user_password' => Hash::make($request->new_password)
         ]);

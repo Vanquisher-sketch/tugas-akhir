@@ -36,13 +36,15 @@
                 <h6 class="m-0 font-weight-bold text-primary">Informasi Pengguna</h6>
             </div>
             <div class="card-body text-center">
+                {{-- 🌟 Perbaikan Inisial Avatar --}}
                 <img class="img-fluid img-profile rounded-circle mx-auto mb-3" 
-                     src="https://placehold.co/150x150/4e73df/ffffff?text={{ strtoupper(substr(Auth::user()->name, 0, 1)) }}" 
+                     src="https://placehold.co/150x150/4e73df/ffffff?text={{ strtoupper(substr(Auth::user()->user_nama, 0, 1)) }}" 
                      alt="Foto Profil" 
                      style="width: 150px; height: 150px; object-fit: cover;">
                 
-                <h4 class="font-weight-bold">{{ Auth::user()->name }}</h4>
-                <p class="text-muted">{{ Auth::user()->email }}</p>
+                {{-- 🌟 Perbaikan Tampilan Nama & Email --}}
+                <h4 class="font-weight-bold">{{ Auth::user()->user_nama }}</h4>
+                <p class="text-muted">{{ Auth::user()->user_email }}</p>
             </div>
         </div>
     </div>
@@ -74,20 +76,22 @@
                             @method('PUT')
                             
                             <div class="form-group row">
-                                <label for="name" class="col-sm-3 col-form-label">Nama Lengkap</label>
+                                <label for="user_nama" class="col-sm-3 col-form-label">Nama Lengkap</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', Auth::user()->name) }}">
-                                    @error('name') 
+                                    {{-- 🌟 Perbaikan input name, id, error, dan old value --}}
+                                    <input type="text" class="form-control @error('user_nama') is-invalid @enderror" id="user_nama" name="user_nama" value="{{ old('user_nama', Auth::user()->user_nama) }}">
+                                    @error('user_nama') 
                                         <div class="invalid-feedback">{{ $message }}</div> 
                                     @enderror
                                 </div>
                             </div>
-                           
+                            
                             <div class="form-group row">
-                                <label for="email" class="col-sm-3 col-form-label">Email (Login)</label>
+                                <label for="user_email" class="col-sm-3 col-form-label">Email (Login)</label>
                                 <div class="col-sm-9">
-                                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', Auth::user()->email) }}">
-                                    @error('email') 
+                                    {{-- 🌟 Perbaikan input name, id, error, dan old value --}}
+                                    <input type="email" class="form-control @error('user_email') is-invalid @enderror" id="user_email" name="user_email" value="{{ old('user_email', Auth::user()->user_email) }}">
+                                    @error('user_email') 
                                         <div class="invalid-feedback">{{ $message }}</div> 
                                     @enderror
                                 </div>
