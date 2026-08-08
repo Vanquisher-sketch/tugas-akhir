@@ -47,14 +47,25 @@
                                 <td class="align-middle"><strong>{{ $item->pegawai_nama }}</strong></td>
                                 <td class="align-middle">{{ $item->pegawai_jabatan }}</td>
                                 <td class="align-middle">
-                                    @if($item->pegawai_no_hp)
-                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $item->pegawai_no_hp) }}" target="_blank" class="text-success font-weight-bold">
-                                            <i class="fab fa-whatsapp"></i> {{ $item->pegawai_no_hp }}
-                                        </a>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
+    @if($item->pegawai_no_hp)
+        @php
+            // 1. Bersihkan spasi atau strip dari nomor database
+            $nomorWa = preg_replace('/[^0-9]/', '', $item->pegawai_no_hp); 
+            
+            // 2. Jika angka depannya 0, ubah jadi 62
+            if (substr($nomorWa, 0, 1) === '0') {
+                $nomorWa = '62' . substr($nomorWa, 1);
+            }
+        @endphp
+        
+        {{-- 3. Masukkan variabel $nomorWa ke link WA --}}
+        <a href="https://wa.me/{{ $nomorWa }}" target="_blank" class="text-success font-weight-bold" style="text-decoration: none;">
+            <i class="fab fa-whatsapp"></i> {{ $item->pegawai_no_hp }}
+        </a>
+    @else
+        -
+    @endif
+</td>
                                 <td class="align-middle">{{ $item->pegawai_email ?? '-' }}</td>
                                 <td class="align-middle">{{ $item->pegawai_alamat }}</td>
                                 <td class="text-center align-middle">

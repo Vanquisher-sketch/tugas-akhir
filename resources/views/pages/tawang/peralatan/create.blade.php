@@ -84,6 +84,11 @@
                     <input type="date" name="tanggal_stnk" class="form-control @error('tanggal_stnk') is-invalid @enderror" value="{{ old('tanggal_stnk') }}">
                     @error('tanggal_stnk') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                <div class="col-md-4 form-group">
+                    <label class="font-weight-bold">Tanggal STNK (Tahunan)</label>
+                    <input type="date" name="tanggal_pajak" class="form-control @error('tanggal_pajak') is-invalid @enderror" value="{{ old('tanggal_pajak') }}">
+                    @error('tanggal_pajak') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
             </div>
 
             {{-- 3. PEROLEHAN, LOKASI & FINANSIAL --}}
