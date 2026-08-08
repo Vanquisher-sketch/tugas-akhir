@@ -57,7 +57,7 @@
                 </tr>
                  <tr>
                     <td><b>RUANGAN / KODE</b></td>
-                    <td>: {{ strtoupper($room->name) }} / <strong>{{ $room->kode_ruangan }}</strong></td>
+                    <td>: {{ strtoupper($room->name ?? $room->ruangan_nama) }} / <strong>{{ $room->kode_ruangan }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -87,25 +87,25 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     
-                    {{-- IMPLEMENTASI SABUK PENGAMAN ATRIBUT (??) --}}
-                    <td>{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
+                    {{-- ✅ PEMANGGILAN DATA DIPERBAIKI SESUAI KOLOM TABEL INVENTARIS --}}
+                    <td class="text-center">{{ $item->inv_nomor_register ?? '-' }}</td>
                     
                     <td class="text-center font-weight-bold">
-                        {{ $item->kode_barang ?? $item->alat_kode_barang ?? '-' }}
+                        {{ $item->inv_kode_barang ?? '-' }}
                     </td>
                     
-                    <td>{{ $item->nama_barang ?? $item->alat_nama_barang ?? '-' }}</td>
-                    <td>{{ $item->spesifikasi_barang ?? $item->bmd_spesifikasi ?? '-' }}</td>
-                    <td>{{ $item->merk_tipe ?? $item->alat_merk_tipe ?? '-' }}</td>
+                    <td>{{ $item->inv_nama_barang ?? '-' }}</td>
+                    <td>{{ $item->inv_spesifikasi_barang ?? '-' }}</td>
+                    <td>{{ $item->inv_merk_tipe ?? '-' }}</td>
                     
-                    <td class="text-center">{{ $item->tahun_perolehan ?? $item->bmd_tahun ?? '-' }}</td>
-                    <td class="text-center font-weight-bold">{{ $item->jumlah ?? $item->bmd_jumlah ?? '1' }}</td>
-                    <td>{{ $item->satuan ?? $item->bmd_satuan ?? '-' }}</td>
-                    <td>{{ $item->keterangan ?? $item->bmd_keterangan ?? '-' }}</td>
+                    <td class="text-center">{{ $item->inv_tahun_perolehan ?? '-' }}</td>
+                    <td class="text-center font-weight-bold">{{ $item->inv_jumlah ?? '1' }}</td>
+                    <td class="text-center">{{ $item->inv_satuan ?? '-' }}</td>
+                    <td>{{ $item->inv_keterangan ?? '-' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="11" class="text-center py-4 font-italic text-muted">
+                    <td colspan="10" class="text-center py-4 font-italic text-muted">
                         Belum ada data inventaris pada ruangan ini.
                     </td>
                 </tr>

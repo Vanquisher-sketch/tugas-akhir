@@ -22,7 +22,6 @@
                                 data-kode="{{ $p->alat_kode_barang ?? $p->kode_barang }}"
                                 data-nama="{{ $p->alat_nama_barang ?? $p->nama_barang }}"
                                 data-merk="{{ $p->alat_merk_tipe ?? $p->merk_tipe ?? $p->merk ?? '-' }}"
-                                {{-- 🌟 PERBAIKAN: Fallback nama kolom tahun & default ke tahun saat ini jika master kosong --}}
                                 data-tahun="{{ $p->alat_tahun_perolehan ?? $p->tahun_perolehan ?? $p->tahun ?? date('Y') }}"
                                 data-satuan="{{ $p->alat_satuan ?? $p->satuan ?? 'Buah' }}"
                                 data-register="{{ $p->alat_nomor_register ?? $p->nomor_register ?? '-' }}"
@@ -78,26 +77,25 @@
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Merk / Tipe</label>
                     <input type="text" id="merk_tipe" name="merk_tipe" class="form-control bg-light text-muted" readonly>
                 </div>
+                {{-- 🌟 KOLOM TAHUN DIKEMBALIKAN KE SINI 🌟 --}}
                 <div class="col-md-6 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Tahun Perolehan</label>
-                    {{-- 🌟 Ditambahkan atribut required agar form memvalidasi input ini --}}
-                    <input type="number" id="tahun_perolehan" name="tahun_perolehan" class="form-control bg-light text-muted" readonly required>
+                    <input type="text" id="tahun_perolehan" name="tahun_perolehan" class="form-control bg-light text-muted" readonly>
                 </div>
             </div>
 
             <div class="row">
-                
-                <div class="col-md-4 form-group">
+                <div class="col-md-6 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Nomor Register</label>
                     <input type="text" id="nomor_register" name="nomor_register" class="form-control bg-light text-muted" readonly>
                 </div>
-                <div class="col-md-4 form-group">
+                <div class="col-md-6 form-group">
                     <label class="font-weight-bold text-muted" style="font-size: 12px;">Kondisi Barang</label>
                     <input type="text" id="kondisi" name="kondisi" class="form-control bg-light text-muted font-weight-bold" readonly required>
                 </div>
             </div>
 
-            {{-- Hidden input untuk satuan agar tetap tersubmit meskipun di UI jadi addon --}}
+            {{-- Hidden input untuk satuan agar tetap tersubmit --}}
             <input type="hidden" id="satuan_hidden" name="satuan">
 
             <div class="row">
@@ -130,17 +128,19 @@
         document.getElementById('kode_barang').value = opt.getAttribute('data-kode') || '';
         document.getElementById('nama_barang').value = opt.getAttribute('data-nama') || '';
         document.getElementById('merk_tipe').value = opt.getAttribute('data-merk') || '-';
-        
-        // 🌟 PERBAIKAN JS: Jika data-tahun dari database kosong/null, gunakan Tahun Berjalan secara otomatis
-        const dataTahun = opt.getAttribute('data-tahun');
-        const currentYear = new Date().getFullYear();
-        document.getElementById('tahun_perolehan').value = (dataTahun && dataTahun !== '' && dataTahun !== 'null') ? dataTahun : currentYear;
-        
         document.getElementById('nomor_register').value = opt.getAttribute('data-register') || '-';
         document.getElementById('kondisi').value = opt.getAttribute('data-kondisi') || 'Baik';
-        
         document.getElementById('spesifikasi_barang').value = opt.getAttribute('data-spesifikasi') || '-';
         document.getElementById('keterangan').value = opt.getAttribute('data-keterangan') || '-';
+
+        // 🌟 JavaScript Pengekstrak Tahun 🌟
+        const tglPenuh = opt.getAttribute('data-tahun');
+        let tahun = '-';
+        if (tglPenuh && tglPenuh !== '' && tglPenuh !== 'null') {
+            // Jika datanya YYYY-MM-DD, potong ambil 4 angka di depan
+            tahun = tglPenuh.substring(0, 4); 
+        }
+        document.getElementById('tahun_perolehan').value = tahun;
 
         // Update Satuan
         const satuanText = opt.getAttribute('data-satuan') || 'Buah';
@@ -152,7 +152,7 @@
         const jumlahInput = document.getElementById('jumlah');
         const sisaInfo = document.getElementById('sisa_info');
 
-        jumlahInput.max = sisa; // Set batas maksimal HTML
+        jumlahInput.max = sisa; 
         
         if(sisa <= 0) {
             sisaInfo.innerText = "Stok HABIS! Barang ini sudah didistribusikan semua ke ruangan.";

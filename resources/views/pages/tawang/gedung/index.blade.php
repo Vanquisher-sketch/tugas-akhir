@@ -48,8 +48,8 @@
                         <th>No. Register</th>
                         <th>Spesifikasi Barang</th>
                         <th>Spesifikasi Lainnya</th>
-                        <th>Jml Lantai</th>
-                        <th>Lok (Fisik)</th>
+                        <th>Jumlah Lantai</th>
+                        <th>Lokasi</th>
                         <th>Titik Koordinat</th>
                         <th>Status Tanah</th>
                         <th>Jumlah</th>
@@ -57,7 +57,7 @@
                         <th>Harga Satuan (Rp)</th>
                         <th>Nilai Perolehan (Rp)</th>
                         <th>Cara Perolehan</th>
-                        <th>Tgl Perolehan</th>
+                        <th>Tanggal Perolehan</th>
                         <th>Status Penggunaan</th>
                         <th>Keterangan</th>
                         <th style="position: sticky; right: 0; background-color: #eaecf4; z-index: 2; border-left: 2px solid #e3e6f0;">Aksi</th>

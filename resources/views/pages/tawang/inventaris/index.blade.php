@@ -8,9 +8,7 @@
     .modal { z-index: 1050 !important; }
 
     /* --- UI TABEL MENYESUAIKAN GAYA BMD --- */
-    .card {
-        border-radius: 0.5rem;
-    }
+    .card { border-radius: 0.5rem; }
     
     .table-bmd th {
         background-color: #f8f9fc !important;
@@ -57,14 +55,14 @@
     .action-group-container {
         display: flex;
         flex-direction: column;
-        gap: 5px; /* Jarak vertikal antar baris tombol */
+        gap: 5px;
         width: 100%;
         padding: 2px 0;
     }
     
     .action-row-flex {
         display: flex;
-        gap: 5px; /* Jarak horizontal antar tombol sejajar */
+        gap: 5px;
         width: 100%;
     }
     
@@ -76,11 +74,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0; /* Reset margin bawaan bootstrap */
+        margin: 0; 
     }
     
     .action-row-flex .btn {
-        flex: 1; /* Membagi rata lebar tombol (50%-50%) jika ada 2 tombol */
+        flex: 1; 
     }
 </style>
 
@@ -96,8 +94,7 @@
         <div class="d-flex align-items-center">
             {{-- Form Pencarian --}}
             <form action="{{ route('lokasi.inventaris.index', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan]) }}"
-                  method="GET"
-                  class="form-inline mr-3">
+                  method="GET" class="form-inline mr-3">
                 <div class="input-group">
                     <input type="text"
                            class="form-control bg-light border-0 small"
@@ -154,16 +151,17 @@
                         <th rowspan="2" style="width: 8%; vertical-align: middle;">No. Reg</th>
                         <th rowspan="2" style="width: 10%; vertical-align: middle;">Kode Barang</th>
                         <th rowspan="2" style="vertical-align: middle;">Nama Barang</th>
-                        <th colspan="2" style="width: 20%;">Spesifikasi Barang</th>
+                        <th rowspan="2" style="width: 15%; vertical-align: middle;">Spesifikasi</th>
+                        <th colspan="2" style="width: 15%;">Detail Barang</th>
                         <th rowspan="2" style="width: 5%; vertical-align: middle;">Total</th>
                         <th rowspan="2" style="width: 5%; vertical-align: middle;">Satuan</th>
                         <th rowspan="2" style="width: 12%; vertical-align: middle;">Kondisi & Unit</th>
                         <th rowspan="2" style="width: 10%; vertical-align: middle;">Keterangan</th>
-                        <th rowspan="2" style="width: 10%; vertical-align: middle;">Aksi</th> {{-- Lebar aksi diperbesar --}}
+                        <th rowspan="2" style="width: 10%; vertical-align: middle;">Aksi</th>
                     </tr>
                     <tr>
                         <th style="font-size: 12px;">Merk/Tipe</th>
-                        <th style="font-size: 12px;">Thn Perolehan</th>
+                        <th style="font-size: 12px;">Tahun Perolehan</th>
                     </tr>
                 </thead>
 
@@ -180,13 +178,22 @@
                         
                         <td class="align-middle font-weight-bold text-dark">
                             {{ optional($firstItem->peralatan)->alat_nama_barang ?? $firstItem->inv_nama_barang }}
-                            @if(optional($firstItem->peralatan)->alat_spesifikasi_barang ?? $firstItem->inv_spesifikasi_barang)
-                                <br><small class="text-muted font-weight-normal">{{ optional($firstItem->peralatan)->alat_spesifikasi_barang ?? $firstItem->inv_spesifikasi_barang }}</small>
-                            @endif
+                        </td>
+
+                        <td class="align-middle text-dark">
+                            {{ optional($firstItem->peralatan)->alat_spesifikasi_barang ?? ($firstItem->inv_spesifikasi_barang ?? '-') }}
                         </td>
 
                         <td class="align-middle text-dark">{{ optional($firstItem->peralatan)->alat_merk_tipe ?? ($firstItem->inv_merk_tipe ?? '-') }}</td>
-                        <td class="align-middle text-dark">{{ optional($firstItem->peralatan)->alat_tahun_perolehan ?? ($firstItem->inv_tahun_perolehan ?? '-') }}</td>
+                        
+                        {{-- 🌟 ISI DATA KOLOM TAHUN (MENGGUNAKAN CARBON) 🌟 --}}
+                        <td class="align-middle text-dark text-center">
+                            @php
+                                $tglPenuh = optional($firstItem->peralatan)->alat_tanggal_perolehan;
+                                $tahun = $tglPenuh ? \Carbon\Carbon::parse($tglPenuh)->format('Y') : ($firstItem->inv_tahun_perolehan ?? '-');
+                            @endphp
+                            {{ $tahun }}
+                        </td>
                         
                         <td class="align-middle font-weight-bold text-primary" style="font-size: 15px;">{{ $totalJumlah }}</td>
                         <td class="align-middle"><span class="badge badge-light border text-dark px-2 py-1">{{ $firstItem->inv_satuan }}</span></td>
@@ -227,22 +234,19 @@
                             </div>
                         </td>
 
-                        {{-- Kolom Aksi (Sub-Row) dengan FLEXBOX TERBARU --}}
+                        {{-- Kolom Aksi (Sub-Row) --}}
                         <td class="p-0 align-middle">
                             <div class="sub-row-container">
                                 @foreach ($items as $subItem)
                                     <div class="item-subrow justify-content-center">
                                         <div class="action-group-container">
                                             
-                                            {{-- Baris Horizontal Pertama (Edit & Mutasi) --}}
                                             <div class="action-row-flex">
-                                                {{-- Tombol Edit --}}
                                                 <a href="{{ route('lokasi.inventaris.edit', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $subItem->inv_kode_barang, 'kond' => $subItem->inv_kondisi]) }}"
                                                    class="btn btn-warning text-white shadow-sm" title="Ubah Kondisi">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
 
-                                                {{-- Tombol Mutasi (Hanya muncul jika kondisi Baik) --}}
                                                 @if($subItem->inv_kondisi === 'Baik')
                                                     <button type="button" class="btn btn-info shadow-sm" data-toggle="modal" data-target="#moveModal{{ md5($subItem->inv_kode_barang . $subItem->inv_kondisi) }}" title="Mutasi Ruangan">
                                                         <i class="fas fa-exchange-alt"></i>
@@ -250,7 +254,6 @@
                                                 @endif
                                             </div>
                                             
-                                            {{-- Baris Horizontal Kedua (Hapus) --}}
                                             <form action="{{ route('lokasi.inventaris.destroy', ['lokasi' => $lokasi, 'kode_ruangan' => $room->kode_ruangan, 'inv_kode_barang' => $subItem->inv_kode_barang, 'kond' => $subItem->inv_kondisi]) }}"
                                                   method="POST" class="m-0"
                                                   onsubmit="return confirm('Yakin ingin menghapus data kondisi {{ $subItem->inv_kondisi }} secara permanen?')">

@@ -6,20 +6,21 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
+        /* FONT DIPERKECIL JADI 6.5pt AGAR 21 KOLOM MUAT DI A4 */
+        body { font-family: 'Times New Roman', serif; font-size: 6.5pt; color: #000; }
         
         .table-bordered th, .table-bordered td { 
             border: 1px solid #000 !important; 
             vertical-align: middle; 
-            padding: 4px; 
+            padding: 2px 3px !important; 
+            word-wrap: break-word;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .header-info td { border: none !important; padding: 0; font-weight: bold; font-size: 9pt; }
         
         /* PENGATURAN KHUSUS UNTUK PDF / PRINT */
         @page { size: A4 landscape; margin: 10mm; }
-        table { page-break-inside: auto; width: 100%; }
+        table { page-break-inside: auto; width: 100%; table-layout: fixed; }
         tr { page-break-inside: avoid; page-break-after: auto; }
         thead { display: table-header-group; background-color: #f2f2f2 !important; }
         tfoot { display: table-footer-group; }
@@ -36,88 +37,109 @@
 <body onload="window.print()">
     <div class="container-fluid">
         {{-- HEADER KIB B --}}
-        <h6 class="text-center font-weight-bold mb-0">DAFTAR INVENTARIS BARANG MILIK DAERAH (BMD)</h6>
-        <h6 class="text-center font-weight-bold mb-4">PERALATAN DAN MESIN (KIB B)</h6>
+        <h6 class="text-center font-weight-bold mb-0" style="font-size: 10pt;">DAFTAR INVENTARIS BARANG MILIK DAERAH (BMD)</h6>
+        <h6 class="text-center font-weight-bold mb-4" style="font-size: 10pt;">KARTU INVENTARIS BARANG (KIB) B - PERALATAN DAN MESIN</h6>
         
-        <table class="header-info mb-3" style="width: 40%;">
+        <table class="mb-2" style="width: 40%; font-weight: bold; font-size: 8pt; border: none;">
             <tr>
-                <td width="150">LOKASI</td>
-                <td>: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
+                <td width="120" style="border: none; padding: 0;">LOKASI</td>
+                <td style="border: none; padding: 0;">: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
             </tr>
             <tr>
-                <td>KABUPATEN/KOTA</td>
-                <td>: TASIKMALAYA</td>
+                <td style="border: none; padding: 0;">KABUPATEN/KOTA</td>
+                <td style="border: none; padding: 0;">: TASIKMALAYA</td>
             </tr>
             <tr>
-                <td>TAHUN ANGGARAN</td>
-                <td>: {{ date('Y') }}</td>
+                <td style="border: none; padding: 0;">TAHUN ANGGARAN</td>
+                <td style="border: none; padding: 0;">: {{ date('Y') }}</td>
             </tr>
         </table>
 
-        {{-- TABEL DATA KIB B --}}
+        {{-- TABEL DATA KIB B (21 KOLOM DENGAN STNK & PAJAK) --}}
         <table class="table table-bordered">
             <thead class="text-center bg-light">
                 <tr class="font-weight-bold">
-                    <th rowspan="2">No</th>
-                    <th rowspan="2">Kode Barang</th>
-                    <th rowspan="2">Nama Barang</th>
-                    <th rowspan="2">Register</th>
-                    <th colspan="2">Spesifikasi</th>
-                    <th colspan="3">Nomor Kendaraan</th>
-                    <th rowspan="2">Jml</th>
-                    <th rowspan="2">Satuan</th>
-                    <th rowspan="2">Harga Perolehan (Rp)</th>
-                    <th rowspan="2">Tgl Perolehan</th>
-                    <th rowspan="2">Keterangan</th>
+                    <th rowspan="2" style="width: 2%;">No</th>
+                    <th rowspan="2" style="width: 4%;">Kode Barang</th>
+                    <th rowspan="2" style="width: 6%;">Nama Barang</th>
+                    <th rowspan="2" style="width: 3%;">No. Reg</th>
+                    <th colspan="3">Spesifikasi</th>
+                    <th colspan="5">Identitas Kendaraan</th>
+                    <th colspan="2">Kuantitas</th>
+                    <th colspan="2">Nilai Aset (Rp)</th>
+                    <th rowspan="2" style="width: 4%;">Cara Perolehan</th>
+                    <th rowspan="2" style="width: 4%;">Tanggal Perolehan</th>
+                    <th rowspan="2" style="width: 3%;">Kondisi</th>
+                    <th rowspan="2" style="width: 3%;">Status</th>
+                    <th rowspan="2" style="width: 4%;">Ket</th>
                 </tr>
                 <tr class="font-weight-bold">
-                    <th>Merk/Tipe</th>
-                    <th>Lainnya</th>
-                    <th>Polisi</th>
-                    <th>Rangka</th>
-                    <th>BPKB</th>
+                    <th style="width: 4%;">Merk/Tipe</th>
+                    <th style="width: 4%;">Ukuran</th>
+                    <th style="width: 4%;">Lainnya</th>
+                    <th style="width: 4%;">Polisi</th>
+                    <th style="width: 4%;">Rangka</th>
+                    <th style="width: 4%;">BPKB</th>
+                    <th style="width: 4%;">STNK</th>
+                    <th style="width: 4%;">Pajak</th>
+                    <th style="width: 2%;">Jumlah</th>
+                    <th style="width: 3%;">Satuan</th>
+                    <th style="width: 5%;">Satuan</th>
+                    <th style="width: 5%;">Total Perolehan</th>
                 </tr>
             </thead>
             <tbody>
                 @php $totalHarga = 0; @endphp
                 @forelse ($dataPeralatan as $index => $item)
                     @php
-                        // ✅ Hitung Manual Harga mengambil langsung dari tabel Peralatan
-                        $harga = $item->alat_nilai_perolehan ?? 0;
+                        $harga = $item->alat_nilai_perolehan ?? $item->nilai_perolehan ?? 0;
                         $totalHarga += $harga;
                         
-                        // ✅ Tangkap Tanggal dengan aman
-                        $tglPerolehan = $item->alat_tanggal_perolehan ?? null;
+                        $tglPerolehan = $item->alat_tanggal_perolehan ?? $item->tanggal_perolehan ?? null;
+                        
+                        // 🌟 FALLBACK PAJAK: Mencari semua kemungkinan nama kolom di database
+                        $tglstnk = $item->alat_tanggal_stnk ?? $item->tanggal_stnk ?? $item->stnk ?? null; 
+                        $tglPajak = $item->alat_tanggal_pajak ?? $item->tanggal_pajak ?? $item->pajak ?? null; 
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
                         
-                        {{-- Identitas Barang --}}
-                        <td class="text-center">{{ $item->alat_kode_barang ?? '-' }}</td>
-                        <td>{{ $item->alat_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->alat_nomor_register ?? '-' }}</td>
+                        {{-- Identitas Utama --}}
+                        <td class="text-center font-weight-bold">{{ $item->alat_kode_barang ?? $item->kode_barang ?? '-' }}</td>
+                        <td>{{ $item->alat_nama_barang ?? $item->nama_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_nomor_register ?? $item->nomor_register ?? '-' }}</td>
                         
-                        {{-- Spesifikasi Umum --}}
-                        <td>{{ $item->alat_merk_tipe ?? '-' }}</td>
-                        <td>{{ $item->alat_spesifikasi_lainnya ?? '-' }}</td>
+                        {{-- Spesifikasi Barang --}}
+                        <td>{{ $item->alat_merk_tipe ?? $item->merk_tipe ?? '-' }}</td>
+                        <td>{{ $item->alat_spesifikasi_barang ?? $item->spesifikasi_barang ?? '-' }}</td>
+                        <td>{{ $item->alat_spesifikasi_lainnya ?? $item->spesifikasi_lainnya ?? '-' }}</td>
                         
-                        {{-- Spesifikasi Kendaraan --}}
-                        <td class="text-center font-weight-bold">{{ $item->alat_nomor_polisi ?? '-' }}</td>
-                        <td><small>{{ $item->alat_nomor_rangka ?? '-' }}</small></td>
-                        <td>{{ $item->alat_nomor_bpkb ?? '-' }}</td>
+                        {{-- Identitas Kendaraan --}}
+                        <td class="text-center font-weight-bold">{{ $item->alat_nomor_polisi ?? $item->nomor_polisi ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_nomor_rangka ?? $item->nomor_rangka ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_nomor_bpkb ?? $item->nomor_bpkb ?? '-' }}</td>
+                        
+                        {{-- 🌟 FALLBACK STNK: Mencari semua kemungkinan nama kolom STNK --}}
+                        <td class="text-center">{{ $tglstnk ? \Carbon\Carbon::parse($tglstnk)->format('d/m/Y') : '-' }}</td>
+                        
+                        <td class="text-center">{{ $tglPajak ? \Carbon\Carbon::parse($tglPajak)->format('d/m/Y') : '-' }}</td> 
                         
                         {{-- Kuantitas & Harga --}}
-                        <td class="text-center font-weight-bold">{{ $item->alat_jumlah ?? '1' }}</td>
-                        <td class="text-center">{{ $item->alat_satuan ?? '-' }}</td>
+                        <td class="text-center font-weight-bold">{{ $item->alat_jumlah ?? $item->jumlah ?? '1' }}</td>
+                        <td class="text-center">{{ $item->alat_satuan ?? $item->satuan ?? '-' }}</td>
+                        <td class="text-right">{{ $item->alat_harga_satuan ?? $item->harga_satuan ? number_format($item->alat_harga_satuan ?? $item->harga_satuan, 0, ',', '.') : '-' }}</td>
                         <td class="text-right font-weight-bold">{{ number_format($harga, 0, ',', '.') }}</td>
                         
-                        {{-- Waktu & Keterangan --}}
+                        {{-- Waktu, Status, Kondisi, Keterangan --}}
+                        <td class="text-center">{{ $item->alat_cara_perolehan ?? $item->cara_perolehan ?? '-' }}</td>
                         <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
-                        <td>{{ $item->alat_keterangan ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_kondisi ?? $item->kondisi ?? '-' }}</td>
+                        <td class="text-center">{{ $item->alat_status_penggunaan ?? $item->status_penggunaan ?? '-' }}</td>
+                        <td>{{ $item->alat_keterangan ?? $item->keterangan ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="14" class="text-center py-4 font-italic text-muted">
+                        <td colspan="21" class="text-center py-4 font-italic text-muted">
                             Belum ada data inventaris KIB B (Peralatan dan Mesin) pada lokasi ini.
                         </td>
                     </tr>
@@ -125,15 +147,14 @@
             </tbody>
             <tfoot class="font-weight-bold bg-light">
                 <tr>
-                    {{-- ✅ Colspan diubah menjadi 11 agar total harga sejajar dengan kolom Harga Perolehan --}}
-                    <td colspan="11" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB B)</td>
-                    <td class="text-right text-dark">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
-                    <td colspan="2"></td>
+                    <td colspan="15" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB B)</td>
+                    <td class="text-right text-primary">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
+                    <td colspan="5"></td>
                 </tr>
             </tfoot>
         </table>
 
-        {{-- AREA TANDA TANGAN (Menggunakan Table agar tidak berantakan saat cetak PDF) --}}
+        {{-- AREA TANDA TANGAN --}}
         <table class="signature-table">
             <tr>
                 <td style="width: 35%; text-align: center; vertical-align: top;">

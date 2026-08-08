@@ -140,6 +140,7 @@ class InventarisController extends Controller
             return redirect()->back()->withInput()->with('error', 'Gagal: Kode barang tidak valid di Master KIB B.');
         }
 
+        // Cek Ketersediaan Stok
         $totalStokMaster = (int) $masterPeralatan->alat_jumlah;
         $stokTerpakaiDiruangan = (int) Inventaris::where('inv_kode_barang', $request->kode_barang)->sum('inv_jumlah');
         $sisaStokTersedia = $totalStokMaster - $stokTerpakaiDiruangan;
@@ -148,12 +149,19 @@ class InventarisController extends Controller
             return redirect()->back()->withInput()->with('error', 'Gagal! Stok tidak mencukupi.');
         }
 
-        $tahunPerolehan = $request->tahun_perolehan;
-        if (empty($tahunPerolehan) || $tahunPerolehan === '-') {
-            $tahunPerolehan = $masterPeralatan->alat_tahun_perolehan 
-                ?? $masterPeralatan->tahun_perolehan 
-                ?? date('Y');
+        // =========================================================================
+        // 🌟 REVISI LOGIKA TAHUN PEROLEHAN (MENGGUNAKAN CARBON) 🌟
+        // =========================================================================
+        $tahunPerolehan = null;
+        if (!empty($masterPeralatan->alat_tanggal_perolehan)) {
+            // Ambil 4 digit tahun (Y) dari tanggal lengkap (Y-m-d) KIB B
+            $tahunPerolehan = \Carbon\Carbon::parse($masterPeralatan->alat_tanggal_perolehan)->format('Y');
+        } else {
+            // Fallback: Jika di KIB B kebetulan tanggalnya kosong, 
+            // ambil dari inputan form (jika ada), atau gunakan tahun saat ini.
+            $tahunPerolehan = $request->tahun_perolehan ?? date('Y');
         }
+        // =========================================================================
 
         $namaBarang = $request->nama_barang ?? $masterPeralatan->alat_nama_barang ?? '-';
         $merkTipe = $request->merk_tipe ?? $masterPeralatan->alat_merk_tipe ?? '-';
@@ -186,7 +194,7 @@ class InventarisController extends Controller
                     'inv_nama_barang'        => $namaBarang,
                     'inv_spesifikasi_barang' => $spesifikasi,
                     'inv_merk_tipe'          => $merkTipe,
-                    'inv_tahun_perolehan'    => $tahunPerolehan,
+                    'inv_tahun_perolehan'    => $tahunPerolehan, // 👈 Akan tersimpan 4 digit tahun
                     'inv_jumlah'             => $request->jumlah,
                     'inv_satuan'             => $request->satuan,
                     'inv_kondisi'            => $request->kondisi,

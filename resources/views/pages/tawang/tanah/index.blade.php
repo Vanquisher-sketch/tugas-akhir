@@ -54,12 +54,12 @@
                         <th>Koordinat</th>
                         <th>Bukti Dokumen</th>
                         <th>No. Dokumen</th>
-                        <th>Tgl Dokumen</th>
+                        <th>Tanggal Dokumen</th>
                         <th>Nama di Dokumen</th>
                         <th>Harga Satuan (Rp)</th>
                         <th>Nilai Perolehan (Rp)</th>
                         <th>Cara Perolehan</th>
-                        <th>Tgl Perolehan</th>
+                        <th>Tanggal Perolehan</th>
                         <th>Status Penggunaan</th>
                         <th>Keterangan</th>
                         <th style="position: sticky; right: 0; z-index: 3; background-color: #eaecf4; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">Aksi</th>

@@ -2,24 +2,25 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>KIB D - {{ strtoupper($lokasi) }}</title>
+    <title>Cetak KIB D - {{ ucfirst($lokasi) }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
+        /* FONT DIPERKECIL JADI 6.5pt AGAR 18 KOLOM BISA MUAT DI A4 LANDSCAPE */
+        body { font-family: 'Times New Roman', serif; font-size: 6.5pt; color: #000; }
         
         .table-bordered th, .table-bordered td { 
             border: 1px solid #000 !important; 
             vertical-align: middle; 
-            padding: 4px; 
+            padding: 2px 3px !important; 
+            word-wrap: break-word;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .header-info td { border: none !important; padding: 0; font-weight: bold; font-size: 9pt; }
         
         /* PENGATURAN KHUSUS UNTUK PDF / PRINT */
         @page { size: A4 landscape; margin: 10mm; }
-        table { page-break-inside: auto; width: 100%; }
+        table { page-break-inside: auto; width: 100%; table-layout: fixed; }
         tr { page-break-inside: avoid; page-break-after: auto; }
         thead { display: table-header-group; background-color: #f2f2f2 !important; }
         tfoot { display: table-footer-group; }
@@ -36,76 +37,101 @@
 <body onload="window.print()">
     <div class="container-fluid">
         {{-- HEADER KIB D --}}
-        <h6 class="text-center font-weight-bold mb-0">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
-        <h6 class="text-center font-weight-bold mb-4">JALAN, IRIGASI DAN JARINGAN (KIB D)</h6>
+        <h6 class="text-center font-weight-bold mb-0" style="font-size: 10pt;">DAFTAR INVENTARIS BARANG MILIK DAERAH (BMD)</h6>
+        <h6 class="text-center font-weight-bold mb-4" style="font-size: 10pt;">KARTU INVENTARIS BARANG (KIB) D - JALAN, IRIGASI, DAN JARINGAN</h6>
         
-        <table class="header-info mb-3" style="width: 40%;">
+        <table class="mb-2" style="width: 40%; font-weight: bold; font-size: 8pt; border: none;">
             <tr>
-                <td width="150">LOKASI</td>
-                <td>: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
+                <td width="120" style="border: none; padding: 0;">LOKASI</td>
+                <td style="border: none; padding: 0;">: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
             </tr>
             <tr>
-                <td>KABUPATEN/KOTA</td>
-                <td>: TASIKMALAYA</td>
+                <td style="border: none; padding: 0;">KABUPATEN/KOTA</td>
+                <td style="border: none; padding: 0;">: TASIKMALAYA</td>
             </tr>
             <tr>
-                <td>TAHUN ANGGARAN</td>
-                <td>: {{ date('Y') }}</td>
+                <td style="border: none; padding: 0;">TAHUN ANGGARAN</td>
+                <td style="border: none; padding: 0;">: {{ date('Y') }}</td>
             </tr>
         </table>
-        
-        {{-- TABEL DATA KIB D --}}
+
+        {{-- TABEL DATA KIB D (18 KOLOM) --}}
         <table class="table table-bordered">
             <thead class="text-center bg-light">
-                <tr>
-                    <th>No</th>
-                    <th>Kode Barang</th>
-                    <th>Nama Barang</th>
-                    <th>Reg</th>
-                    <th>No. Ruas</th>
-                    <th>Pjg/Luas</th>
-                    <th>Satuan</th>
-                    <th>Lokasi/Alamat</th>
-                    <th>Status Tanah</th>
-                    <th>Tgl Perolehan</th>
-                    <th>Harga Satuan (Rp)</th>
-                    <th>Nilai Perolehan (Rp)</th>
-                    <th>Ket</th>
+                <tr class="font-weight-bold">
+                    <th rowspan="2" style="width: 2%;">No</th>
+                    <th rowspan="2" style="width: 5%;">Kode Barang</th>
+                    <th rowspan="2" style="width: 3%;">No. Reg</th>
+                    <th rowspan="2" style="width: 6%;">Nama Barang</th>
+                    <th colspan="2">Spesifikasi</th>
+                    <th colspan="3">Data Lokasi</th>
+                    <th rowspan="2" style="width: 5%;">Status Tanah</th>
+                    <th colspan="2">Kuantitas</th>
+                    <th colspan="2">Nilai Aset (Rp)</th>
+                    <th rowspan="2" style="width: 5%;">Cara Perolehan</th>
+                    <th rowspan="2" style="width: 4%;">Tgl Perolehan</th>
+                    <th rowspan="2" style="width: 5%;">Status Penggunaan</th>
+                    <th rowspan="2" style="width: 5%;">Ket</th>
+                </tr>
+                <tr class="font-weight-bold">
+                    <th style="width: 5%;">Barang</th>
+                    <th style="width: 5%;">Lainnya</th>
+                    <th style="width: 4%;">No. Ruas</th>
+                    <th style="width: 6%;">Alamat Fisik</th>
+                    <th style="width: 5%;">Koordinat</th>
+                    <th style="width: 3%;">Jumlah</th>
+                    <th style="width: 3%;">Satuan</th>
+                    <th style="width: 5%;">Harga Satuan</th>
+                    <th style="width: 6%;">Total Perolehan</th>
                 </tr>
             </thead>
             <tbody>
                 @php $totalHarga = 0; @endphp
                 @forelse ($dataJalan as $index => $item)
                     @php
-                        // Kalkulasi manual aman dari error DB
-                        $hargaSatuan = $item->harga_satuan ?? $item->jalan_harga_satuan ?? 0;
-                        $hargaTotal = $item->nilai_perolehan ?? $item->bmd_nilai_perolehan ?? $item->jalan_harga ?? 0;
+                        // ✅ Kalkulasi Harga (Aman)
+                        $hargaSatuan = $item->jalan_harga_satuan ?? 0;
+                        $hargaTotal = $item->jalan_nilai_perolehan ?? 0;
                         $totalHarga += $hargaTotal;
                         
-                        // Parse tanggal aman
-                        $tglPerolehan = $item->tanggal_perolehan ?? $item->bmd_tanggal_perolehan ?? $item->bmd_tahun ?? null;
+                        // ✅ Parse Tanggal (Aman)
+                        $tglPerolehan = $item->jalan_tanggal_perolehan ?? null;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
-                        <td class="text-center">{{ $item->kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
-                        <td>{{ $item->nama_barang ?? $item->jalan_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
                         
-                        <td class="text-center">{{ $item->nomor_ruas_jalan_jembatan_irigasi ?? $item->jalan_no_ruas ?? '-' }}</td>
-                        <td class="text-center font-weight-bold">{{ number_format($item->jumlah ?? $item->jalan_panjang ?? $item->bmd_jumlah ?? 0, 0, ',', '.') }}</td>
-                        <td class="text-center">{{ $item->satuan ?? $item->bmd_satuan ?? '-' }}</td>
-                        <td>{{ $item->Lok ?? $item->lokasi ?? $item->jalan_alamat ?? '-' }}</td>
+                        {{-- Identitas Utama --}}
+                        <td class="text-center font-weight-bold">{{ $item->jalan_kode_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->jalan_nomor_register ?? '-' }}</td>
+                        <td>{{ $item->jalan_nama_barang ?? '-' }}</td>
                         
-                        <td class="text-center">{{ $item->status_kepemilikan_tanah ?? $item->jalan_status_tanah ?? '-' }}</td>
-                        <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
+                        {{-- Spesifikasi --}}
+                        <td>{{ $item->jalan_spesifikasi_barang ?? '-' }}</td>
+                        <td>{{ $item->jalan_spesifikasi_lainnya ?? '-' }}</td>
                         
+                        {{-- Data Lokasi --}}
+                        <td class="text-center">{{ $item->jalan_nomor_ruas_jalan_jembatan_irigasi ?? '-' }}</td>
+                        <td>{{ $item->jalan_lokasi_fisik ?? '-' }}</td>
+                        <td class="text-center">{{ $item->jalan_titik_koordinat ?? '-' }}</td>
+                        
+                        {{-- Tanah & Kuantitas --}}
+                        <td class="text-center">{{ $item->jalan_status_kepemilikan_tanah ?? '-' }}</td>
+                        <td class="text-center font-weight-bold">{{ number_format($item->jalan_jumlah ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ $item->jalan_satuan ?? '-' }}</td>
+                        
+                        {{-- Nilai Aset --}}
                         <td class="text-right">{{ number_format($hargaSatuan, 0, ',', '.') }}</td>
                         <td class="text-right font-weight-bold">{{ number_format($hargaTotal, 0, ',', '.') }}</td>
-                        <td>{{ $item->keterangan ?? $item->bmd_keterangan ?? '-' }}</td>
+                        
+                        {{-- Status & Keterangan --}}
+                        <td class="text-center">{{ $item->jalan_cara_perolehan ?? '-' }}</td>
+                        <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
+                        <td class="text-center">{{ $item->jalan_status_penggunaan ?? '-' }}</td>
+                        <td>{{ $item->jalan_keterangan ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="13" class="text-center py-4 font-italic text-muted">
+                        <td colspan="18" class="text-center py-4 font-italic text-muted">
                             Belum ada data inventaris KIB D (Jalan, Irigasi & Jaringan) pada lokasi ini.
                         </td>
                     </tr>
@@ -113,9 +139,10 @@
             </tbody>
             <tfoot class="font-weight-bold bg-light">
                 <tr>
-                    <td colspan="11" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB D)</td>
+                    {{-- 🌟 Colspan diubah jadi 13 agar total harga sejajar pas di kolom Nilai Perolehan (Kolom ke-14) --}}
+                    <td colspan="13" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB D)</td>
                     <td class="text-right text-primary">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
-                    <td></td>
+                    <td colspan="4"></td>
                 </tr>
             </tfoot>
         </table>

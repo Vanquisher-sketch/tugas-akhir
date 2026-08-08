@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between" style="position: relative; z-index: 10;">
         <h6 class="m-0 font-weight-bold text-primary">Data Jalan, Irigasi & Jaringan (KIB D) - Kecamatan {{ ucfirst($lokasi) }}</h6>
         
         <div class="d-flex">
@@ -56,10 +56,10 @@
                         <th>Harga Satuan (Rp)</th>
                         <th>Nilai Perolehan (Rp)</th>
                         <th>Cara Perolehan</th>
-                        <th>Tgl Perolehan</th>
+                        <th>Tanggal Perolehan</th>
                         <th>Status Penggunaan</th>
                         <th>Keterangan</th>
-                        <th class="sticky-top right-0 bg-light">Aksi</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

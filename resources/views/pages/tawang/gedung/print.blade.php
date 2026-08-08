@@ -2,24 +2,25 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>KIB C - {{ strtoupper($lokasi) }}</title>
+    <title>Cetak KIB C - {{ ucfirst($lokasi) }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        body { font-family: 'Times New Roman', serif; font-size: 8pt; color: #000; }
+        /* FONT DIPERKECIL JADI 6.5pt AGAR 19 KOLOM MUAT DI KERTAS A4 LANDSCAPE */
+        body { font-family: 'Times New Roman', serif; font-size: 6.5pt; color: #000; }
         
         .table-bordered th, .table-bordered td { 
             border: 1px solid #000 !important; 
             vertical-align: middle; 
-            padding: 4px; 
+            padding: 2px 3px !important; 
+            word-wrap: break-word;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .header-info td { border: none !important; padding: 0; font-weight: bold; font-size: 9pt; }
         
         /* PENGATURAN KHUSUS UNTUK PDF / PRINT */
         @page { size: A4 landscape; margin: 10mm; }
-        table { page-break-inside: auto; width: 100%; }
+        table { page-break-inside: auto; width: 100%; table-layout: fixed; }
         tr { page-break-inside: avoid; page-break-after: auto; }
         thead { display: table-header-group; background-color: #f2f2f2 !important; }
         tfoot { display: table-footer-group; }
@@ -36,70 +37,97 @@
 <body onload="window.print()">
     <div class="container-fluid">
         {{-- HEADER KIB C --}}
-        <h6 class="text-center font-weight-bold mb-0">DAFTAR BMD PADA KUASA PENGGUNA BARANG</h6>
-        <h6 class="text-center font-weight-bold mb-4">GEDUNG DAN BANGUNAN (KIB C)</h6>
+        <h6 class="text-center font-weight-bold mb-0" style="font-size: 10pt;">DAFTAR INVENTARIS BARANG MILIK DAERAH (BMD)</h6>
+        <h6 class="text-center font-weight-bold mb-4" style="font-size: 10pt;">KARTU INVENTARIS BARANG (KIB) C - GEDUNG DAN BANGUNAN</h6>
         
-        <table class="header-info mb-3" style="width: 40%;">
+        <table class="mb-2" style="width: 40%; font-weight: bold; font-size: 8pt; border: none;">
             <tr>
-                <td width="150">LOKASI</td>
-                <td>: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
+                <td width="120" style="border: none; padding: 0;">LOKASI</td>
+                <td style="border: none; padding: 0;">: {{ strtoupper($lokasi == 'tawang' ? 'KECAMATAN TAWANG' : 'KELURAHAN ' . $lokasi) }}</td>
             </tr>
             <tr>
-                <td>KABUPATEN/KOTA</td>
-                <td>: TASIKMALAYA</td>
+                <td style="border: none; padding: 0;">KABUPATEN/KOTA</td>
+                <td style="border: none; padding: 0;">: TASIKMALAYA</td>
             </tr>
             <tr>
-                <td>TAHUN ANGGARAN</td>
-                <td>: {{ date('Y') }}</td>
+                <td style="border: none; padding: 0;">TAHUN ANGGARAN</td>
+                <td style="border: none; padding: 0;">: {{ date('Y') }}</td>
             </tr>
         </table>
         
-        {{-- TABEL DATA KIB C --}}
+        {{-- TABEL DATA KIB C (19 KOLOM) --}}
         <table class="table table-bordered">
             <thead class="text-center bg-light">
-                <tr>
-                    <th>No</th>
-                    <th>Kode Barang</th>
-                    <th>Nama Gedung</th>
-                    <th>Reg</th>
-                    <th>Lantai</th>
-                    <th>Luas (M2)</th>
-                    <th>Lokasi/Alamat</th>
-                    <th>Status Tanah</th>
-                    <th>Tgl Perolehan</th>
-                    <th>Nilai Perolehan (Rp)</th>
-                    <th>Keterangan</th>
+                <tr class="font-weight-bold">
+                    <th rowspan="2" style="width: 2%;">No</th>
+                    <th rowspan="2" style="width: 5%;">Kode Barang</th>
+                    <th rowspan="2" style="width: 4%;">Sistem Lokasi</th>
+                    <th rowspan="2" style="width: 6%;">Nama Barang</th>
+                    <th rowspan="2" style="width: 3%;">No. Reg</th>
+                    <th colspan="2">Spesifikasi</th>
+                    <th rowspan="2" style="width: 3%;">Jumlah Lantai</th>
+                    <th rowspan="2" style="width: 6%;">Lokasi Fisik</th>
+                    <th rowspan="2" style="width: 5%;">Koordinat</th>
+                    <th rowspan="2" style="width: 5%;">Status Tanah</th>
+                    <th colspan="2">Kuantitas</th>
+                    <th colspan="2">Nilai Aset (Rp)</th>
+                    <th rowspan="2" style="width: 5%;">Cara Perolehan</th>
+                    <th rowspan="2" style="width: 4%;">Tanggal Perolehan</th>
+                    <th rowspan="2" style="width: 4%;">Status Penggunaan</th>
+                    <th rowspan="2" style="width: 6%;">Keterangan</th>
+                </tr>
+                <tr class="font-weight-bold">
+                    <th style="width: 5%;">Utama (Luas)</th>
+                    <th style="width: 4%;">Lainnya</th>
+                    <th style="width: 3%;">Jumlah</th>
+                    <th style="width: 3%;">Satuan</th>
+                    <th style="width: 5%;">Harga Satuan</th>
+                    <th style="width: 6%;">Total Perolehan</th>
                 </tr>
             </thead>
             <tbody>
                 @php $totalHarga = 0; @endphp
                 @forelse ($dataGedung as $index => $item)
                     @php
-                        // Kalkulasi manual aman dari error DB
-                        $harga = $item->nilai_perolehan ?? $item->bmd_nilai_perolehan ?? $item->gedung_harga ?? 0;
+                        // ✅ Hitung Harga berdasarkan variabel index (gedung_nilai_perolehan)
+                        $harga = $item->gedung_nilai_perolehan ?? $item->nilai_perolehan ?? 0;
                         $totalHarga += $harga;
                         
-                        // Parse tanggal aman
-                        $tglPerolehan = $item->tanggal_perolehan ?? $item->bmd_tanggal_perolehan ?? $item->bmd_tahun ?? null;
+                        // ✅ Tangkap Tanggal
+                        $tglPerolehan = $item->gedung_tanggal_perolehan ?? $item->tanggal_perolehan ?? null;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
-                        <td class="text-center">{{ $item->kode_barang ?? $item->bmd_kode_barang ?? '-' }}</td>
-                        <td>{{ $item->nama_barang ?? $item->gedung_nama_barang ?? '-' }}</td>
-                        <td class="text-center">{{ $item->nomor_register ?? $item->bmd_register ?? '-' }}</td>
                         
-                        <td class="text-center">{{ $item->jumlah_lantai ?? $item->gedung_lantai ?? '-' }}</td>
-                        <td class="text-center font-weight-bold">{{ number_format($item->jumlah ?? $item->gedung_luas ?? $item->bmd_jumlah ?? 0, 0, ',', '.') }}</td>
-                        <td>{{ $item->Lok ?? $item->lokasi ?? $item->gedung_alamat ?? '-' }}</td>
+                        {{-- Identitas Utama --}}
+                        <td class="text-center font-weight-bold">{{ $item->gedung_kode_barang ?? $item->kode_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->lokasi ?? '-' }}</td>
+                        <td>{{ $item->gedung_nama_barang ?? $item->nama_barang ?? '-' }}</td>
+                        <td class="text-center">{{ $item->gedung_nomor_register ?? $item->nomor_register ?? '-' }}</td>
                         
-                        <td class="text-center">{{ $item->status_kepemilikan_tanah ?? $item->gedung_status_tanah ?? '-' }}</td>
-                        <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
+                        {{-- Spesifikasi & Lokasi Bangunan --}}
+                        <td>{{ $item->gedung_spesifikasi_barang ?? '-' }}</td>
+                        <td>{{ $item->gedung_spesifikasi_lainnya ?? '-' }}</td>
+                        <td class="text-center">{{ $item->gedung_jumlah_lantai ?? '-' }}</td>
+                        <td>{{ $item->gedung_lokasi_fisik ?? '-' }}</td>
+                        <td class="text-center">{{ $item->gedung_titik_koordinat ?? '-' }}</td>
+                        <td class="text-center">{{ $item->gedung_status_kepemilikan_tanah ?? '-' }}</td>
+                        
+                        {{-- Kuantitas & Nilai --}}
+                        <td class="text-center font-weight-bold">{{ number_format($item->gedung_jumlah ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ $item->gedung_satuan ?? '-' }}</td>
+                        <td class="text-right">{{ $item->gedung_harga_satuan ? number_format($item->gedung_harga_satuan, 0, ',', '.') : '-' }}</td>
                         <td class="text-right font-weight-bold">{{ number_format($harga, 0, ',', '.') }}</td>
-                        <td>{{ $item->keterangan ?? $item->bmd_keterangan ?? '-' }}</td>
+                        
+                        {{-- Informasi Tambahan --}}
+                        <td class="text-center">{{ $item->gedung_cara_perolehan ?? '-' }}</td>
+                        <td class="text-center">{{ $tglPerolehan ? \Carbon\Carbon::parse($tglPerolehan)->format('d/m/Y') : '-' }}</td>
+                        <td class="text-center">{{ $item->gedung_status_penggunaan ?? '-' }}</td>
+                        <td>{{ $item->gedung_keterangan ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="12" class="text-center py-4 font-italic text-muted">
+                        <td colspan="19" class="text-center py-4 font-italic text-muted">
                             Belum ada data inventaris KIB C (Gedung dan Bangunan) pada lokasi ini.
                         </td>
                     </tr>
@@ -107,14 +135,15 @@
             </tbody>
             <tfoot class="font-weight-bold bg-light">
                 <tr>
-                    <td colspan="10" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB C)</td>
+                    {{-- Colspan 14 agar total nilai sejajar pas di bawah kolom Nilai Perolehan (Kolom ke-15) --}}
+                    <td colspan="14" class="text-right text-uppercase">Total Nilai Kapitalisasi Aset (KIB C)</td>
                     <td class="text-right text-primary">Rp {{ number_format($totalHarga, 0, ',', '.') }}</td>
-                    <td></td>
+                    <td colspan="4"></td>
                 </tr>
             </tfoot>
         </table>
 
-        {{-- AREA TANDA TANGAN --}}
+        {{-- AREA TANDA TANGAN KIB --}}
         <table class="signature-table">
             <tr>
                 <td style="width: 35%; text-align: center; vertical-align: top;">
@@ -127,7 +156,7 @@
                 <td style="width: 30%;"></td>
                 <td style="width: 35%; text-align: center; vertical-align: top;">
                     <p class="mb-0">Tasikmalaya, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</p>
-                    <p>Kuasa Pengguna Barang,</p>
+                    <p>Pengurus Barang,</p>
                     <br><br><br><br>
                     <p class="font-weight-bold mb-0"><u>............................................</u></p>
                     <p>NIP. ............................................</p>

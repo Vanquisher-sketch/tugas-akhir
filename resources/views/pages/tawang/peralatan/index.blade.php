@@ -61,13 +61,13 @@
                         <th rowspan="2" class="align-middle">Merk / Tipe</th>
                         <th rowspan="2" class="align-middle">Lokasi Fisik</th>
                         <th colspan="3" class="align-middle">Identitas Fisik & Legalitas Kendaraan</th>
-                        <th colspan="2" class="align-middle">Sistem Patroli Pajak</th>
-                        <th rowspan="2" class="align-middle">Jml</th>
+                        <th colspan="2" class="align-middle">Tanggal Pajak</th>
+                        <th rowspan="2" class="align-middle">Jumlah</th>
                         <th rowspan="2" class="align-middle">Satuan</th>
                         <th rowspan="2" class="align-middle">Harga Satuan (Rp)</th>
                         <th rowspan="2" class="align-middle">Nilai Perolehan (Rp)</th>
                         <th rowspan="2" class="align-middle">Cara Perolehan</th>
-                        <th rowspan="2" class="align-middle">Tgl Perolehan</th>
+                        <th rowspan="2" class="align-middle">Tanggal Perolehan</th>
                         <th rowspan="2" class="align-middle" style="width: 7%;">Status Pakai</th>
                         <th rowspan="2" class="align-middle" style="width: 7%;">Kondisi</th>
                         <th rowspan="2" class="align-middle">Keterangan</th>
@@ -78,7 +78,7 @@
                         <th>No. Rangka</th>
                         <th>No. BPKB</th>
                         <th>Pajak Tahunan</th>
-                        <th>STNK (5 Thn)</th>
+                        <th>STNK (5 Tahun)</th>
                     </tr>
                     
                 </thead>
